@@ -1,0 +1,163 @@
+# ==============================================================================
+# VERSION DEFINITIONS
+#
+# Centralized place for all dependency versions, grouped by function.
+# ==============================================================================
+[versions]
+# --- Build & Kotlin ---
+agp = "8.13.0"
+kotlin = "2.2.10"
+ksp = "2.2.10-2.0.2"
+
+# --- AndroidX ---
+coreKtx = "1.17.0"
+lifecycleRuntimeKtx = "2.9.4"
+appcompat = "1.7.1"
+
+# --- Jetpack Compose ---
+composeBom = "2025.10.00"
+activityCompose = "1.11.0"
+composeNavigation = "2.9.5"
+foundation = "1.9.3"
+material3 = "1.4.0"
+
+# --- Data & Storage ---
+datastore = "1.1.7"
+paging = "3.3.6"
+room = "2.8.2"
+
+# --- Dependency Injection ---
+hilt = "2.57.2"
+hilt-navigation-compose = "1.3.0"
+
+# --- UI & Image Loading ---
+coil3 = "3.3.0"
+reorderable = "3.0.0"
+materialKolor = "3.0.0"
+
+# --- External ---
+youtubedlAndroid = "0.18.0"
+timber = "5.0.1"
+
+# --- Testing ---
+junit = "4.13.2"
+junitVersion = "1.3.0"
+espressoCore = "3.7.0"
+
+
+# ==============================================================================
+# LIBRARY ALIASES
+#
+# Aliases for all libraries, grouped by function.
+# ==============================================================================
+[libraries]
+# --- AndroidX - Core ---
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+
+# --- Jetpack Compose ---
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-compose-navigation = { group = "androidx.navigation", name = "navigation-compose", version.ref = "composeNavigation" }
+androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
+androidx-material-icons-core = { module = "androidx.compose.material:material-icons-core" }
+
+# --- Jetpack Compose - Tooling & Testing ---
+androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+
+# --- Data & Storage ---
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+androidx-paging-runtime = { group = "androidx.paging", name = "paging-runtime", version.ref = "paging" }
+androidx-paging-compose = { group = "androidx.paging", name = "paging-compose", version.ref = "paging" }
+
+# --- Room Database ---
+androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+androidx-room-paging = { group = "androidx.room", name = "room-paging", version.ref = "room"}
+
+# --- Dependency Injection - Hilt ---
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
+hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
+hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hilt-navigation-compose" }
+
+# --- UI & Image Loading ---
+materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
+coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil3" }
+coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil3" }
+compose-reorderable = { group = "sh.calvin.reorderable", name = "reorderable", version.ref = "reorderable" }
+
+# --- External ---
+youtubedl-android-ffmpeg =  { group = "io.github.junkfood02.youtubedl-android", name = "ffmpeg", version.ref = "youtubedlAndroid"}
+youtubedl-android-aria2c =  { group = "io.github.junkfood02.youtubedl-android", name = "aria2c", version.ref = "youtubedlAndroid"}
+youtubedl-android-library =  { group = "io.github.junkfood02.youtubedl-android", name = "library", version.ref = "youtubedlAndroid"}
+timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
+
+# --- Testing ---
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-test-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-test-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+
+
+# ==============================================================================
+# PLUGIN ALIASES
+#
+# Aliases for all Gradle plugins.
+# ==============================================================================
+[plugins]
+# --- Core ---
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+
+# --- Framework & Tooling ---
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+
+
+# ==============================================================================
+# LIBRARY BUNDLES
+#
+# Groups of related libraries that can be added to Gradle with one line.
+# ==============================================================================
+[bundles]
+# Essential Jetpack Compose UI libraries
+compose-ui = [
+    "androidx-compose-ui",
+    "androidx-compose-ui-graphics",
+    "androidx-compose-foundation",
+    "androidx-compose-material3",
+    "androidx-compose-ui-tooling-preview",
+    "androidx-material-icons-core"
+]
+
+# Core package
+core = ["androidx-activity-compose",
+    "androidx-appcompat",
+    "androidx-core-ktx"]
+
+# Room database libraries for implementation
+room = ["androidx-room-runtime", "androidx-room-ktx", "androidx-room-paging"]
+
+# Paging 3 libraries for runtime and Compose UI
+paging = ["androidx-paging-runtime", "androidx-paging-compose"]
+
+# Hilt libraries for dependency injection
+hilt = ["hilt-android", "hilt-navigation-compose"]
+
+# Coil 3 libraries for image loading
+coil = ["coil-compose", "coil-network-okhttp"]
+
+# YouTube DL libraries for Android
+youtubedl = ["youtubedl-android-ffmpeg", "youtubedl-android-aria2c", "youtubedl-android-library"]
+
+# Libraries for Android instrumentation testing
+testing-android = ["androidx-test-junit", "androidx-test-espresso-core"]

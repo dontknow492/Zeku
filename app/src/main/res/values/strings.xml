@@ -1,0 +1,224 @@
+<resources>
+    <string name="app_name">Zeku</string>
+    <string name="settings">Settings</string>
+    <string name="back">Back\n</string>
+
+<!--    Settings-->
+    <string name="settings_general_title">General</string>
+    <string name="settings_general_description">Core app behavior, language, and startup options</string>
+
+    <string name="settings_files_title">Files &amp; Folders</string>
+    <string name="settings_files_description">Manage download locations and file organization</string>
+
+    <string name="settings_appearance_title">Appearance</string>
+    <string name="settings_appearance_description">Customize the app\'s theme, colors, and layout</string>
+
+    <string name="settings_media_title">Media &amp; Formats</string>
+    <string name="settings_media_description">Adjust media quality, playback, and supported formats</string>
+
+    <string name="settings_network_title">Network</string>
+    <string name="settings_network_description">Configure proxy settings, connection timeouts, and data usage</string>
+
+    <string name="settings_post_processing_title">Post-Processing</string>
+    <string name="settings_post_processing_description">Automate actions after tasks complete</string>
+
+    <string name="settings_advanced_title">Advanced</string>
+    <string name="settings_advanced_description">Expert-level settings for power users. Change with caution.</string>
+
+    <string name="settings_about_title">About</string>
+    <string name="settings_about_description">View app version, licenses, and developer information</string>
+
+
+
+
+<!--&lt;!&ndash;    Advance setting &ndash;&gt;-->
+    <string name="settings_advanced_custom_command_title">Custom Command</string>
+    <string name="settings_advanced_custom_command_description">Define a custom command to run for downloads.</string>
+    <string name="settings_advanced_custom_command_not_set">Not set</string>
+
+    <string name="settings_advanced_sponsor_block_title">Skip Video Segments</string>
+    <string name="settings_advanced_sponsor_block_description">Automatically skip sponsors, intros, and other segments.</string>
+
+    <string name="settings_advanced_sponsor_block_categories_title">Skippable Categories</string>
+    <string name="settings_advanced_sponsor_block_categories_description">Select which segment types to skip.</string>
+    <string name="settings_advanced_sponsor_block_categories_none">Using defaults</string>
+
+    <string name="settings_advanced_template_id_title">Command Template</string>
+    <string name="settings_advanced_template_id_description">Select a pre-configured command template.</string>
+
+
+<!--&lt;!&ndash;    Appearance setting&ndash;&gt;-->
+    <string name="settings_appearance_theme_subtitle">Theme</string>
+
+    <string name="settings_appearance_accent_color_title">Accent Color</string>
+    <string name="settings_appearance_accent_color_description">Customize the color of buttons and highlights.</string>
+
+    <string name="settings_appearance_amoled_mode_title">AMOLED Mode</string>
+    <string name="settings_appearance_amoled_mode_description">Use pure black backgrounds in dark mode to save power.</string>
+
+    <string name="settings_appearance_dynamic_color_title">Dynamic Color</string>
+    <string name="settings_appearance_dynamic_color_description">Adapt app colors to match your wallpaper (Android 12+).</string>
+
+    <string name="settings_appearance_high_contrast_title">High Contrast</string>
+    <string name="settings_appearance_high_contrast_description">Increase text contrast for better readability.</string>
+    <string name="settings_appearance_high_contrast_value_format">Current: [%1$d%%]</string>
+
+
+<!--&lt;!&ndash;    Directory settings&ndash;&gt;-->
+        <string name="group_title_file_locations">File Locations</string>
+        <string name="group_title_filename_formatting">Filename &amp; Formatting</string>
+
+        <string name="title_download_archive_files">Download Archive Files</string>
+        <string name="desc_download_archive_files">Automatically download files compressed in an archive format (e.g., .zip, .tar).</string>
+
+        <string name="title_audio_save_location">Audio Save Location</string>
+        <string name="desc_audio_save_location">Save location: %s</string>
+        <string name="title_video_save_location">Video Save Location</string>
+        <string name="desc_video_save_location">Save location: %s</string>
+        <string name="title_command_script_location">Commands Save Location</string>
+        <string name="desc_command_script_location">Script path: %s</string>
+
+        <string name="title_audio_filename_format">Audio Filename Format</string>
+        <string name="desc_audio_filename_format">Current template: %s</string>
+        <string name="title_video_filename_format">Video Filename Format</string>
+        <string name="desc_video_filename_format">Current template: %s</string>
+        <string name="title_limit_filename_characters">Limit Filename Characters</string>
+        <string name="desc_limit_filename_characters">Restrict filenames to use only basic ASCII characters (recommended for compatibility).</string>
+
+
+<!--&lt;!&ndash;    General settings&ndash;&gt;-->
+    <string name="title_always_show_config">Always Show Configuration</string>
+    <string name="desc_always_show_config">Show the settings screen before starting every download.</string>
+    <string name="title_download_status_notifications">Download Status Notifications</string>
+    <string name="desc_download_status_notifications">Display persistent notifications showing the progress and status of ongoing downloads.</string>
+
+    <string name="group_title_download_management">Download Management</string>
+    <string name="title_prevent_duplicate_downloads">Prevent Duplicate Downloads</string>
+    <string name="desc_prevent_duplicate_downloads">Current rule: [%s]</string>
+    <string name="title_preferred_content_type">Preferred Content Type</string>
+    <string name="desc_preferred_content_type">Determines the preferred format for downloaded content. Current default: [%s]</string>
+
+    <string name="group_title_privacy_security">Privacy &amp; Security</string>
+    <string name="title_private_mode">Private Mode</string>
+    <string name="desc_private_mode">Prevent history and logs from being saved locally.</string>
+
+    <string name="group_title_advanced">Advanced</string>
+    <string name="title_automatic_updates">Automatic Updates</string>
+    <string name="desc_automatic_updates">Automatically check for and download new versions of the application.</string>
+    <string name="title_enable_debug_logging">Enable Debug Logging</string>
+    <string name="desc_enable_debug_logging">Enable detailed system logging for troubleshooting. Only turn this on if requested by support.</string>
+
+    <string name="button_reset_all_settings">Reset All Settings</string>
+
+
+<!--&lt;!&ndash;    Media and format&ndash;&gt;-->
+    <string name="group_title_audio_settings">Audio Settings</string>
+
+    <string name="title_target_audio_format">Target Audio Format</string>
+    <string name="desc_target_audio_format">The file container format (e.g., MP3, AAC) for saved audio. [%s]</string>
+
+    <string name="title_audio_codec">Audio Codec</string>
+    <string name="desc_audio_codec">The compression scheme used for audio files. [%s]</string>
+
+    <string name="title_audio_quality">Audio Quality</string>
+    <string name="desc_audio_quality">The desired fidelity level for audio output. [%s]</string>
+
+    <string name="title_convert_audio_format">Convert Audio Format</string>
+    <string name="desc_convert_audio_format">Enable conversion of audio to a specified target format after extraction.</string>
+
+    <string name="title_conversion_target_format">Conversion Target Format</string>
+    <string name="desc_conversion_target_format">The format the audio will be converted to if conversion is enabled. [%s]</string>
+
+    <string name="group_title_video_settings">Video Settings</string>
+
+    <string name="title_target_video_format">Target Video Format</string>
+    <string name="desc_target_video_format">The file container format (e.g., MP4, MKV) for saved video. [%s]</string>
+
+    <string name="title_video_resolution_quality">Video Resolution/Quality</string>
+    <string name="desc_video_resolution_quality">The preferred resolution or quality level for the downloaded video. [%s]</string>
+
+    <string name="title_video_codec">Video Codec</string>
+    <string name="desc_video_codec">The compression scheme used for video files (e.g., H.264, VP9). [%s]</string>
+
+    <string name="title_enable_video_clipping">Enable Video Clipping</string>
+    <string name="desc_enable_video_clipping">Allow setting start and end points to download only a portion of the video.</string>
+
+    <string name="group_title_additional_options">Additional Options</string>
+
+    <string name="title_always_extract_audio">Always Extract Audio</string>
+    <string name="desc_always_extract_audio">Automatically save video files as audio-only files during post-processing.</string>
+
+    <string name="title_enable_av1_hardware_acceleration">Enable AV1 Hardware Acceleration</string>
+    <string name="desc_enable_av1_hardware_acceleration">Use specialized hardware for faster AV1 video decoding/encoding (may improve performance).</string>
+
+<!--    Network-->
+    <string name="title_force_ipv4_connection">Force IPv4 Connection</string>
+    <string name="desc_force_ipv4_connection">Forces all network connections to use the IPv4 protocol. This may fix connection issues on older networks.</string>
+
+    <string name="group_title_connection_limits">Connection Limits</string>
+    <string name="title_enable_rate_limiting">Enable Rate Limiting</string>
+    <string name="desc_enable_rate_limiting">Restricts the maximum download speed to save bandwidth or manage network load.</string>
+
+    <string name="title_max_download_rate">Max Download Rate</string>
+    <string name="desc_max_download_rate_full">The maximum allowed download speed when rate limiting is active (e.g., 500K for 500 Kilobytes/s). Current rate: [%s]</string>
+
+    <string name="title_connection_retries">Connection Retries</string>
+    <string name="desc_connection_retries_full">The number of times to retry a failed download before giving up. Current attempts: [%s]</string>
+
+    <string name="title_fragment_retries">Fragment Retries</string>
+    <string name="desc_fragment_retries_full">The number of times to retry a failed file fragment download. Current attempts: [%s]</string>
+
+    <string name="group_title_download_configuration">Download Configuration</string>
+
+    <string name="title_concurrent_downloads">Concurrent Downloads</string>
+    <string name="desc_concurrent_downloads_full">The maximum number of files that can be downloaded simultaneously. Max parallel: [%s]</string>
+
+    <string name="title_allow_cellular_downloads">Allow Cellular Downloads</string>
+    <string name="desc_allow_cellular_downloads">Permit file downloads when connected to a mobile (cellular) network instead of Wi-Fi.</string>
+
+    <string name="title_use_aria2c_downloader">Use Aria2c Downloader</string>
+    <string name="desc_use_aria2c_downloader">Enable the powerful Aria2c external tool for faster, segmented downloads.</string>
+
+    <string name="group_title_proxy_settings">Proxy Settings</string>
+
+    <string name="title_enable_proxy">Enable Proxy</string>
+    <string name="desc_enable_proxy">Route all network traffic through a custom proxy server.</string>
+
+    <string name="title_proxy_server_url">Proxy Server URL</string>
+    <string name="desc_proxy_server_url_full">The address of the proxy server (e.g., http://1.2.3.4:8080). Current URL: [%s]</string>
+
+    <string name="title_authentication_cookies">Authentication Cookies</string>
+    <string name="desc_authentication_cookies_full">Custom cookies to be used for site authentication. Set cookies: [%s]</string>
+
+    <string name="group_title_client_identification">Client Identification</string>
+
+    <string name="title_default_user_agent">Default User Agent</string>
+    <string name="desc_default_user_agent_full">The browser profile used to identify your device to websites. Current profile: [%s]</string>
+
+    <string name="title_custom_user_agent_string">Custom User Agent String</string>
+    <string name="desc_custom_user_agent_string_full">Manually set a custom User Agent string. Current string: [%s]</string>
+
+
+<!--&lt;!&ndash;    Post processing&ndash;&gt;-->
+    <string name="title_download_thumbnail_image">Download Thumbnail Image</string>
+    <string name="desc_download_thumbnail_image">Download the video\'s thumbnail image along with the media file.</string>
+
+    <string name="title_embed_thumbnail">Embed Thumbnail</string>
+    <string name="desc_embed_thumbnail">Embed the downloaded thumbnail directly into the output media file (e.g., MP4 or MP3).</string>
+
+    <string name="title_embed_metadata">Embed Metadata</string>
+    <string name="desc_embed_metadata">Embed video title, artist, and other details into the output media file.</string>
+
+    <string name="title_crop_artwork_to_square">Crop Artwork to Square</string>
+    <string name="desc_crop_artwork_to_square">Crop album artwork or thumbnail images to a square aspect ratio.</string>
+
+    <string name="title_merge_to_mkv_container">Merge to MKV Container</string>
+    <string name="desc_merge_to_mkv_container">Force the final merged output file to use the MKV container format.</string>
+
+    <string name="title_merge_multiple_audio_streams">Merge Multiple Audio Streams</string>
+    <string name="desc_merge_multiple_audio_streams">Include all available audio streams when merging/converting the final file.</string>
+
+
+<!--    Ui-->
+
+</resources>
