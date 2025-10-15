@@ -22,12 +22,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import org.ghost.zeku.R
 import org.ghost.zeku.core.DownloadType
 import org.ghost.zeku.core.enum.PreventDuplicateDownload
+import org.ghost.zeku.ui.common.SettingScaffold
 import org.ghost.zeku.ui.component.GroupSettingItem
 import org.ghost.zeku.ui.component.RadioSettingEnumItem
 import org.ghost.zeku.ui.component.SettingItem
 import org.ghost.zeku.ui.component.SwitchSettingItem
 import org.ghost.zeku.ui.screen.settings.GeneralSettingsState
-import org.ghost.zeku.ui.common.SettingScaffold
 import org.ghost.zeku.ui.theme.ZekuTheme
 import timber.log.Timber
 
@@ -62,7 +62,7 @@ fun GeneralSettings(
         modifier = modifier,
         title = stringResource(R.string.settings_general_title),
         onBackClick = onBackClick
-    ){
+    ) {
         SwitchSettingItem(
             title = stringResource(R.string.title_always_show_config),
             description = stringResource(R.string.desc_always_show_config),
@@ -90,7 +90,10 @@ fun GeneralSettings(
                 selectedValue = state.preventDuplicateDownloads,
                 items = PreventDuplicateDownload.entries,
                 title = stringResource(R.string.title_prevent_duplicate_downloads),
-                description  = stringResource(state.preventDuplicateDownloads.descriptionResId ?: R.string.prevent_duplicate_none_desc),
+                description = stringResource(
+                    state.preventDuplicateDownloads.descriptionResId
+                        ?: R.string.prevent_duplicate_none_desc
+                ),
                 icon = ImageVector.vectorResource(R.drawable.rounded_download_24),
                 onValueChange = { value ->
                     eventHandler(GeneralSettingsEvent.UpdatePreventDuplicates(value))
@@ -105,7 +108,7 @@ fun GeneralSettings(
                     state.preferredDownloadType.toString().uppercase()
                 ),
                 icon = ImageVector.vectorResource(R.drawable.baseline_perm_media_24),
-                onClick = {  }
+                onClick = { }
             )
         }
 
@@ -165,7 +168,7 @@ fun GeneralSettings(
 @Preview
 @Composable
 private fun GeneralSettingsPreview() {
-    var state  by remember {
+    var state by remember {
         mutableStateOf(
             GeneralSettingsState(
                 configure = false,
@@ -185,33 +188,41 @@ private fun GeneralSettingsPreview() {
     ZekuTheme {
         GeneralSettings(
             state = state,
-            eventHandler = {event ->
+            eventHandler = { event ->
                 Timber.d("event: $event")
-                when (event){
+                when (event) {
                     is GeneralSettingsEvent.UpdateConfigure -> {
                         state = state.copy(configure = event.isEnabled)
                     }
+
                     is GeneralSettingsEvent.UpdateDebug -> {
                         state = state.copy(debug = event.isEnabled)
                     }
+
                     is GeneralSettingsEvent.UpdateNotification -> {
                         state = state.copy(notification = event.isEnabled)
                     }
+
                     is GeneralSettingsEvent.UpdateAutoUpdate -> {
                         state = state.copy(autoUpdate = event.isEnabled)
                     }
+
                     is GeneralSettingsEvent.UpdatePrivateMode -> {
                         state = state.copy(privateMode = event.isEnabled)
                     }
+
                     is GeneralSettingsEvent.UpdatePreventDuplicates -> {
                         state = state.copy(preventDuplicateDownloads = event.value)
                     }
+
                     is GeneralSettingsEvent.UpdateChannel -> {
                         state = state.copy(updateChannel = event.channel)
                     }
+
                     is GeneralSettingsEvent.UpdatePreferredDownloadType -> {
                         state = state.copy(preferredDownloadType = event.type)
-                        }
+                    }
+
                     is GeneralSettingsEvent.ResetToDefaults -> {}
                 }
             },

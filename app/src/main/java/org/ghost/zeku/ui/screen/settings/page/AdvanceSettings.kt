@@ -8,11 +8,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import org.ghost.zeku.R
+import org.ghost.zeku.ui.common.SettingScaffold
 import org.ghost.zeku.ui.component.InputSettingItem
 import org.ghost.zeku.ui.component.SettingItem
 import org.ghost.zeku.ui.component.SwitchSettingItem
 import org.ghost.zeku.ui.screen.settings.AdvancedSettingsState
-import org.ghost.zeku.ui.common.SettingScaffold
 
 sealed interface AdvancedSettingsEvent {
     data class OnSponsorBlockChange(val sponsorBlock: Boolean) : AdvancedSettingsEvent
@@ -36,8 +36,8 @@ fun AdvanceSettings(
         modifier = modifier,
         title = stringResource(R.string.settings_advanced_title),
         onBackClick = onBackClick
-    ){
-            // ### Custom Command ###
+    ) {
+        // ### Custom Command ###
         SettingItem(
             title = stringResource(R.string.settings_advanced_custom_command_title),
             description = "${stringResource(R.string.settings_advanced_custom_command_description)}",
@@ -51,7 +51,7 @@ fun AdvanceSettings(
             description = stringResource(R.string.settings_advanced_sponsor_block_description),
             icon = ImageVector.vectorResource(R.drawable.rounded_tag_24),
             checked = state.sponsorBlock,
-            onSelectionChange = { skip -> event(AdvancedSettingsEvent.OnSponsorBlockChange(skip) ) }
+            onSelectionChange = { skip -> event(AdvancedSettingsEvent.OnSponsorBlockChange(skip)) }
         )
 
         // ### Skippable Categories ###
@@ -71,7 +71,13 @@ fun AdvanceSettings(
         // ### Command Template ###
         InputSettingItem(
             value = state.templateId.toString(),
-            onValueChange = { id -> event(AdvancedSettingsEvent.OnTemplateIdChange(id.toIntOrNull() ?: 0)) },
+            onValueChange = { id ->
+                event(
+                    AdvancedSettingsEvent.OnTemplateIdChange(
+                        id.toIntOrNull() ?: 0
+                    )
+                )
+            },
             title = stringResource(R.string.settings_advanced_template_id_title),
             description = "${stringResource(R.string.settings_advanced_template_id_description)}\nCurrent Id: [${state.templateId}]",
             icon = ImageVector.vectorResource(R.drawable.rounded_123_24),

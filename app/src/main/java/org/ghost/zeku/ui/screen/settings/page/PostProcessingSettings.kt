@@ -8,9 +8,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import org.ghost.zeku.R
+import org.ghost.zeku.ui.common.SettingScaffold
 import org.ghost.zeku.ui.component.SwitchSettingItem
 import org.ghost.zeku.ui.screen.settings.PostProcessingSettingsState
-import org.ghost.zeku.ui.common.SettingScaffold
 
 sealed interface PostProcessingSettingsEvent {
     data class OnThumbnailChange(val thumbnail: Boolean) : PostProcessingSettingsEvent
@@ -34,7 +34,7 @@ fun PostProcessingSettings(
         modifier = modifier,
         title = stringResource(R.string.settings_post_processing_title),
         onBackClick = onBackClick
-    ){
+    ) {
         SwitchSettingItem(
             title = stringResource(R.string.title_download_thumbnail_image),
             description = stringResource(R.string.desc_download_thumbnail_image),

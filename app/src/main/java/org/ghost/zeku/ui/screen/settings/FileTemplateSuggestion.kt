@@ -13,7 +13,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,7 +41,9 @@ fun FilenameTemplateSuggestion(
     modifier: Modifier = Modifier
 ) {
     FlowRow(
-        modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+        modifier = modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(0.dp) // Use this if you expect multiple rows
     ) {
@@ -76,9 +77,10 @@ private fun TemplateChip(
     AssistChip(
         modifier = modifier,
         onClick = onClick,
-        label = { Text(
-            stringResource(id = template.labelResId),
-            style = MaterialTheme.typography.bodySmall
+        label = {
+            Text(
+                stringResource(id = template.labelResId),
+                style = MaterialTheme.typography.bodySmall
             )
         },
         colors = AssistChipDefaults.assistChipColors(containerColor = containerColor),

@@ -16,11 +16,11 @@ import org.ghost.zeku.core.enum.AudioQuality
 import org.ghost.zeku.core.enum.VideoEncoding
 import org.ghost.zeku.core.enum.VideoFormat
 import org.ghost.zeku.core.enum.VideoQuality
+import org.ghost.zeku.ui.common.SettingScaffold
 import org.ghost.zeku.ui.component.GroupSettingItem
 import org.ghost.zeku.ui.component.RadioSettingEnumItem
 import org.ghost.zeku.ui.component.SwitchSettingItem
 import org.ghost.zeku.ui.screen.settings.MediaSettingsState
-import org.ghost.zeku.ui.common.SettingScaffold
 
 sealed interface MediaSettingsEvent {
     data class OnVideoFormatChange(val videoFormat: VideoFormat) : MediaSettingsEvent
@@ -54,7 +54,7 @@ fun MediaSettings(
         modifier = modifier,
         title = stringResource(R.string.settings_media_title),
         onBackClick = onBackClick
-    ){
+    ) {
         GroupSettingItem(
             title = stringResource(R.string.group_title_audio_settings)
         ) {
@@ -67,7 +67,13 @@ fun MediaSettings(
                     state.audioFormat.label
                 ),
                 icon = ImageVector.vectorResource(R.drawable.rounded_music_note_24),
-                onValueChange = { format -> eventHandler(MediaSettingsEvent.OnAudioFormatChange(format))}
+                onValueChange = { format ->
+                    eventHandler(
+                        MediaSettingsEvent.OnAudioFormatChange(
+                            format
+                        )
+                    )
+                }
             )
 
             RadioSettingEnumItem(
@@ -79,7 +85,13 @@ fun MediaSettings(
                     state.audioEncoding.label
                 ),
                 icon = ImageVector.vectorResource(R.drawable.rounded_music_history_24),
-                onValueChange = { encoding -> eventHandler(MediaSettingsEvent.OnAudioEncodingChange(encoding))}
+                onValueChange = { encoding ->
+                    eventHandler(
+                        MediaSettingsEvent.OnAudioEncodingChange(
+                            encoding
+                        )
+                    )
+                }
             )
             RadioSettingEnumItem(
                 selectedValue = state.audioQuality,
@@ -90,7 +102,13 @@ fun MediaSettings(
                     state.audioQuality.label
                 ),
                 icon = ImageVector.vectorResource(R.drawable.baseline_speaker_24),
-                onValueChange = { quality -> eventHandler(MediaSettingsEvent.OnAudioQualityChange(quality))}
+                onValueChange = { quality ->
+                    eventHandler(
+                        MediaSettingsEvent.OnAudioQualityChange(
+                            quality
+                        )
+                    )
+                }
             )
             SwitchSettingItem(
                 title = stringResource(R.string.title_convert_audio_format),
@@ -115,7 +133,13 @@ fun MediaSettings(
                 ),
                 icon = Icons.Filled.Settings,
                 enabled = state.audioConvert,
-                onValueChange = { format -> eventHandler(MediaSettingsEvent.OnAudioConversionFormatChange(format))}
+                onValueChange = { format ->
+                    eventHandler(
+                        MediaSettingsEvent.OnAudioConversionFormatChange(
+                            format
+                        )
+                    )
+                }
             )
         }
 
@@ -131,7 +155,13 @@ fun MediaSettings(
                     state.videoFormat.label
                 ),
                 icon = ImageVector.vectorResource(R.drawable.round_videocam_24),
-                onValueChange = { format -> eventHandler(MediaSettingsEvent.OnVideoFormatChange(format))}
+                onValueChange = { format ->
+                    eventHandler(
+                        MediaSettingsEvent.OnVideoFormatChange(
+                            format
+                        )
+                    )
+                }
             )
             RadioSettingEnumItem(
                 selectedValue = state.videoQuality,
@@ -142,7 +172,13 @@ fun MediaSettings(
                     state.videoQuality.label
                 ),
                 icon = ImageVector.vectorResource(R.drawable.rounded_high_quality_24),
-                onValueChange = { quality -> eventHandler(MediaSettingsEvent.OnVideoQualityChange(quality))}
+                onValueChange = { quality ->
+                    eventHandler(
+                        MediaSettingsEvent.OnVideoQualityChange(
+                            quality
+                        )
+                    )
+                }
             )
             RadioSettingEnumItem(
                 selectedValue = state.videoEncoding,
@@ -153,7 +189,13 @@ fun MediaSettings(
                     state.videoEncoding.label
                 ),
                 icon = ImageVector.vectorResource(R.drawable.round_video_settings_24),
-                onValueChange = { encoding -> eventHandler(MediaSettingsEvent.OnVideoEncodingChange(encoding)) }
+                onValueChange = { encoding ->
+                    eventHandler(
+                        MediaSettingsEvent.OnVideoEncodingChange(
+                            encoding
+                        )
+                    )
+                }
             )
             SwitchSettingItem(
                 title = stringResource(R.string.title_enable_video_clipping),

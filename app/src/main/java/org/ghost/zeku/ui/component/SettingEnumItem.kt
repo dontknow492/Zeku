@@ -6,11 +6,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import org.ghost.zeku.core.enum.SettingEnum
 import org.ghost.zeku.core.enum.VideoEncoding
@@ -127,7 +130,7 @@ fun InputSettingItem(
         onClick = { isDialogVisible = true }
     )
 
-    if(isDialogVisible){
+    if (isDialogVisible) {
         var tempValue by remember { mutableStateOf(value) }
         InputDialog(
             value = tempValue,
@@ -167,7 +170,6 @@ fun InputSettingItemPreview() {
         }
     }
 }
-
 
 
 @Preview(showBackground = true, widthDp = 360)

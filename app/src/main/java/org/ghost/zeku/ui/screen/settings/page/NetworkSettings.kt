@@ -12,11 +12,11 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import org.ghost.zeku.R
+import org.ghost.zeku.ui.common.SettingScaffold
 import org.ghost.zeku.ui.component.GroupSettingItem
 import org.ghost.zeku.ui.component.InputSettingItem
 import org.ghost.zeku.ui.component.SwitchSettingItem
 import org.ghost.zeku.ui.screen.settings.NetworkSettingsState
-import org.ghost.zeku.ui.common.SettingScaffold
 
 sealed interface NetworkSettingsEvent {
     data class OnConcurrentChange(val concurrent: String) : NetworkSettingsEvent
@@ -46,7 +46,7 @@ fun NetworkSettings(
         modifier = modifier,
         title = stringResource(R.string.settings_network_title),
         onBackClick = onBackClick
-    ){
+    ) {
         // Force IPv4 Switch
         SwitchSettingItem(
             title = stringResource(R.string.title_force_ipv4_connection),
@@ -81,7 +81,13 @@ fun NetworkSettings(
             )
             InputSettingItem(
                 value = state.maxRate.toString(),
-                onValueChange = { value -> eventHandler.invoke(NetworkSettingsEvent.OnMaxRateChange(value )) },
+                onValueChange = { value ->
+                    eventHandler.invoke(
+                        NetworkSettingsEvent.OnMaxRateChange(
+                            value
+                        )
+                    )
+                },
                 title = stringResource(R.string.title_max_download_rate),
                 label = stringResource(R.string.max_rate_label),
                 placeholder = stringResource(R.string.max_rate_placeholder),
@@ -100,7 +106,13 @@ fun NetworkSettings(
 
             InputSettingItem(
                 value = state.retries.toString(),
-                onValueChange = { value -> eventHandler.invoke(NetworkSettingsEvent.OnRetriesChange(value )) },
+                onValueChange = { value ->
+                    eventHandler.invoke(
+                        NetworkSettingsEvent.OnRetriesChange(
+                            value
+                        )
+                    )
+                },
                 title = stringResource(R.string.title_connection_retries),
                 // Descriptive message + Value
                 description = stringResource(
@@ -118,7 +130,13 @@ fun NetworkSettings(
 
             InputSettingItem(
                 value = state.fragmentRetries.toString(),
-                onValueChange = { value -> eventHandler.invoke(NetworkSettingsEvent.OnFragmentRetriesChange(value )) },
+                onValueChange = { value ->
+                    eventHandler.invoke(
+                        NetworkSettingsEvent.OnFragmentRetriesChange(
+                            value
+                        )
+                    )
+                },
                 title = stringResource(R.string.title_fragment_retries),
                 // Descriptive message + Value
                 description = stringResource(
@@ -141,7 +159,13 @@ fun NetworkSettings(
         ) {
             InputSettingItem(
                 value = state.concurrent.toString(),
-                onValueChange = { value -> eventHandler.invoke(NetworkSettingsEvent.OnConcurrentChange(value )) },
+                onValueChange = { value ->
+                    eventHandler.invoke(
+                        NetworkSettingsEvent.OnConcurrentChange(
+                            value
+                        )
+                    )
+                },
                 title = stringResource(R.string.title_concurrent_downloads),
                 // Descriptive message + Value
                 description = stringResource(
@@ -203,7 +227,13 @@ fun NetworkSettings(
             )
             InputSettingItem(
                 value = state.proxyUrl,
-                onValueChange = { value -> eventHandler.invoke(NetworkSettingsEvent.OnProxyUrlChange(value )) },
+                onValueChange = { value ->
+                    eventHandler.invoke(
+                        NetworkSettingsEvent.OnProxyUrlChange(
+                            value
+                        )
+                    )
+                },
                 title = stringResource(R.string.title_proxy_server_url),
                 // Descriptive message + Value
                 description = stringResource(
@@ -218,7 +248,13 @@ fun NetworkSettings(
 
             InputSettingItem(
                 value = state.cookies,
-                onValueChange = { value -> eventHandler.invoke(NetworkSettingsEvent.OnCookiesChange(value )) },
+                onValueChange = { value ->
+                    eventHandler.invoke(
+                        NetworkSettingsEvent.OnCookiesChange(
+                            value
+                        )
+                    )
+                },
                 title = stringResource(R.string.title_authentication_cookies),
                 // Descriptive message + Value
                 description = stringResource(
@@ -238,7 +274,13 @@ fun NetworkSettings(
         ) {
             InputSettingItem(
                 value = state.userAgent,
-                onValueChange = { value -> eventHandler.invoke(NetworkSettingsEvent.OnUserAgentChange(value )) },
+                onValueChange = { value ->
+                    eventHandler.invoke(
+                        NetworkSettingsEvent.OnUserAgentChange(
+                            value
+                        )
+                    )
+                },
                 title = stringResource(R.string.title_default_user_agent),
                 // Descriptive message + Value
                 description = stringResource(
@@ -253,7 +295,13 @@ fun NetworkSettings(
 
             InputSettingItem(
                 value = state.userAgentString,
-                onValueChange = { value -> eventHandler.invoke(NetworkSettingsEvent.OnUserAgentStringChange(value )) },
+                onValueChange = { value ->
+                    eventHandler.invoke(
+                        NetworkSettingsEvent.OnUserAgentStringChange(
+                            value
+                        )
+                    )
+                },
                 title = stringResource(R.string.title_custom_user_agent_string),
                 // Descriptive message + Value
                 description = stringResource(

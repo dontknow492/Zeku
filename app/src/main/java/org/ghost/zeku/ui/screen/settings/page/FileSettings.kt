@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.ghost.zeku.R
 import org.ghost.zeku.core.utils.FileTemplateUtils
+import org.ghost.zeku.ui.common.SettingScaffold
 import org.ghost.zeku.ui.component.GroupSettingItem
 import org.ghost.zeku.ui.component.InputSettingItem
 import org.ghost.zeku.ui.component.SettingItem
@@ -29,7 +30,6 @@ import org.ghost.zeku.ui.component.SwitchSettingItem
 import org.ghost.zeku.ui.screen.settings.FileSettingsState
 import org.ghost.zeku.ui.screen.settings.FilenameTemplateSuggestion
 import org.ghost.zeku.ui.screen.settings.Template
-import org.ghost.zeku.ui.common.SettingScaffold
 
 
 sealed interface FilesSettingsEvent {
@@ -60,7 +60,7 @@ fun FileSettings(
         modifier = modifier,
         title = stringResource(R.string.settings_files_title),
         onBackClick = onBackClick
-    ){
+    ) {
 
         SwitchSettingItem(
             title = stringResource(R.string.title_download_archive_files),
@@ -150,7 +150,13 @@ fun FileSettings(
                         )
                         FilenameTemplateSuggestion(
                             templates = state.audioTemplates,
-                            onTemplateClick = { template -> eventHandler(FilesSettingsEvent.OnAudioTemplateChange(template))}
+                            onTemplateClick = { template ->
+                                eventHandler(
+                                    FilesSettingsEvent.OnAudioTemplateChange(
+                                        template
+                                    )
+                                )
+                            }
                         )
                     }
                 }
@@ -183,7 +189,13 @@ fun FileSettings(
                         )
                         FilenameTemplateSuggestion(
                             templates = state.videoTemplates,
-                            onTemplateClick = { template -> eventHandler(FilesSettingsEvent.OnVideoTemplateChange(template)) }
+                            onTemplateClick = { template ->
+                                eventHandler(
+                                    FilesSettingsEvent.OnVideoTemplateChange(
+                                        template
+                                    )
+                                )
+                            }
                         )
                     }
                 }
@@ -206,6 +218,7 @@ fun FileSettings(
 
     }
 }
+
 @Composable
 private fun DirectorySettingItem(
     modifier: Modifier = Modifier,

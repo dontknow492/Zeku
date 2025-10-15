@@ -21,11 +21,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.ghost.zeku.R
 import org.ghost.zeku.core.enum.ThemeMode
+import org.ghost.zeku.ui.common.SettingScaffold
 import org.ghost.zeku.ui.component.SettingItem
 import org.ghost.zeku.ui.component.SwitchSettingItem
 import org.ghost.zeku.ui.component.ThemeItem
 import org.ghost.zeku.ui.screen.settings.AppearanceSettingsState
-import org.ghost.zeku.ui.common.SettingScaffold
 import org.ghost.zeku.ui.theme.AppTheme
 import org.ghost.zeku.ui.theme.ZekuTheme
 
@@ -50,7 +50,7 @@ fun AppearanceSettings(
         modifier = modifier,
         title = stringResource(R.string.settings_appearance_title),
         onBackClick = onBackClick
-    ){
+    ) {
         SingleChoiceSegmentedButtonRow(
             modifier = Modifier
                 .fillMaxWidth()
