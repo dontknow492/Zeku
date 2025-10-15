@@ -65,25 +65,29 @@
 
 
 <!--&lt;!&ndash;    Directory settings&ndash;&gt;-->
-        <string name="group_title_file_locations">File Locations</string>
-        <string name="group_title_filename_formatting">Filename &amp; Formatting</string>
+    <string name="group_title_file_locations">File Locations</string>
+    <string name="group_title_filename_formatting">Filename &amp; Formatting</string>
 
-        <string name="title_download_archive_files">Download Archive Files</string>
-        <string name="desc_download_archive_files">Automatically download files compressed in an archive format (e.g., .zip, .tar).</string>
+    <string name="title_download_archive_files">Download Archive Files</string>
+    <string name="desc_download_archive_files">Automatically download files compressed in an archive format (e.g., .zip, .tar).</string>
 
-        <string name="title_audio_save_location">Audio Save Location</string>
-        <string name="desc_audio_save_location">Save location: %s</string>
-        <string name="title_video_save_location">Video Save Location</string>
-        <string name="desc_video_save_location">Save location: %s</string>
-        <string name="title_command_script_location">Commands Save Location</string>
-        <string name="desc_command_script_location">Script path: %s</string>
+    <string name="title_audio_save_location">Audio Save Location</string>
+    <string name="desc_audio_save_location">Save location: %s</string>
+    <string name="title_video_save_location">Video Save Location</string>
+    <string name="desc_video_save_location">Save location: %s</string>
+    <string name="title_command_script_location">Commands Save Location</string>
+    <string name="desc_command_script_location">Script path: %s</string>
 
-        <string name="title_audio_filename_format">Audio Filename Format</string>
-        <string name="desc_audio_filename_format">Current template: %s</string>
-        <string name="title_video_filename_format">Video Filename Format</string>
-        <string name="desc_video_filename_format">Current template: %s</string>
-        <string name="title_limit_filename_characters">Limit Filename Characters</string>
-        <string name="desc_limit_filename_characters">Restrict filenames to use only basic ASCII characters (recommended for compatibility).</string>
+    <string name="title_audio_filename_format">Audio Filename Format</string>
+    <string name="desc_audio_filename_format">Current template: %s</string>
+    <string name="title_video_filename_format">Video Filename Format</string>
+    <string name="desc_video_filename_format">Current template: %s</string>
+    <string name="title_limit_filename_characters">Limit Filename Characters</string>
+    <string name="desc_limit_filename_characters">Restrict filenames to use only basic ASCII characters (recommended for compatibility).</string>
+
+    <string name="filename_template_placeholder">%(title)s.%(ext)s</string>
+    <string name="video_template_title">Video template</string>
+    <string name="audio_template_label">Audio template</string>
 
 
 <!--&lt;!&ndash;    General settings&ndash;&gt;-->
@@ -199,7 +203,34 @@
     <string name="desc_custom_user_agent_string_full">Manually set a custom User Agent string. Current string: [%s]</string>
 
 
-<!--&lt;!&ndash;    Post processing&ndash;&gt;-->
+    <string name="user_agent_label">User Agent</string>
+    <string name="user_agent_placeholder">e.g., Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3</string>
+
+    <string name="user_agent_string_label">Custom User Agent String</string>
+    <string name="user_agent_string_placeholder">e.g., Custom UA String</string>
+
+    <string name="proxy_url_label">Proxy Server URL</string>
+    <string name="proxy_url_placeholder">e.g., http://proxy.example.com:8080</string>
+
+    <string name="cookies_label">Authentication Cookies</string>
+    <string name="cookies_placeholder">e.g., key1=value1; key2=value2</string>
+
+    <string name="max_rate_label">Max Download Rate (KB/s)</string>
+    <string name="max_rate_placeholder">e.g., 1024</string>
+
+    <string name="connection_retries_label">Connection Retries</string>
+    <string name="connection_retries_placeholder">e.g., 3</string>
+
+    <string name="fragment_retries_label">Fragment Retries</string>
+    <string name="fragment_retries_placeholder">e.g., 5</string>
+
+    <string name="concurrent_label">Concurrent Connections</string>
+    <string name="concurrent_placeholder">e.g., 5</string>
+
+
+
+
+    <!--&lt;!&ndash;    Post processing&ndash;&gt;-->
     <string name="title_download_thumbnail_image">Download Thumbnail Image</string>
     <string name="desc_download_thumbnail_image">Download the video\'s thumbnail image along with the media file.</string>
 
@@ -218,7 +249,23 @@
     <string name="title_merge_multiple_audio_streams">Merge Multiple Audio Streams</string>
     <string name="desc_merge_multiple_audio_streams">Include all available audio streams when merging/converting the final file.</string>
 
+    <!--  Dialog-->
+    <string name="dismiss">Dismiss</string>
+    <string name="confirm">Confirm</string>
+    <string name="apply">Apply</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm_deletion">Confirm Deletion</string>
+    <string name="default_delete_message">Are you sure you want to delete this? This action cannot be undone.</string>
 
-<!--    Ui-->
+
+    <!-- Descriptions for PreventDuplicateDownload Enum -->
+    <string name="prevent_duplicate_none_desc">Does not check for duplicates. Downloads will always proceed.</string>
+    <string name="prevent_duplicate_url_desc">Prevents downloading if another file with the exact same URL already exists.</string>
+    <string name="prevent_duplicate_type_and_url_desc">Strictest check. Prevents downloading if a file of the same type (e.g., video) and URL exists.</string>
+    <string name="prevent_duplicate_configuration_desc">Prevents downloading if another file was downloaded with the exact same configuration.</string>
+
+
+    <!--    Ui-->
+
 
 </resources>
