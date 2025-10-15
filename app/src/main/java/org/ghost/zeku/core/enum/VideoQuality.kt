@@ -1,5 +1,7 @@
 package org.ghost.zeku.core.enum
 
+import androidx.annotation.StringRes
+
 /**
  * Represents the desired video quality (resolution) for a download.
  * @param uiName The user-friendly string to display in the UI.
@@ -7,10 +9,11 @@ package org.ghost.zeku.core.enum
  * This will typically be combined with an audio stream (e.g., "+bestaudio").
  */
 enum class VideoQuality(
-    val value: String,      // The stable ID for storage. THIS NEVER CHANGES.
-    val uiName: String,     // The display name for the UI. Can be changed freely.
-    val commandArg: String  // The argument for the downloader process.
-) {
+    override val value: String,      // The stable ID for storage. THIS NEVER CHANGES.
+    override val label: String,     // The display name for the UI. Can be changed freely.
+    val commandArg: String,  // The argument for the downloader process.
+    @param: StringRes override val descriptionResId: Int? = null,
+) : SettingEnum  {
     BEST("best", "Best quality", "bestvideo"),
     RESOLUTION_2160P("2160p", "2160p (4K)", "bestvideo[height<=2160]"),
     RESOLUTION_1440P("1440p", "1440p (2K)", "bestvideo[height<=1440]"),

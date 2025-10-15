@@ -1,13 +1,40 @@
 package org.ghost.zeku.core.enum
 
-enum class PreventDuplicateDownload(val value: Int, val description: String) {
-    NONE(0, "Disabled"),
-    URL(1, "Based on media url"),
-    TYPE_AND_URL(2, "Based on media type and url"),
-    CONFIGURATION(3, "Based on media download configuration");
+import androidx.annotation.StringRes
+import org.ghost.zeku.R
+
+enum class PreventDuplicateDownload(
+    override val value: String,      // The stable ID is now a readable string.
+    override val label: String,      // The UI-friendly label.
+    @param: StringRes override val descriptionResId: Int? // Now holds the R.string ID.
+) : SettingEnum {
+    NONE(
+        value = "none",
+        label = "None",
+        descriptionResId = R.string.prevent_duplicate_none_desc
+    ),
+    URL(
+        value = "url",
+        label = "Url",
+        descriptionResId = R.string.prevent_duplicate_url_desc
+    ),
+    TYPE_AND_URL(
+        value = "type_and_url",
+        label = "Type and Url",
+        descriptionResId = R.string.prevent_duplicate_type_and_url_desc
+    ),
+    CONFIGURATION(
+        value = "configuration",
+        label = "Configuration",
+        descriptionResId = R.string.prevent_duplicate_configuration_desc
+    );
 
     companion object {
-        fun fromValue(value: Int): PreventDuplicateDownload {
+        /**
+         * Safely finds an enum constant from a stored string value.
+         * Defaults to NONE if the value is null or not found.
+         */
+        fun fromValue(value: String?): PreventDuplicateDownload {
             return entries.firstOrNull { it.value == value } ?: NONE
         }
     }

@@ -1,5 +1,7 @@
 package org.ghost.zeku.core.enum
 
+import androidx.annotation.StringRes
+
 /**
  * Represents the desired final video container/encoding.
  * @param uiName The user-friendly string to display in the UI.
@@ -7,10 +9,11 @@ package org.ghost.zeku.core.enum
  * An empty string means no recoding is performed.
  */
 enum class VideoEncoding(
-    val value: String,      // The stable ID for storage. THIS NEVER CHANGES.
-    val uiName: String,     // The display name for the UI. Can be changed freely.
-    val commandArg: String  // The argument for the downloader process.
-) {
+    override val value: String,      // The stable ID for storage. THIS NEVER CHANGES.
+    override val label: String,     // The display name for the UI. Can be changed freely.
+    val commandArg: String,  // The argument for the downloader process.
+    @param: StringRes override val descriptionResId: Int? = null,
+) : SettingEnum {
     H264("h264", "H.264", "h264"),
     H265("h265", "H.265 (HEVC)", "h265"),
     VP9("vp9", "VP9", "vp9"),
@@ -26,7 +29,7 @@ enum class VideoEncoding(
          * Finds a VideoEncoding enum by its stable storage 'value'.
          */
         fun fromValue(value: String?): VideoEncoding {
-            return values().find { it.value == value } ?: DEFAULT
+            return entries.find { it.value == value } ?: DEFAULT
         }
     }
 }

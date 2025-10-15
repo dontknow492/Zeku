@@ -1,5 +1,7 @@
 package org.ghost.zeku.core.enum
 
+import androidx.annotation.StringRes
+
 /**
  * Represents the desired audio quality for a download.
  * @param uiName The user-friendly string to display in the UI (e.g., in a dropdown).
@@ -7,10 +9,11 @@ package org.ghost.zeku.core.enum
  * This is based on yt-dlp's format selection syntax.
  */
 enum class AudioQuality(
-    val value: String,      // The stable ID for storage. THIS NEVER CHANGES.
-    val uiName: String,     // The display name for the UI. Can be changed freely.
-    val commandArg: String  // The argument for the downloader process.
-) {
+    override val value: String,      // The stable ID for storage. THIS NEVER CHANGES.
+    override val label: String,     // The display name for the UI. Can be changed freely.
+    val commandArg: String,  // The argument for the downloader process.
+    @param: StringRes override val descriptionResId: Int? = null,
+) : SettingEnum  {
     HIGHEST("highest", "Best quality", "bestaudio"),
     BIT_320("320k", "320 kbps", "bestaudio[abr<=320]"),
     BIT_256("256k", "256 kbps", "bestaudio[abr<=256]"),

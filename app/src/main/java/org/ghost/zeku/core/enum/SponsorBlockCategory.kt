@@ -1,12 +1,18 @@
 package org.ghost.zeku.core.enum
 
+import androidx.annotation.StringRes
+
 /**
  * Represents the different categories of segments defined by SponsorBlock.
  *
  * @property value The string value used by the SponsorBlock API and yt-dlp.
  * @property displayName A user-friendly name for UI elements.
  */
-enum class SponsorBlockCategory(val value: String, val displayName: String) {
+enum class SponsorBlockCategory(
+    override val value: String,
+    override val label: String,
+    @param: StringRes override val descriptionResId: Int? = null,
+): SettingEnum{
     SPONSOR("sponsor", "Sponsor"),
     INTRO("intro", "Intro"),
     OUTRO("outro", "Outro"),
