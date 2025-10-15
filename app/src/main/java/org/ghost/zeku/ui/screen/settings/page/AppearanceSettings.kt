@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import org.ghost.zeku.R
 import org.ghost.zeku.core.enum.ThemeMode
 import org.ghost.zeku.ui.common.SettingScaffold
+import org.ghost.zeku.ui.component.InputSettingItem
 import org.ghost.zeku.ui.component.SettingItem
 import org.ghost.zeku.ui.component.SwitchSettingItem
 import org.ghost.zeku.ui.component.ThemeItem
@@ -106,11 +107,15 @@ fun AppearanceSettings(
             R.string.settings_appearance_high_contrast_value_format,
             contrastPercentage
         )
-        SettingItem(
+        InputSettingItem(
+            value = state.highContrast.toString(),
+            onValueChange = { value -> eventHandler(AppearanceSettingsEvent.OnHighContrastChange(value.toFloat())) },
             title = stringResource(R.string.settings_appearance_high_contrast_title),
             description = "${stringResource(R.string.settings_appearance_high_contrast_description)}\n$contrastValue",
             icon = ImageVector.vectorResource(R.drawable.rounded_contrast_24),
-            onClick = { /* TODO: Show contrast adjustment dialog/slider */ }
+            label = stringResource(R.string.contrast_label),
+            placeholder = stringResource(R.string.contrast_value_placeholder),
+            isError = !state.isValidHighContrast
         )
 
     }

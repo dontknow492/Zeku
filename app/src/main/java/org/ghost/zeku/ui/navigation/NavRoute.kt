@@ -3,7 +3,11 @@ package org.ghost.zeku.ui.navigation
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed interface NavRoute
+sealed interface NavRoute {
+
+    @Serializable
+    object Settings : NavRoute
+}
 
 
 @Serializable

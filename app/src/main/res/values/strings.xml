@@ -66,6 +66,9 @@
     <string name="settings_appearance_high_contrast_description">Increase text contrast for better readability.</string>
     <string name="settings_appearance_high_contrast_value_format">Current: [%1$d%%]</string>
 
+    <string name="contrast_label">Contrast</string>
+    <string name="contrast_value_placeholder">Contrast value (eg 0.0 - 1.0)</string>
+
 
 <!--&lt;!&ndash;    Directory settings&ndash;&gt;-->
     <string name="group_title_file_locations">File Locations</string>
@@ -120,6 +123,7 @@
     <string name="button_reset_all_settings">Reset All Settings</string>
 
 
+
 <!--&lt;!&ndash;    Media and format&ndash;&gt;-->
     <string name="group_title_audio_settings">Audio Settings</string>
 
@@ -159,6 +163,8 @@
 
     <string name="title_enable_av1_hardware_acceleration">Enable AV1 Hardware Acceleration</string>
     <string name="desc_enable_av1_hardware_acceleration">Use specialized hardware for faster AV1 video decoding/encoding (may improve performance).</string>
+
+
 
 <!--    Network-->
     <string name="title_force_ipv4_connection">Force IPv4 Connection</string>
