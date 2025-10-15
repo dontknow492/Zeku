@@ -138,6 +138,10 @@ data class FileSettingsState(
     val downloadArchive: Boolean,
     val restrictFilenames: Boolean,
 
+    val videoTemplates: List<Template> = emptyList(),
+    val audioTemplates: List<Template> = emptyList(),
+
+
     // validate state
     val isValidVideoDirectory: Boolean = true,
     val isValidAudioDirectory: Boolean = true,

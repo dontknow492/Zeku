@@ -46,6 +46,9 @@
     <string name="settings_advanced_template_id_title">Command Template</string>
     <string name="settings_advanced_template_id_description">Select a pre-configured command template.</string>
 
+    <string name="template_id">Template Id</string>
+    <string name="template_placeholder">eg. 1, 2, 3, etc</string>
+
 
 <!--&lt;!&ndash;    Appearance setting&ndash;&gt;-->
     <string name="settings_appearance_theme_subtitle">Theme</string>
@@ -88,6 +91,8 @@
     <string name="filename_template_placeholder">%(title)s.%(ext)s</string>
     <string name="video_template_title">Video template</string>
     <string name="audio_template_label">Audio template</string>
+
+    <string name="filename_template_hint">Filename template hints</string>
 
 
 <!--&lt;!&ndash;    General settings&ndash;&gt;-->
@@ -263,6 +268,85 @@
     <string name="prevent_duplicate_url_desc">Prevents downloading if another file with the exact same URL already exists.</string>
     <string name="prevent_duplicate_type_and_url_desc">Strictest check. Prevents downloading if a file of the same type (e.g., video) and URL exists.</string>
     <string name="prevent_duplicate_configuration_desc">Prevents downloading if another file was downloaded with the exact same configuration.</string>
+
+
+<!--    File Template-->
+    <!-- Core Identifiers -->
+    <string name="video_id">Video ID</string>
+    <string name="title">Title</string>
+    <string name="full_title">Full Title</string>
+    <string name="alternate_title">Alternate Title</string>
+    <string name="file_extension">File Extension</string>
+
+    <!-- Uploader & Channel -->
+    <string name="uploader_name">Uploader Name</string>
+    <string name="uploader_id">Uploader ID</string>
+    <string name="uploader_url">Uploader URL</string>
+    <string name="channel_name">Channel Name</string>
+    <string name="channel_id">Channel ID</string>
+    <string name="channel_url">Channel URL</string>
+
+    <!-- Date & Time -->
+    <string name="upload_date">Upload Date (YYYYMMDD)</string>
+    <string name="release_date">Release Date (YYYYMMDD)</string>
+    <string name="publication_timestamp">Publication Timestamp</string>
+    <string name="duration_seconds">Duration (Seconds)</string>
+    <string name="duration_hms">Duration (HH:MM:SS)</string>
+
+    <!-- Format & Quality -->
+    <string name="format_description">Format Description</string>
+    <string name="format_id">Format ID</string>
+    <string name="resolution_wh">Resolution (WxH)</string>
+    <string name="video_width">Video Width</string>
+    <string name="video_height">Video Height</string>
+    <string name="frames_per_second">Frames Per Second</string>
+    <string name="video_bitrate">Video Bitrate (Kbps)</string>
+    <string name="audio_bitrate">Audio Bitrate (Kbps)</string>
+    <string name="video_codec">Video Codec</string>
+    <string name="audio_codec">Audio Codec</string>
+
+    <!-- Playlist & Series -->
+    <string name="playlist_title">Playlist Title</string>
+    <string name="playlist_id">Playlist ID</string>
+    <string name="playlist_index">Playlist Index</string>
+    <string name="playlist_entry_count">Playlist Entry Count</string>
+    <string name="series_title">Series Title</string>
+    <string name="season_name">Season Name</string>
+    <string name="season_number">Season Number</string>
+    <string name="episode_title">Episode Title</string>
+    <string name="episode_number">Episode Number</string>
+
+    <!-- Music Metadata -->
+    <string name="artist">Artist</string>
+    <string name="album">Album</string>
+    <string name="album_artist">Album Artist</string>
+    <string name="track_title">Track Title</string>
+    <string name="track_number">Track Number</string>
+    <string name="disc_number">Disc Number</string>
+    <string name="release_year">Release Year</string>
+    <string name="genre">Genre</string>
+
+    <!-- Chapter Metadata -->
+    <string name="chapter_title">Chapter Title</string>
+    <string name="chapter_number">Chapter Number</string>
+
+    <!-- Engagement Metrics -->
+    <string name="view_count">View Count</string>
+    <string name="like_count">Like Count</string>
+    <string name="dislike_count">Dislike Count</string>
+    <string name="comment_count">Comment Count</string>
+
+    <!-- System & File -->
+    <string name="current_timestamp_epoch">Current Timestamp (Epoch)</string>
+    <string name="file_size_bytes">File Size (Bytes)</string>
+    <string name="approx_file_size_bytes">Approx. File Size (Bytes)</string>
+    <string name="original_filename">Original Filename</string>
+
+    <!-- Miscellaneous -->
+    <string name="webpage_url">Webpage URL</string>
+    <string name="video_description">Video Description</string>
+    <string name="age_limit">Age Limit</string>
+
 
 
     <!--    Ui-->

@@ -1,23 +1,16 @@
 package org.ghost.zeku.ui.screen.settings.page
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,16 +22,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import org.ghost.zeku.R
 import org.ghost.zeku.core.DownloadType
 import org.ghost.zeku.core.enum.PreventDuplicateDownload
-import org.ghost.zeku.core.utils.titlecase
 import org.ghost.zeku.ui.component.GroupSettingItem
 import org.ghost.zeku.ui.component.RadioSettingEnumItem
 import org.ghost.zeku.ui.component.SettingItem
-import org.ghost.zeku.ui.component.SettingTitle
 import org.ghost.zeku.ui.component.SwitchSettingItem
-import org.ghost.zeku.ui.component.dialog.RadioBoxDialog
-import org.ghost.zeku.ui.component.dialog.RadioItem
-import org.ghost.zeku.ui.screen.settings.BackButton
 import org.ghost.zeku.ui.screen.settings.GeneralSettingsState
+import org.ghost.zeku.ui.common.SettingScaffold
 import org.ghost.zeku.ui.theme.ZekuTheme
 import timber.log.Timber
 
@@ -69,117 +58,107 @@ fun GeneralSettings(
     onBackClick: () -> Unit,
 ) {
 
-    Scaffold(
+    SettingScaffold(
         modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = {},
-                navigationIcon = { BackButton(onBackClick = onBackClick) }
-            )
-        }
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(it)
-                .verticalScroll(rememberScrollState())
+        title = stringResource(R.string.settings_general_title),
+        onBackClick = onBackClick
+    ){
+        SwitchSettingItem(
+            title = stringResource(R.string.title_always_show_config),
+            description = stringResource(R.string.desc_always_show_config),
+            checked = state.configure,
+            icon = Icons.Filled.Edit,
+            onSelectionChange = { checked ->
+                eventHandler(GeneralSettingsEvent.UpdateConfigure(checked))
+            }
+        )
+
+        SwitchSettingItem(
+            title = stringResource(R.string.title_download_status_notifications),
+            description = stringResource(R.string.desc_download_status_notifications),
+            checked = state.notification,
+            icon = Icons.Filled.Notifications,
+            onSelectionChange = { checked ->
+                eventHandler(GeneralSettingsEvent.UpdateNotification(checked))
+            }
+        )
+
+        GroupSettingItem(
+            title = stringResource(R.string.group_title_download_management)
         ) {
-            SettingTitle(stringResource(R.string.settings_general_title))
-            SwitchSettingItem(
-                title = stringResource(R.string.title_always_show_config),
-                description = stringResource(R.string.desc_always_show_config),
-                checked = state.configure,
-                icon = Icons.Filled.Edit,
-                onSelectionChange = { checked ->
-                    eventHandler(GeneralSettingsEvent.UpdateConfigure(checked))
+            RadioSettingEnumItem(
+                selectedValue = state.preventDuplicateDownloads,
+                items = PreventDuplicateDownload.entries,
+                title = stringResource(R.string.title_prevent_duplicate_downloads),
+                description  = stringResource(state.preventDuplicateDownloads.descriptionResId ?: R.string.prevent_duplicate_none_desc),
+                icon = ImageVector.vectorResource(R.drawable.rounded_download_24),
+                onValueChange = { value ->
+                    eventHandler(GeneralSettingsEvent.UpdatePreventDuplicates(value))
                 }
             )
 
-            SwitchSettingItem(
-                title = stringResource(R.string.title_download_status_notifications),
-                description = stringResource(R.string.desc_download_status_notifications),
-                checked = state.notification,
-                icon = Icons.Filled.Notifications,
-                onSelectionChange = { checked ->
-                    eventHandler(GeneralSettingsEvent.UpdateNotification(checked))
-                }
+            SettingItem(
+                title = stringResource(R.string.title_preferred_content_type),
+                // Value-based description with dynamic content
+                description = stringResource(
+                    R.string.desc_preferred_content_type,
+                    state.preferredDownloadType.toString().uppercase()
+                ),
+                icon = ImageVector.vectorResource(R.drawable.baseline_perm_media_24),
+                onClick = {  }
             )
-
-            GroupSettingItem(
-                title = stringResource(R.string.group_title_download_management)
-            ) {
-                RadioSettingEnumItem(
-                    selectedValue = state.preventDuplicateDownloads,
-                    items = PreventDuplicateDownload.entries,
-                    title = stringResource(R.string.title_prevent_duplicate_downloads),
-                    description  = stringResource(state.preventDuplicateDownloads.descriptionResId ?: R.string.prevent_duplicate_none_desc),
-                    icon = ImageVector.vectorResource(R.drawable.rounded_download_24),
-                    onValueChange = { value ->
-                        eventHandler(GeneralSettingsEvent.UpdatePreventDuplicates(value))
-                    }
-                )
-
-                SettingItem(
-                    title = stringResource(R.string.title_preferred_content_type),
-                    // Value-based description with dynamic content
-                    description = stringResource(
-                        R.string.desc_preferred_content_type,
-                        state.preferredDownloadType.toString().uppercase()
-                    ),
-                    icon = ImageVector.vectorResource(R.drawable.baseline_perm_media_24),
-                    onClick = {  }
-                )
-            }
-
-            GroupSettingItem(
-                title = stringResource(R.string.group_title_privacy_security)
-            ) {
-                SwitchSettingItem(
-                    title = stringResource(R.string.title_private_mode),
-                    description = stringResource(R.string.desc_private_mode),
-                    checked = state.privateMode,
-                    icon = ImageVector.vectorResource(R.drawable.incognito),
-                    onSelectionChange = { checked ->
-                        eventHandler(GeneralSettingsEvent.UpdatePrivateMode(checked))
-                    }
-                )
-            }
-
-            GroupSettingItem(
-                title = stringResource(R.string.group_title_advanced)
-            ) {
-                SwitchSettingItem(
-                    title = stringResource(R.string.title_automatic_updates),
-                    description = stringResource(R.string.desc_automatic_updates),
-                    checked = state.autoUpdate,
-                    icon = ImageVector.vectorResource(R.drawable.rounded_update_24),
-                    onSelectionChange = { checked ->
-                        eventHandler(GeneralSettingsEvent.UpdateAutoUpdate(checked))
-                    }
-                )
-                SwitchSettingItem(
-                    title = stringResource(R.string.title_enable_debug_logging),
-                    description = stringResource(R.string.desc_enable_debug_logging),
-                    checked = state.debug,
-                    icon = ImageVector.vectorResource(R.drawable.round_bug_report_24),
-                    onSelectionChange = { checked ->
-                        eventHandler(GeneralSettingsEvent.UpdateDebug(checked))
-                    }
-                )
-            }
-            Button(
-                onClick = { eventHandler(GeneralSettingsEvent.ResetToDefaults) },
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                Text(
-                    text = stringResource(R.string.button_reset_all_settings),
-                    modifier = Modifier
-                )
-                Icon(
-                    painter = painterResource(R.drawable.rounded_reset_wrench_24),
-                    contentDescription = null
-                )
-            }
         }
+
+        GroupSettingItem(
+            title = stringResource(R.string.group_title_privacy_security)
+        ) {
+            SwitchSettingItem(
+                title = stringResource(R.string.title_private_mode),
+                description = stringResource(R.string.desc_private_mode),
+                checked = state.privateMode,
+                icon = ImageVector.vectorResource(R.drawable.incognito),
+                onSelectionChange = { checked ->
+                    eventHandler(GeneralSettingsEvent.UpdatePrivateMode(checked))
+                }
+            )
+        }
+
+        GroupSettingItem(
+            title = stringResource(R.string.group_title_advanced)
+        ) {
+            SwitchSettingItem(
+                title = stringResource(R.string.title_automatic_updates),
+                description = stringResource(R.string.desc_automatic_updates),
+                checked = state.autoUpdate,
+                icon = ImageVector.vectorResource(R.drawable.rounded_update_24),
+                onSelectionChange = { checked ->
+                    eventHandler(GeneralSettingsEvent.UpdateAutoUpdate(checked))
+                }
+            )
+            SwitchSettingItem(
+                title = stringResource(R.string.title_enable_debug_logging),
+                description = stringResource(R.string.desc_enable_debug_logging),
+                checked = state.debug,
+                icon = ImageVector.vectorResource(R.drawable.round_bug_report_24),
+                onSelectionChange = { checked ->
+                    eventHandler(GeneralSettingsEvent.UpdateDebug(checked))
+                }
+            )
+        }
+        Button(
+            onClick = { eventHandler(GeneralSettingsEvent.ResetToDefaults) },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text(
+                text = stringResource(R.string.button_reset_all_settings),
+                modifier = Modifier
+            )
+            Icon(
+                painter = painterResource(R.drawable.rounded_reset_wrench_24),
+                contentDescription = null
+            )
+        }
+
     }
 }
 
