@@ -120,7 +120,12 @@ data class GeneralSettingsState(
     val updateChannel: String,
     val privateMode: Boolean,
     val preventDuplicateDownloads: PreventDuplicateDownload,
-    val preferredDownloadType: DownloadType
+    val preferredDownloadType: DownloadType,
+
+    //validate state
+    val isValidUpdateChannel: Boolean = true,
+
+    val error: String? = null
 )
 
 data class FileSettingsState(
@@ -131,7 +136,17 @@ data class FileSettingsState(
     val filenameTemplateVideo: String,
     val filenameTemplateAudio: String,
     val downloadArchive: Boolean,
-    val restrictFilenames: Boolean
+    val restrictFilenames: Boolean,
+
+    // validate state
+    val isValidVideoDirectory: Boolean = true,
+    val isValidAudioDirectory: Boolean = true,
+    val isValidCommandDirectory: Boolean = true,
+    val isValidFilenameTemplateVideo: Boolean = true,
+    val isValidFilenameTemplateAudio: Boolean = true,
+
+    val error: String? = null
+
 )
 
 data class AppearanceSettingsState(
@@ -141,6 +156,12 @@ data class AppearanceSettingsState(
     val amoled: Boolean,
     val dynamicColor: Boolean,
     val highContrast: Float,
+
+    // validate state
+    val isValidAccentColor: Boolean = true,
+    val isValidHighContrast: Boolean = true,
+
+    val error: String? = null
 )
 
 data class MediaSettingsState(
@@ -158,7 +179,9 @@ data class MediaSettingsState(
     val audioConversionFormat: AudioFormat,
     val audioFormat: AudioFormat,
     val audioQuality: AudioQuality,
-    val useCustomAudioPreset: Boolean
+    val useCustomAudioPreset: Boolean,
+
+    val error: String? = null
 )
 
 data class SubtitleSettingsState(
@@ -168,7 +191,9 @@ data class SubtitleSettingsState(
     val subtitleLanguage: String,
     val autoSubtitle: Boolean,
     val convertSubtitle: String,
-    val autoTranslatedSubtitles: Boolean
+    val autoTranslatedSubtitles: Boolean,
+
+    val error: String? = null
 )
 
 data class NetworkSettingsState(
@@ -184,7 +209,19 @@ data class NetworkSettingsState(
     val maxRate: Int,
     val retries: Int,
     val fragmentRetries: Int,
-    val forceIpv4: Boolean
+    val forceIpv4: Boolean,
+
+    //validate state
+    val isValidConcurrent: Boolean = true,
+    val isValidMaxRate: Boolean = true,
+    val isValidRetries: Boolean = true,
+    val isValidFragmentRetries: Boolean = true,
+    val isValidProxyUrl: Boolean = true,
+    val isValidCookies: Boolean = true,
+    val isValidUserAgent: Boolean = true,
+    val isValidUserAgentString: Boolean = true,
+
+    val error: String? = null
 )
 
 data class PostProcessingSettingsState(
@@ -200,5 +237,10 @@ data class AdvancedSettingsState(
     val customCommand: String,
     val sponsorBlock: Boolean,
     val sponsorBlockCategories: Set<String>,
-    val templateId: Int
+    val templateId: Int,
+
+    // validate state
+    val isValidTemplateId: Boolean = true,
+
+    val error: String? = null
 )

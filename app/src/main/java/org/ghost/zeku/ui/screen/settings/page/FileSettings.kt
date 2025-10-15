@@ -1,8 +1,13 @@
 package org.ghost.zeku.ui.screen.settings.page
 
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -10,11 +15,14 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import org.ghost.zeku.R
 import org.ghost.zeku.ui.component.GroupSettingItem
+import org.ghost.zeku.ui.component.InputSettingItem
 import org.ghost.zeku.ui.component.SettingItem
 import org.ghost.zeku.ui.component.SettingTitle
 import org.ghost.zeku.ui.component.SwitchSettingItem
@@ -23,9 +31,9 @@ import org.ghost.zeku.ui.screen.settings.FileSettingsState
 
 
 sealed interface FilesSettingsEvent {
-    data class OnAudioDirectoryChange(val value: String) : FilesSettingsEvent
-    data class OnVideoDirectoryChange(val value: String) : FilesSettingsEvent
-    data class OnCommandDirectoryChange(val value: String) : FilesSettingsEvent
+    data class OnAudioDirectoryChange(val value: Uri?) : FilesSettingsEvent
+    data class OnVideoDirectoryChange(val value: Uri?) : FilesSettingsEvent
+    data class OnCommandDirectoryChange(val value: Uri?) : FilesSettingsEvent
     data class OnSubdirectoryPlaylistTitle(val value: Boolean) : FilesSettingsEvent
     data class OnVideoFilenameTemplateChange(val value: String) : FilesSettingsEvent
     data class OnAudioFilenameTemplateChange(val value: String) : FilesSettingsEvent
@@ -70,10 +78,11 @@ fun FileSettings(
                     )
                 },
             )
+
             GroupSettingItem(
                 title = stringResource(R.string.group_title_file_locations)
             ) {
-                SettingItem(
+                DirectorySettingItem(
                     title = stringResource(R.string.title_audio_save_location),
                     // Combines a static string with the dynamic path value
                     description = stringResource(
@@ -81,47 +90,76 @@ fun FileSettings(
                         state.audioDirectory
                     ),
                     icon = ImageVector.vectorResource(R.drawable.rounded_music_note_24),
-                    onClick = { /*TODO*/ }
+                    onDirectoryChange = { uri ->
+                        eventHandler(FilesSettingsEvent.OnAudioDirectoryChange(uri))
+                    }
                 )
-                SettingItem(
+                DirectorySettingItem(
                     title = stringResource(R.string.title_video_save_location),
                     description = stringResource(
                         R.string.desc_video_save_location,
                         state.videoDirectory
                     ),
                     icon = ImageVector.vectorResource(R.drawable.round_videocam_24),
-                    onClick = { /*Todo*/ }
+                    onDirectoryChange = { uri ->
+                        eventHandler(FilesSettingsEvent.OnVideoDirectoryChange(uri))
+                    }
                 )
-                SettingItem(
+                DirectorySettingItem(
                     title = stringResource(R.string.title_command_script_location),
                     description = stringResource(
                         R.string.desc_command_script_location,
                         state.commandDirectory
                     ),
                     icon = ImageVector.vectorResource(R.drawable.rounded_terminal_24),
-                    onClick = { /*Todo*/ }
+                    onDirectoryChange = { uri ->
+                        eventHandler(FilesSettingsEvent.OnCommandDirectoryChange(uri))
+                    }
+
                 )
             }
             GroupSettingItem(
                 title = stringResource(R.string.group_title_filename_formatting),
             ) {
-                SettingItem(
+                InputSettingItem(
+                    value = state.filenameTemplateAudio,
+                    onValueChange = { value ->
+                        eventHandler(
+                            FilesSettingsEvent.OnAudioFilenameTemplateChange(
+                                value
+                            )
+                        )
+                    },
                     title = stringResource(R.string.title_audio_filename_format),
                     description = stringResource(
                         R.string.desc_audio_filename_format,
                         state.filenameTemplateAudio
                     ),
+                    label = stringResource(R.string.audio_template_label),
+                    placeholder = stringResource(R.string.filename_template_placeholder),
                     icon = ImageVector.vectorResource(R.drawable.rounded_music_note_24),
-                    onClick = { /*Todo*/ }
+                    isError = !state.isValidFilenameTemplateAudio,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text
+                    )
                 )
-                SettingItem(
+                InputSettingItem(
+                    value = state.filenameTemplateVideo,
+                    onValueChange = { value ->
+                        eventHandler(FilesSettingsEvent.OnVideoFilenameTemplateChange(value))
+                    },
                     title = stringResource(R.string.title_video_filename_format),
                     description = stringResource(
                         R.string.desc_video_filename_format,
                         state.filenameTemplateVideo
                     ),
+                    label = stringResource(R.string.video_template_title),
+                    placeholder = stringResource(R.string.filename_template_placeholder),
                     icon = ImageVector.vectorResource(R.drawable.round_videocam_24),
-                    onClick = { /*Todo*/ }
+                    isError = !state.isValidFilenameTemplateVideo,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text
+                    )
                 )
 
                 SwitchSettingItem(
@@ -140,6 +178,52 @@ fun FileSettings(
             }
         }
     }
+}
+
+@Composable
+private fun DirectorySettingItem(
+    modifier: Modifier = Modifier,
+    title: String,
+    description: String,
+    icon: ImageVector?,
+    enabled: Boolean = true,
+    onDirectoryChange: (Uri?) -> Unit,
+) {
+    val context = LocalContext.current
+
+    // 1. The modern way to handle activity results in Compose.
+    //    We remember a launcher for the "Open Document Tree" contract.
+    val directoryPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree(),
+        onResult = { uri: Uri? ->
+            // 4. When the user picks a folder, the result (a Uri) comes back here.
+
+            // CRUCIAL: To maintain access to this folder across device reboots,
+            // you must take persistable URI permissions.
+            if (uri != null) {
+                val contentResolver = context.contentResolver
+                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                contentResolver.takePersistableUriPermission(uri, takeFlags)
+            }
+
+            // 5. We then pass the Uri up to the caller.
+            onDirectoryChange(uri)
+        }
+    )
+
+    // 2. We use your base SettingItem.
+    SettingItem(
+        modifier = modifier,
+        title = title,
+        description = description,
+        icon = icon,
+        enabled = enabled,
+        onClick = {
+            // 3. When the user clicks, we launch the system's folder picker.
+            directoryPickerLauncher.launch(null)
+        }
+    )
 }
 
 @Preview

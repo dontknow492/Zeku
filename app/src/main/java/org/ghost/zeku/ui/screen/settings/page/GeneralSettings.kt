@@ -14,6 +14,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -24,13 +29,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import org.ghost.zeku.R
 import org.ghost.zeku.core.DownloadType
 import org.ghost.zeku.core.enum.PreventDuplicateDownload
+import org.ghost.zeku.core.utils.titlecase
 import org.ghost.zeku.ui.component.GroupSettingItem
+import org.ghost.zeku.ui.component.RadioSettingEnumItem
 import org.ghost.zeku.ui.component.SettingItem
 import org.ghost.zeku.ui.component.SettingTitle
 import org.ghost.zeku.ui.component.SwitchSettingItem
+import org.ghost.zeku.ui.component.dialog.RadioBoxDialog
+import org.ghost.zeku.ui.component.dialog.RadioItem
 import org.ghost.zeku.ui.screen.settings.BackButton
 import org.ghost.zeku.ui.screen.settings.GeneralSettingsState
 import org.ghost.zeku.ui.theme.ZekuTheme
+import timber.log.Timber
 
 sealed interface GeneralSettingsEvent {
     // Event for a boolean switch changing
@@ -58,6 +68,7 @@ fun GeneralSettings(
     eventHandler: (GeneralSettingsEvent) -> Unit,
     onBackClick: () -> Unit,
 ) {
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -96,16 +107,17 @@ fun GeneralSettings(
             GroupSettingItem(
                 title = stringResource(R.string.group_title_download_management)
             ) {
-                SettingItem(
+                RadioSettingEnumItem(
+                    selectedValue = state.preventDuplicateDownloads,
+                    items = PreventDuplicateDownload.entries,
                     title = stringResource(R.string.title_prevent_duplicate_downloads),
-                    // Value-based description with dynamic content
-                    description = stringResource(
-                        R.string.desc_prevent_duplicate_downloads,
-                        state.preventDuplicateDownloads.description
-                    ),
+                    description  = stringResource(state.preventDuplicateDownloads.descriptionResId ?: R.string.prevent_duplicate_none_desc),
                     icon = ImageVector.vectorResource(R.drawable.rounded_download_24),
-                    onClick = { }
+                    onValueChange = { value ->
+                        eventHandler(GeneralSettingsEvent.UpdatePreventDuplicates(value))
+                    }
                 )
+
                 SettingItem(
                     title = stringResource(R.string.title_preferred_content_type),
                     // Value-based description with dynamic content
@@ -114,7 +126,7 @@ fun GeneralSettings(
                         state.preferredDownloadType.toString().uppercase()
                     ),
                     icon = ImageVector.vectorResource(R.drawable.baseline_perm_media_24),
-                    onClick = { }
+                    onClick = {  }
                 )
             }
 
@@ -174,9 +186,9 @@ fun GeneralSettings(
 @Preview
 @Composable
 private fun GeneralSettingsPreview() {
-    ZekuTheme {
-        GeneralSettings(
-            state = GeneralSettingsState(
+    var state  by remember {
+        mutableStateOf(
+            GeneralSettingsState(
                 configure = false,
                 debug = true,
                 welcomeDialog = true,
@@ -186,6 +198,45 @@ private fun GeneralSettingsPreview() {
                 privateMode = false,
                 preventDuplicateDownloads = PreventDuplicateDownload.TYPE_AND_URL,
                 preferredDownloadType = DownloadType.Video
-            ), eventHandler = {}, onBackClick = {})
+            )
+        )
+
+
+    }
+    ZekuTheme {
+        GeneralSettings(
+            state = state,
+            eventHandler = {event ->
+                Timber.d("event: $event")
+                when (event){
+                    is GeneralSettingsEvent.UpdateConfigure -> {
+                        state = state.copy(configure = event.isEnabled)
+                    }
+                    is GeneralSettingsEvent.UpdateDebug -> {
+                        state = state.copy(debug = event.isEnabled)
+                    }
+                    is GeneralSettingsEvent.UpdateNotification -> {
+                        state = state.copy(notification = event.isEnabled)
+                    }
+                    is GeneralSettingsEvent.UpdateAutoUpdate -> {
+                        state = state.copy(autoUpdate = event.isEnabled)
+                    }
+                    is GeneralSettingsEvent.UpdatePrivateMode -> {
+                        state = state.copy(privateMode = event.isEnabled)
+                    }
+                    is GeneralSettingsEvent.UpdatePreventDuplicates -> {
+                        state = state.copy(preventDuplicateDownloads = event.value)
+                    }
+                    is GeneralSettingsEvent.UpdateChannel -> {
+                        state = state.copy(updateChannel = event.channel)
+                    }
+                    is GeneralSettingsEvent.UpdatePreferredDownloadType -> {
+                        state = state.copy(preferredDownloadType = event.type)
+                        }
+                    is GeneralSettingsEvent.ResetToDefaults -> {}
+                }
+            },
+            onBackClick = {}
+        )
     }
 }

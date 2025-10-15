@@ -69,7 +69,7 @@ fun AdvanceSettings(
                 description = stringResource(R.string.settings_advanced_sponsor_block_description),
                 icon = ImageVector.vectorResource(R.drawable.rounded_tag_24),
                 checked = state.sponsorBlock,
-                onSelectionChange = { /* TODO: event(AdvancedSettingsEvent.SetSponsorBlock(it)) */ }
+                onSelectionChange = { skip -> event(AdvancedSettingsEvent.OnSponsorBlockChange(skip) ) }
             )
 
             // ### Skippable Categories ###

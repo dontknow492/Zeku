@@ -23,6 +23,7 @@ import org.ghost.zeku.core.enum.VideoEncoding
 import org.ghost.zeku.core.enum.VideoFormat
 import org.ghost.zeku.core.enum.VideoQuality
 import org.ghost.zeku.ui.component.GroupSettingItem
+import org.ghost.zeku.ui.component.RadioSettingEnumItem
 import org.ghost.zeku.ui.component.SettingItem
 import org.ghost.zeku.ui.component.SettingTitle
 import org.ghost.zeku.ui.component.SwitchSettingItem
@@ -75,32 +76,39 @@ fun MediaSettings(
             GroupSettingItem(
                 title = stringResource(R.string.group_title_audio_settings)
             ) {
-                SettingItem(
+                RadioSettingEnumItem(
+                    selectedValue = state.audioFormat,
+                    items = AudioFormat.entries,
                     title = stringResource(R.string.title_target_audio_format),
                     description = stringResource(
                         R.string.desc_target_audio_format,
-                        state.audioFormat.uiName
+                        state.audioFormat.label
                     ),
                     icon = ImageVector.vectorResource(R.drawable.rounded_music_note_24),
-                    onClick = {}
+                    onValueChange = { format -> eventHandler(MediaSettingsEvent.OnAudioFormatChange(format))}
                 )
-                SettingItem(
+
+                RadioSettingEnumItem(
+                    selectedValue = state.audioEncoding,
+                    items = AudioEncoding.entries,
                     title = stringResource(R.string.title_audio_codec),
                     description = stringResource(
                         R.string.desc_audio_codec,
-                        state.audioEncoding.uiName
+                        state.audioEncoding.label
                     ),
                     icon = ImageVector.vectorResource(R.drawable.rounded_music_history_24),
-                    onClick = {}
+                    onValueChange = { encoding -> eventHandler(MediaSettingsEvent.OnAudioEncodingChange(encoding))}
                 )
-                SettingItem(
+                RadioSettingEnumItem(
+                    selectedValue = state.audioQuality,
+                    items = AudioQuality.entries,
                     title = stringResource(R.string.title_audio_quality),
                     description = stringResource(
                         R.string.desc_audio_quality,
-                        state.audioQuality.uiName
+                        state.audioQuality.label
                     ),
                     icon = ImageVector.vectorResource(R.drawable.baseline_speaker_24),
-                    onClick = {}
+                    onValueChange = { quality -> eventHandler(MediaSettingsEvent.OnAudioQualityChange(quality))}
                 )
                 SwitchSettingItem(
                     title = stringResource(R.string.title_convert_audio_format),
@@ -115,47 +123,55 @@ fun MediaSettings(
                         )
                     }
                 )
-                SettingItem(
+                RadioSettingEnumItem(
+                    selectedValue = state.audioConversionFormat,
+                    items = AudioFormat.entries,
                     title = stringResource(R.string.title_conversion_target_format),
                     description = stringResource(
                         R.string.desc_conversion_target_format,
-                        state.audioConversionFormat.uiName
+                        state.audioConversionFormat.label
                     ),
                     icon = Icons.Filled.Settings,
                     enabled = state.audioConvert,
-                    onClick = {}
+                    onValueChange = { format -> eventHandler(MediaSettingsEvent.OnAudioConversionFormatChange(format))}
                 )
             }
 
             GroupSettingItem(
                 title = stringResource(R.string.group_title_video_settings)
             ) {
-                SettingItem(
+                RadioSettingEnumItem(
+                    selectedValue = state.videoFormat,
+                    items = VideoFormat.entries,
                     title = stringResource(R.string.title_target_video_format),
                     description = stringResource(
                         R.string.desc_target_video_format,
-                        state.videoFormat.uiName
+                        state.videoFormat.label
                     ),
                     icon = ImageVector.vectorResource(R.drawable.round_videocam_24),
-                    onClick = {}
+                    onValueChange = { format -> eventHandler(MediaSettingsEvent.OnVideoFormatChange(format))}
                 )
-                SettingItem(
+                RadioSettingEnumItem(
+                    selectedValue = state.videoQuality,
+                    items = VideoQuality.entries,
                     title = stringResource(R.string.title_video_resolution_quality),
                     description = stringResource(
                         R.string.desc_video_resolution_quality,
-                        state.videoQuality.uiName
+                        state.videoQuality.label
                     ),
                     icon = ImageVector.vectorResource(R.drawable.rounded_high_quality_24),
-                    onClick = {}
+                    onValueChange = { quality -> eventHandler(MediaSettingsEvent.OnVideoQualityChange(quality))}
                 )
-                SettingItem(
+                RadioSettingEnumItem(
+                    selectedValue = state.videoEncoding,
+                    items = VideoEncoding.entries,
                     title = stringResource(R.string.title_video_codec),
                     description = stringResource(
                         R.string.desc_video_codec,
-                        state.videoEncoding.uiName
+                        state.videoEncoding.label
                     ),
                     icon = ImageVector.vectorResource(R.drawable.round_video_settings_24),
-                    onClick = {}
+                    onValueChange = { encoding -> eventHandler(MediaSettingsEvent.OnVideoEncodingChange(encoding)) }
                 )
                 SwitchSettingItem(
                     title = stringResource(R.string.title_enable_video_clipping),

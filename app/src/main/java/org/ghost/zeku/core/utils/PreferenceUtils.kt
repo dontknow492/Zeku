@@ -20,7 +20,7 @@ object PreferenceKeys {
     val AUTO_UPDATE = booleanPreferencesKey("auto_update")
     val UPDATE_CHANNEL = stringPreferencesKey("update_channel")
     val PRIVATE_MODE = booleanPreferencesKey("private_mode")
-    val PREVENT_DUPLICATE_DOWNLOADS = intPreferencesKey("prevent_duplicate_downloads")
+    val PREVENT_DUPLICATE_DOWNLOADS = stringPreferencesKey("prevent_duplicate_downloads")
     val DOWNLOAD_TYPE_INITIALIZATION = booleanPreferencesKey("download_type_init")
     val PREFERRED_DOWNLOAD_TYPE = stringPreferencesKey("preferred_download_type")
 
@@ -112,7 +112,7 @@ object PreferenceKeyDefaults {
     const val AUTO_UPDATE = true
     const val UPDATE_CHANNEL = "stable"
     const val PRIVATE_MODE = false
-    const val PREVENT_DUPLICATE_DOWNLOADS = 0
+    const val PREVENT_DUPLICATE_DOWNLOADS = "none"
     const val DOWNLOAD_TYPE_INITIALIZATION = false
     const val PREFERRED_DOWNLOAD_TYPE = "video"
 

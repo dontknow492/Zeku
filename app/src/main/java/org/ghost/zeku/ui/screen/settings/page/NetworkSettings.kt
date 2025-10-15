@@ -3,6 +3,7 @@ package org.ghost.zeku.ui.screen.settings.page
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -14,9 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import org.ghost.zeku.R
 import org.ghost.zeku.ui.component.GroupSettingItem
+import org.ghost.zeku.ui.component.InputSettingItem
 import org.ghost.zeku.ui.component.SettingItem
 import org.ghost.zeku.ui.component.SettingTitle
 import org.ghost.zeku.ui.component.SwitchSettingItem
@@ -24,7 +27,7 @@ import org.ghost.zeku.ui.screen.settings.BackButton
 import org.ghost.zeku.ui.screen.settings.NetworkSettingsState
 
 sealed interface NetworkSettingsEvent {
-    data class OnConcurrentChange(val concurrent: Int) : NetworkSettingsEvent
+    data class OnConcurrentChange(val concurrent: String) : NetworkSettingsEvent
     data class OnCellularDownloadChange(val cellularDownload: Boolean) : NetworkSettingsEvent
     data class OnAria2cChange(val aria2c: Boolean) : NetworkSettingsEvent
     data class OnProxyChange(val proxy: Boolean) : NetworkSettingsEvent
@@ -33,9 +36,9 @@ sealed interface NetworkSettingsEvent {
     data class OnUserAgentChange(val userAgent: String) : NetworkSettingsEvent
     data class OnUserAgentStringChange(val userAgentString: String) : NetworkSettingsEvent
     data class OnRateLimitChange(val rateLimit: Boolean) : NetworkSettingsEvent
-    data class OnMaxRateChange(val maxRate: Int) : NetworkSettingsEvent
-    data class OnRetriesChange(val retries: Int) : NetworkSettingsEvent
-    data class OnFragmentRetriesChange(val fragmentRetries: Int) : NetworkSettingsEvent
+    data class OnMaxRateChange(val maxRate: String) : NetworkSettingsEvent
+    data class OnRetriesChange(val retries: String) : NetworkSettingsEvent
+    data class OnFragmentRetriesChange(val fragmentRetries: String) : NetworkSettingsEvent
     data class OnForceIpv4Change(val forceIpv4: Boolean) : NetworkSettingsEvent
 }
 
@@ -96,8 +99,12 @@ fun NetworkSettings(
                         )
                     }
                 )
-                SettingItem(
+                InputSettingItem(
+                    value = state.maxRate.toString(),
+                    onValueChange = { value -> eventHandler.invoke(NetworkSettingsEvent.OnMaxRateChange(value )) },
                     title = stringResource(R.string.title_max_download_rate),
+                    label = stringResource(R.string.max_rate_label),
+                    placeholder = stringResource(R.string.max_rate_placeholder),
                     // Descriptive message + Value
                     description = stringResource(
                         R.string.desc_max_download_rate_full,
@@ -105,27 +112,46 @@ fun NetworkSettings(
                     ),
                     icon = ImageVector.vectorResource(R.drawable.rounded_speed_24),
                     enabled = state.rateLimit,
-                    onClick = { /* TODO: Handle Max Rate change */ }
+                    isError = !state.isValidMaxRate,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    )
                 )
-                SettingItem(
+
+                InputSettingItem(
+                    value = state.retries.toString(),
+                    onValueChange = { value -> eventHandler.invoke(NetworkSettingsEvent.OnRetriesChange(value )) },
                     title = stringResource(R.string.title_connection_retries),
                     // Descriptive message + Value
                     description = stringResource(
                         R.string.desc_connection_retries_full,
                         state.retries.toString()
                     ),
+                    label = stringResource(R.string.connection_retries_label),
+                    placeholder = stringResource(R.string.connection_retries_placeholder),
                     icon = ImageVector.vectorResource(R.drawable.rounded_sync_24),
-                    onClick = { /* TODO: Handle Retries change */ }
+                    isError = !state.isValidRetries,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    )
                 )
-                SettingItem(
+
+                InputSettingItem(
+                    value = state.fragmentRetries.toString(),
+                    onValueChange = { value -> eventHandler.invoke(NetworkSettingsEvent.OnFragmentRetriesChange(value )) },
                     title = stringResource(R.string.title_fragment_retries),
                     // Descriptive message + Value
                     description = stringResource(
                         R.string.desc_fragment_retries_full,
                         state.fragmentRetries.toString()
                     ),
+                    label = stringResource(R.string.fragment_retries_label),
+                    placeholder = stringResource(R.string.fragment_retries_placeholder),
                     icon = Icons.Filled.Settings,
-                    onClick = { /* TODO: Handle Fragment Retries change */ }
+                    isError = !state.isValidFragmentRetries,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    )
                 )
             }
 
@@ -133,15 +159,22 @@ fun NetworkSettings(
             GroupSettingItem(
                 title = stringResource(R.string.group_title_download_configuration)
             ) {
-                SettingItem(
+                InputSettingItem(
+                    value = state.concurrent.toString(),
+                    onValueChange = { value -> eventHandler.invoke(NetworkSettingsEvent.OnConcurrentChange(value )) },
                     title = stringResource(R.string.title_concurrent_downloads),
                     // Descriptive message + Value
                     description = stringResource(
                         R.string.desc_concurrent_downloads_full,
                         state.concurrent.toString()
                     ),
+                    label = stringResource(R.string.concurrent_label),
+                    placeholder = stringResource(R.string.concurrent_placeholder),
                     icon = Icons.Filled.Settings,
-                    onClick = {}
+                    isError = !state.isValidConcurrent,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    )
                 )
                 SwitchSettingItem(
                     title = stringResource(R.string.title_allow_cellular_downloads),
@@ -188,25 +221,34 @@ fun NetworkSettings(
                         )
                     }
                 )
-                SettingItem(
+                InputSettingItem(
+                    value = state.proxyUrl,
+                    onValueChange = { value -> eventHandler.invoke(NetworkSettingsEvent.OnProxyUrlChange(value )) },
                     title = stringResource(R.string.title_proxy_server_url),
                     // Descriptive message + Value
                     description = stringResource(
                         R.string.desc_proxy_server_url_full,
                         state.proxyUrl
                     ),
+                    label = stringResource(R.string.proxy_url_label),
+                    placeholder = stringResource(R.string.proxy_url_placeholder),
                     icon = ImageVector.vectorResource(R.drawable.rounded_link_24),
-                    onClick = { /* TODO: Handle Proxy URL change */ }
+                    isError = !state.isValidProxyUrl
                 )
-                SettingItem(
+
+                InputSettingItem(
+                    value = state.cookies,
+                    onValueChange = { value -> eventHandler.invoke(NetworkSettingsEvent.OnCookiesChange(value )) },
                     title = stringResource(R.string.title_authentication_cookies),
                     // Descriptive message + Value
                     description = stringResource(
                         R.string.desc_authentication_cookies_full,
                         state.cookies
                     ),
+                    label = stringResource(R.string.cookies_label),
+                    placeholder = stringResource(R.string.cookies_placeholder),
                     icon = ImageVector.vectorResource(R.drawable.baseline_cookie_24),
-                    onClick = { /* TODO: Handle Cookies change */ }
+                    isError = !state.isValidCookies
                 )
             }
 
@@ -214,25 +256,34 @@ fun NetworkSettings(
             GroupSettingItem(
                 title = stringResource(R.string.group_title_client_identification)
             ) {
-                SettingItem(
+                InputSettingItem(
+                    value = state.userAgent,
+                    onValueChange = { value -> eventHandler.invoke(NetworkSettingsEvent.OnUserAgentChange(value )) },
                     title = stringResource(R.string.title_default_user_agent),
                     // Descriptive message + Value
                     description = stringResource(
                         R.string.desc_default_user_agent_full,
                         state.userAgent
                     ),
+                    label = stringResource(R.string.user_agent_label),
+                    placeholder = stringResource(R.string.user_agent_placeholder),
                     icon = ImageVector.vectorResource(R.drawable.rounded_support_agent_24),
-                    onClick = { /* TODO: Handle User Agent change */ }
+                    isError = !state.isValidUserAgent
                 )
-                SettingItem(
+
+                InputSettingItem(
+                    value = state.userAgentString,
+                    onValueChange = { value -> eventHandler.invoke(NetworkSettingsEvent.OnUserAgentStringChange(value )) },
                     title = stringResource(R.string.title_custom_user_agent_string),
                     // Descriptive message + Value
                     description = stringResource(
                         R.string.desc_custom_user_agent_string_full,
                         state.userAgentString
                     ),
+                    label = stringResource(R.string.user_agent_string_label),
+                    placeholder = stringResource(R.string.user_agent_string_placeholder),
                     icon = ImageVector.vectorResource(R.drawable.rounded_abc_24),
-                    onClick = { /* TODO: Handle User Agent String change */ }
+                    isError = !state.isValidUserAgentString
                 )
             }
 
