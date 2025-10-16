@@ -144,7 +144,6 @@ object FileTemplateUtils {
     }
 
 
-
     fun getAvailableTemplates(): Map<Int, String> {
         return allTemplatePlaceholders
     }

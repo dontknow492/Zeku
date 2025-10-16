@@ -10,6 +10,7 @@ import androidx.annotation.StringRes
 interface SettingEnum {
     val value: String // The stable ID for storage
     val label: String // The name for the UI
+
     @get: StringRes
     val descriptionResId: Int?
 }
