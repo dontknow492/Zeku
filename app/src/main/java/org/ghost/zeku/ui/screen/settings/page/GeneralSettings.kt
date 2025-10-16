@@ -38,7 +38,7 @@ sealed interface GeneralSettingsEvent {
     data class UpdateNotification(val isEnabled: Boolean) : GeneralSettingsEvent
     data class UpdateAutoUpdate(val isEnabled: Boolean) : GeneralSettingsEvent
     data class UpdatePrivateMode(val isEnabled: Boolean) : GeneralSettingsEvent
-    data class UpdatePreventDuplicates(val value: PreventDuplicateDownload) : GeneralSettingsEvent
+    data class UpdatePreventDuplicates(val type: PreventDuplicateDownload) : GeneralSettingsEvent
 
     // Event for a text or selection-based setting changing
     data class UpdateChannel(val channel: String) : GeneralSettingsEvent
@@ -61,6 +61,7 @@ fun GeneralSettings(
     SettingScaffold(
         modifier = modifier,
         title = stringResource(R.string.settings_general_title),
+        error = state.error,
         onBackClick = onBackClick
     ) {
         SwitchSettingItem(
@@ -212,7 +213,7 @@ private fun GeneralSettingsPreview() {
                     }
 
                     is GeneralSettingsEvent.UpdatePreventDuplicates -> {
-                        state = state.copy(preventDuplicateDownloads = event.value)
+                        state = state.copy(preventDuplicateDownloads = event.type)
                     }
 
                     is GeneralSettingsEvent.UpdateChannel -> {

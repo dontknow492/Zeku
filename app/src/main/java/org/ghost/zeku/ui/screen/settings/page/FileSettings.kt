@@ -41,10 +41,6 @@ sealed interface FilesSettingsEvent {
     data class OnAudioFilenameTemplateChange(val value: String) : FilesSettingsEvent
     data class OnDownloadArchive(val value: Boolean) : FilesSettingsEvent
     data class OnRestrictFilenames(val value: Boolean) : FilesSettingsEvent
-
-    data class OnAudioTemplateChange(val value: Template) : FilesSettingsEvent
-
-    data class OnVideoTemplateChange(val value: Template) : FilesSettingsEvent
 }
 
 
@@ -59,6 +55,7 @@ fun FileSettings(
     SettingScaffold(
         modifier = modifier,
         title = stringResource(R.string.settings_files_title),
+        error = state.error,
         onBackClick = onBackClick
     ) {
 
@@ -81,7 +78,7 @@ fun FileSettings(
         ) {
             DirectorySettingItem(
                 title = stringResource(R.string.title_audio_save_location),
-                // Combines a static string with the dynamic path value
+                // Combines a static string with the dynamic path type
                 description = stringResource(
                     R.string.desc_audio_save_location,
                     state.audioDirectory
@@ -150,13 +147,7 @@ fun FileSettings(
                         )
                         FilenameTemplateSuggestion(
                             templates = state.audioTemplates,
-                            onTemplateClick = { template ->
-                                eventHandler(
-                                    FilesSettingsEvent.OnAudioTemplateChange(
-                                        template
-                                    )
-                                )
-                            }
+                            onTemplateClick = { template -> }
                         )
                     }
                 }
@@ -189,13 +180,7 @@ fun FileSettings(
                         )
                         FilenameTemplateSuggestion(
                             templates = state.videoTemplates,
-                            onTemplateClick = { template ->
-                                eventHandler(
-                                    FilesSettingsEvent.OnVideoTemplateChange(
-                                        template
-                                    )
-                                )
-                            }
+                            onTemplateClick = { template -> }
                         )
                     }
                 }

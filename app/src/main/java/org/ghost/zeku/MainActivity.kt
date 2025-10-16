@@ -5,13 +5,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import org.ghost.zeku.core.enum.ThemeMode
 import org.ghost.zeku.ui.navigation.AppNavigationGraph
 import org.ghost.zeku.ui.navigation.NavRoute
 import org.ghost.zeku.ui.screen.settings.SettingsViewModel
@@ -26,8 +30,19 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val settingsState by settingsViewModel.settingsStateFlow.collectAsStateWithLifecycle()
             navHostController = rememberNavController()
-            ZekuTheme {
+            ZekuTheme(
+                appTheme = settingsState.appearance.theme,
+                darkTheme = when (settingsState.appearance.themeMode) {
+                    ThemeMode.LIGHT -> false
+                    ThemeMode.DARK -> true
+                    ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                },
+                isAmoled = settingsState.appearance.amoled,
+                contrastLevel = settingsState.appearance.highContrast.toDouble(),
+                dynamicColor = settingsState.appearance.dynamicColor,
+            ) {
                 val startDestination = NavRoute.Settings
                 AppNavigationGraph(
                     navHostController = navHostController,

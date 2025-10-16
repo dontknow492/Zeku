@@ -13,7 +13,7 @@ enum class AudioQuality(
     override val label: String,     // The display name for the UI. Can be changed freely.
     val commandArg: String,  // The argument for the downloader process.
     @param: StringRes override val descriptionResId: Int? = null,
-) : SettingEnum  {
+) : SettingEnum {
     HIGHEST("highest", "Best quality", "bestaudio"),
     BIT_320("320k", "320 kbps", "bestaudio[abr<=320]"),
     BIT_256("256k", "256 kbps", "bestaudio[abr<=256]"),
@@ -29,7 +29,7 @@ enum class AudioQuality(
 
     companion object {
         /**
-         * Finds an AudioQuality enum by its stable storage 'value'.
+         * Finds an AudioQuality enum by its stable storage 'type'.
          */
         fun fromValue(value: String?): AudioQuality {
             return values().find { it.value == value } ?: DEFAULT

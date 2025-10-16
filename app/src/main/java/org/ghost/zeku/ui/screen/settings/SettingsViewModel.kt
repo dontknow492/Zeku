@@ -1,16 +1,22 @@
 package org.ghost.zeku.ui.screen.settings
 
+import android.content.Context
+import android.net.Uri
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.ghost.zeku.core.DownloadType
+import org.ghost.zeku.core.enum.AudioEncoding
 import org.ghost.zeku.core.enum.AudioFormat
 import org.ghost.zeku.core.enum.AudioQuality
 import org.ghost.zeku.core.enum.PreventDuplicateDownload
@@ -19,16 +25,59 @@ import org.ghost.zeku.core.enum.ThemeMode
 import org.ghost.zeku.core.enum.VideoEncoding
 import org.ghost.zeku.core.enum.VideoFormat
 import org.ghost.zeku.core.enum.VideoQuality
+import org.ghost.zeku.core.utils.FileTemplateUtils
 import org.ghost.zeku.repository.PreferenceRepository
 import org.ghost.zeku.ui.theme.AppTheme
 import javax.inject.Inject
 
+
+private data class NetworkUiState(
+    val isValidConcurrent: Boolean = true,
+    val isValidMaxRate: Boolean = true,
+    val isValidRetries: Boolean = true,
+    val isValidFragmentRetries: Boolean = true,
+    val isValidProxyUrl: Boolean = true,
+    val isValidCookies: Boolean = true,
+    val isValidUserAgent: Boolean = true,
+    val isValidUserAgentString: Boolean = true,
+    val error: String? = null
+)
+
+private data class AdvancedSettingsUiState(
+    val isValidTemplateId: Boolean = true,
+    val error: String? = null
+)
+
+private data class GeneralSettingsUiState(
+    val isValidUpdateChannel: Boolean = true,
+    val error: String? = null
+)
+
+private data class FilesSettingsUiState(
+    // validate state
+    val isValidVideoDirectory: Boolean = true,
+    val isValidAudioDirectory: Boolean = true,
+    val isValidCommandDirectory: Boolean = true,
+    val isValidFilenameTemplateVideo: Boolean = true,
+    val isValidFilenameTemplateAudio: Boolean = true,
+
+    val error: String? = null
+)
+
+private data class AppearanceSettingsUiState(
+    val isValidAccentColor: Boolean = true,
+    val isValidHighContrast: Boolean = true,
+
+    val error: String? = null
+)
+
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val repository: PreferenceRepository
+    private val repository: PreferenceRepository,
+    @param: ApplicationContext private val context: Context
 ) : ViewModel() {
 
-
+    private val _generalUiState = MutableStateFlow(GeneralSettingsUiState())
     private val generalSettingsStateFlow: Flow<GeneralSettingsState> = combine(
         // Group 1 (5 flows)
         combine(
@@ -56,8 +105,9 @@ class SettingsViewModel @Inject constructor(
                 val preventDuplicates = preventDuplicates
                 val preferredType = preferredType
             }
-        }
-    ) { group1, group2 ->
+        },
+        _generalUiState
+    ) { group1, group2, uiState ->
         // Combine the results from both groups into the final state class
         GeneralSettingsState(
             configure = group1.configure,
@@ -68,10 +118,15 @@ class SettingsViewModel @Inject constructor(
             updateChannel = group2.updateChannel,
             privateMode = group2.privateMode,
             preventDuplicateDownloads = group2.preventDuplicates,
-            preferredDownloadType = group2.preferredType
+            preferredDownloadType = group2.preferredType,
+            //errors
+            isValidUpdateChannel = uiState.isValidUpdateChannel,
+            error = uiState.error
         )
     }
 
+
+    private val _fileUiState = MutableStateFlow(FilesSettingsUiState())
     private val fileSettingsStateFlow: Flow<FileSettingsState> = combine(
         // Group 1 (5 flows)
         combine(
@@ -100,8 +155,9 @@ class SettingsViewModel @Inject constructor(
                 val archive = archive
                 val restrict = restrict
             }
-        }
-    ) { group1, group2 ->
+        },
+        _fileUiState
+    ) { group1, group2, uiState ->
         FileSettingsState(
             videoDirectory = group1.videoDir,
             audioDirectory = group1.audioDir,
@@ -110,10 +166,23 @@ class SettingsViewModel @Inject constructor(
             filenameTemplateVideo = group1.videoTemplate,
             filenameTemplateAudio = group2.audioTemplate,
             downloadArchive = group2.archive,
-            restrictFilenames = group2.restrict
+            restrictFilenames = group2.restrict,
+
+            audioTemplates = FileTemplateUtils.getAvailableTemplates().map { Template(it.key) },
+            videoTemplates = FileTemplateUtils.getAvailableTemplates().map { Template(it.key) },
+
+            //errors
+            isValidVideoDirectory = uiState.isValidVideoDirectory,
+            isValidAudioDirectory = uiState.isValidAudioDirectory,
+            isValidCommandDirectory = uiState.isValidCommandDirectory,
+            isValidFilenameTemplateVideo = uiState.isValidFilenameTemplateVideo,
+            isValidFilenameTemplateAudio = uiState.isValidFilenameTemplateAudio,
+            error = uiState.error
+
         )
     }
 
+    private val _appearanceUiState = MutableStateFlow(AppearanceSettingsUiState())
     private val appearanceSettingsStateFlow: Flow<AppearanceSettingsState> = combine(
         combine(
             repository.themeModeFlow, repository.amoledFlow, repository.accentColorFlow,
@@ -127,17 +196,23 @@ class SettingsViewModel @Inject constructor(
                 val dynamicColor = dynamicColor
             }
         },
-        repository.highContrastFlow
-    ) { group1, highContrast ->
+        repository.highContrastFlow,
+        _appearanceUiState
+    ) { group1, highContrast, uiState ->
         AppearanceSettingsState(
             themeMode = group1.themeModel,
             amoled = group1.amoled,
             accentColor = group1.accentColor,
             theme = group1.themeColor,
             dynamicColor = group1.dynamicColor,
-            highContrast = highContrast
+            highContrast = highContrast,
+            //errors
+            isValidAccentColor = uiState.isValidAccentColor,
+            isValidHighContrast = uiState.isValidHighContrast,
+            error = uiState.error
         )
     }
+
 
     private val mediaSettingsStateFlow: Flow<MediaSettingsState> = combine(
         combine(
@@ -222,6 +297,8 @@ class SettingsViewModel @Inject constructor(
         )
     }
 
+
+    private val _networkUiState = MutableStateFlow(NetworkUiState())
     private val networkSettingsStateFlow: Flow<NetworkSettingsState> = combine(
         combine(
             repository.concurrentFlow, repository.cellularDownloadFlow, repository.aria2cFlow,
@@ -255,8 +332,9 @@ class SettingsViewModel @Inject constructor(
                 val fragRetries = v12
                 val ipv4 = v13
             }
-        }
-    ) { g1, g2, g3 ->
+        },
+        _networkUiState
+    ) { g1, g2, g3, uiState ->
         NetworkSettingsState(
             concurrent = g1.concurrent,
             cellularDownload = g1.cellular,
@@ -270,7 +348,19 @@ class SettingsViewModel @Inject constructor(
             maxRate = g2.maxRate,
             retries = g3.retries,
             fragmentRetries = g3.fragRetries,
-            forceIpv4 = g3.ipv4
+            forceIpv4 = g3.ipv4,
+
+            // ⭐ Validation and Error state from the ViewModel
+            isValidConcurrent = uiState.isValidConcurrent,
+            isValidMaxRate = uiState.isValidMaxRate,
+            isValidRetries = uiState.isValidRetries,
+            isValidFragmentRetries = uiState.isValidFragmentRetries,
+            isValidProxyUrl = uiState.isValidProxyUrl,
+            isValidCookies = uiState.isValidCookies,
+            isValidUserAgent = uiState.isValidUserAgent,
+            isValidUserAgentString = uiState.isValidUserAgentString,
+            error = uiState.error
+
         )
     }
 
@@ -337,11 +427,12 @@ class SettingsViewModel @Inject constructor(
             postProcessing = postProcessing,
             advanced = advanced
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = SettingsUiState()
-    )
+    }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = SettingsUiState()
+        )
 
 
     init {
@@ -358,9 +449,12 @@ class SettingsViewModel @Inject constructor(
 
     // --- General & Core Settings ---
     fun setConfigure(isEnabled: Boolean) =
-        viewModelScope.launch { repository.setConfigure(isEnabled) }
+        viewModelScope.launch {
+            repository.setConfigure(isEnabled)
+        }
 
     fun setDebug(isEnabled: Boolean) = viewModelScope.launch { repository.setDebug(isEnabled) }
+
     fun setWelcomeDialog(isEnabled: Boolean) =
         viewModelScope.launch { repository.setWelcomeDialog(isEnabled) }
 
@@ -386,23 +480,54 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { repository.setPreferredDownloadType(type) }
 
     // --- File & Directory Management ---
-    fun setVideoDirectory(path: String) =
+    fun setVideoDirectory(path: Uri?) =
         viewModelScope.launch { repository.setVideoDirectory(path) }
 
-    fun setAudioDirectory(path: String) =
+    fun setAudioDirectory(path: Uri?) =
         viewModelScope.launch { repository.setAudioDirectory(path) }
 
-    fun setCommandDirectory(path: String) =
+    fun setCommandDirectory(path: Uri?) =
         viewModelScope.launch { repository.setCommandDirectory(path) }
 
     fun setSubdirectoryPlaylistTitle(isEnabled: Boolean) =
         viewModelScope.launch { repository.setSubdirectoryPlaylistTitle(isEnabled) }
 
-    fun setFilenameTemplateVideo(template: String) =
-        viewModelScope.launch { repository.setFilenameTemplateVideo(template) }
 
-    fun setFilenameTemplateAudio(template: String) =
-        viewModelScope.launch { repository.setFilenameTemplateAudio(template) }
+    // Public function for Audio Template
+
+
+    fun setFilenameTemplateAudio(template: String) {
+        viewModelScope.launch {
+            if (FileTemplateUtils.isValidFileTemplate(template)) {
+                repository.setFilenameTemplateAudio(template)
+                _fileUiState.update { it.copy(isValidFilenameTemplateAudio = true, error = null) }
+            } else {
+                _fileUiState.update {
+                    it.copy(
+                        isValidFilenameTemplateAudio = false,
+                        error = context.getString(org.ghost.zeku.R.string.invalid_filename_template)
+                    )
+                }
+            }
+        }
+    }
+
+    fun setFilenameTemplateVideo(template: String) {
+        viewModelScope.launch {
+            if (FileTemplateUtils.isValidFileTemplate(template)) {
+                repository.setFilenameTemplateVideo(template)
+                _fileUiState.update { it.copy(isValidFilenameTemplateVideo = true, error = null) }
+            } else {
+                _fileUiState.update {
+                    it.copy(
+                        isValidFilenameTemplateVideo = false,
+                        error = context.getString(org.ghost.zeku.R.string.invalid_filename_template)
+                    )
+                }
+            }
+        }
+    }
+
 
     fun setDownloadArchive(isEnabled: Boolean) =
         viewModelScope.launch { repository.setDownloadArchive(isEnabled) }
@@ -448,6 +573,11 @@ class SettingsViewModel @Inject constructor(
     fun setAudioConvert(isEnabled: Boolean) =
         viewModelScope.launch { repository.setAudioConvert(isEnabled) }
 
+    fun setAudioEncoding(encoding: AudioEncoding) =
+        viewModelScope.launch {
+            repository.setAudioEncoding(encoding)
+        }
+
     fun setAudioConversionFormat(format: AudioFormat) =
         viewModelScope.launch { repository.setAudioConversionFormat(format) }
 
@@ -483,7 +613,23 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { repository.setAutoTranslatedSubtitles(isEnabled) }
 
     // --- Network & Performance ---
-    fun setConcurrent(count: Int) = viewModelScope.launch { repository.setConcurrent(count) }
+    fun setConcurrent(count: String) {
+        viewModelScope.launch {
+            try {
+                val countInt = count.toInt()
+                repository.setConcurrent(countInt)
+                _networkUiState.update { it.copy(isValidConcurrent = true, error = null) }
+            } catch (e: NumberFormatException) {
+                _networkUiState.update {
+                    it.copy(
+                        isValidConcurrent = false,
+                        error = "Invalid number format"
+                    )
+                }
+            }
+        }
+    }
+
     fun setCellularDownload(isEnabled: Boolean) =
         viewModelScope.launch { repository.setCellularDownload(isEnabled) }
 
@@ -498,10 +644,84 @@ class SettingsViewModel @Inject constructor(
     fun setRateLimit(isEnabled: Boolean) =
         viewModelScope.launch { repository.setRateLimit(isEnabled) }
 
-    fun setMaxRate(rate: Int) = viewModelScope.launch { repository.setMaxRate(rate) }
-    fun setRetries(count: Int) = viewModelScope.launch { repository.setRetries(count) }
-    fun setFragmentRetries(count: Int) =
-        viewModelScope.launch { repository.setFragmentRetries(count) }
+    fun setMaxRate(rate: String) {
+        viewModelScope.launch {
+            try {
+                val countInt = rate.toInt()
+                if (countInt <= 0) {
+                    _networkUiState.update {
+                        it.copy(
+                            isValidMaxRate = false,
+                            error = context.getString(org.ghost.zeku.R.string.max_rate_range_exception)
+                        )
+                    }
+                } else {
+                    repository.setMaxRate(countInt)
+                    _networkUiState.update { it.copy(isValidMaxRate = true, error = null) }
+                }
+            } catch (e: NumberFormatException) {
+                _networkUiState.update {
+                    it.copy(
+                        isValidMaxRate = false,
+                        error = context.getString(org.ghost.zeku.R.string.invalid_rate_exception_message)
+                    )
+                }
+            }
+        }
+    }
+
+    fun setRetries(count: String) {
+        viewModelScope.launch {
+            try {
+                val countInt = count.toInt()
+                if (countInt < 0) {
+                    _networkUiState.update {
+                        it.copy(
+                            isValidRetries = false,
+                            error = context.getString(org.ghost.zeku.R.string.retries_range_exception)
+                        )
+                    }
+                } else {
+                    repository.setRetries(countInt)
+                    _networkUiState.update { it.copy(isValidRetries = true, error = null) }
+                }
+            } catch (e: NumberFormatException) {
+                _networkUiState.update {
+                    it.copy(
+                        isValidRetries = false,
+                        error = context.getString(org.ghost.zeku.R.string.retries_invalid_message)
+                    )
+                }
+            }
+        }
+    }
+
+    fun setFragmentRetries(count: String) {
+        viewModelScope.launch {
+            try {
+                val countInt = count.toInt()
+                if (countInt < 0) {
+                    _networkUiState.update {
+                        it.copy(
+                            isValidFragmentRetries = false,
+                            error = context.getString(org.ghost.zeku.R.string.fragment_retries_range_exception)
+                        )
+                    }
+                } else {
+                    repository.setFragmentRetries(countInt)
+                    _networkUiState.update { it.copy(isValidFragmentRetries = true, error = null) }
+                }
+            } catch (e: NumberFormatException) {
+                _networkUiState.update {
+                    it.copy(
+                        isValidFragmentRetries = false,
+                        error = context.getString(org.ghost.zeku.R.string.invalid_fragment_retries_exception_message)
+                    )
+                }
+            }
+        }
+    }
+
 
     fun setForceIpv4(isEnabled: Boolean) =
         viewModelScope.launch { repository.setForceIpv4(isEnabled) }
@@ -536,5 +756,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { repository.setSponsorBlockCategories(categories) }
 
     fun setTemplateId(id: Int) = viewModelScope.launch { repository.setTemplateId(id) }
+
+
+    fun resetSettingsToDefault() {
+        // TODO: reset setting to default 
+    }
 
 }

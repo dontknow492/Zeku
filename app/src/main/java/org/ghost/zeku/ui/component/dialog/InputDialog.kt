@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
  * A reusable, stateless dialog for capturing a single text input from the user.
  *
  * This dialog follows Compose best practices by hoisting its state. The caller is responsible
- * for providing the `value` and handling the `onValueChange` callback.
+ * for providing the `type` and handling the `onValueChange` callback.
  *
  * @param value The current text to display in the text field.
  * @param onValueChange The callback that is triggered when the user enters text.
@@ -77,7 +77,6 @@ fun InputDialog(
         onConfirmation = onConfirmation, // The caller now decides what to do on confirm
         title = title,
         content = {
-
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {

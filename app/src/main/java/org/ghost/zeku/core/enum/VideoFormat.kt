@@ -5,7 +5,7 @@ import androidx.annotation.StringRes
 /**
  * Represents the desired final video format.
  * @param uiName The user-friendly string to display in the UI.
- * @param commandArg The value for the downloader's `--recode-video` argument.
+ * @param commandArg The type for the downloader's `--recode-video` argument.
  * An empty string means no recoding is performed.
  */
 enum class VideoFormat(
@@ -22,14 +22,14 @@ enum class VideoFormat(
     AVI("avi", "AVI", "avi"),
     GIF("gif", "GIF", "gif"),
 
-    // The default value should also have a stable identifier.
+    // The default type should also have a stable identifier.
     DEFAULT("default", "Default", "mkv");
 
     companion object {
         /**
-         * Finds a VideoFormat enum by its stable storage 'value'.
+         * Finds a VideoFormat enum by its stable storage 'type'.
          * This is the correct and safe way to deserialize the stored preference.
-         * It gracefully falls back to DEFAULT if the stored value is somehow invalid or not found.
+         * It gracefully falls back to DEFAULT if the stored type is somehow invalid or not found.
          */
         fun fromValue(value: String?): VideoFormat {
             return values().find { it.value == value } ?: DEFAULT

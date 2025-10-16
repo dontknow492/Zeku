@@ -5,7 +5,7 @@ import androidx.annotation.StringRes
 /**
  * Represents the desired final video container/encoding.
  * @param uiName The user-friendly string to display in the UI.
- * @param commandArg The value for the downloader's `--recode-video` argument.
+ * @param commandArg The type for the downloader's `--recode-video` argument.
  * An empty string means no recoding is performed.
  */
 enum class VideoEncoding(
@@ -26,7 +26,7 @@ enum class VideoEncoding(
 
     companion object {
         /**
-         * Finds a VideoEncoding enum by its stable storage 'value'.
+         * Finds a VideoEncoding enum by its stable storage 'type'.
          */
         fun fromValue(value: String?): VideoEncoding {
             return entries.find { it.value == value } ?: DEFAULT

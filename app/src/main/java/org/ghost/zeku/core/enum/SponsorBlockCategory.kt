@@ -5,14 +5,14 @@ import androidx.annotation.StringRes
 /**
  * Represents the different categories of segments defined by SponsorBlock.
  *
- * @property value The string value used by the SponsorBlock API and yt-dlp.
+ * @property value The string type used by the SponsorBlock API and yt-dlp.
  * @property displayName A user-friendly name for UI elements.
  */
 enum class SponsorBlockCategory(
     override val value: String,
     override val label: String,
     @param: StringRes override val descriptionResId: Int? = null,
-): SettingEnum{
+) : SettingEnum {
     SPONSOR("sponsor", "Sponsor"),
     INTRO("intro", "Intro"),
     OUTRO("outro", "Outro"),
@@ -29,7 +29,7 @@ enum class SponsorBlockCategory(
         val ALL_VALUES: Set<String> = values().mapTo(HashSet()) { it.value }
 
         /**
-         * Finds a SponsorBlockCategory by its string value, returning null if not found.
+         * Finds a SponsorBlockCategory by its string type, returning null if not found.
          * This is safer than `valueOf()` which throws an exception.
          */
         fun fromValue(value: String?): SponsorBlockCategory? {

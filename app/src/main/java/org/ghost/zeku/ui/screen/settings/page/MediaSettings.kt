@@ -53,6 +53,7 @@ fun MediaSettings(
     SettingScaffold(
         modifier = modifier,
         title = stringResource(R.string.settings_media_title),
+        error = state.error,
         onBackClick = onBackClick
     ) {
         GroupSettingItem(
@@ -232,7 +233,7 @@ fun MediaSettings(
                 title = stringResource(R.string.title_enable_av1_hardware_acceleration),
                 description = stringResource(R.string.desc_enable_av1_hardware_acceleration),
                 icon = ImageVector.vectorResource(R.drawable.rounded_speed_24),
-                checked = state.extractAudio, // Assuming this should be a different state value related to AV1
+                checked = state.extractAudio, // Assuming this should be a different state type related to AV1
                 onSelectionChange = { convert ->
                     eventHandler(
                         MediaSettingsEvent.OnAv1HardwareAcceleratedChange(

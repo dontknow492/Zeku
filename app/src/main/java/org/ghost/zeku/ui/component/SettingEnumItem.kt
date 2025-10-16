@@ -136,7 +136,10 @@ fun InputSettingItem(
             value = tempValue,
             onValueChange = { tempValue = it },
             onDismissRequest = { isDialogVisible = false },
-            onConfirmation = { onValueChange(tempValue) },
+            onConfirmation = {
+                onValueChange(tempValue)
+                isDialogVisible = false
+            },
             title = title,
             label = label,
             isError = isError,
@@ -162,7 +165,7 @@ fun InputSettingItemPreview() {
                 title = "Input Setting Title",
                 label = "Input Label",
                 placeholder = "Enter text here...",
-                description = "This is the current value: $value",
+                description = "This is the current type: $value",
                 isError = false,
                 icon = Icons.Default.Settings,
                 enabled = true
@@ -186,7 +189,7 @@ fun RadioSettingEnumItemPreview() {
                 selectedValue = currentSelection,
                 items = VideoEncoding.entries,
                 title = "Video Encoding",
-                // The description shows the currently selected value's label.
+                // The description shows the currently selected type's label.
                 description = currentSelection.label,
                 icon = Icons.Default.Settings,
                 onValueChange = { newSelection ->

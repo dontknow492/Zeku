@@ -31,8 +31,8 @@ enum class PreventDuplicateDownload(
 
     companion object {
         /**
-         * Safely finds an enum constant from a stored string value.
-         * Defaults to NONE if the value is null or not found.
+         * Safely finds an enum constant from a stored string type.
+         * Defaults to NONE if the type is null or not found.
          */
         fun fromValue(value: String?): PreventDuplicateDownload {
             return entries.firstOrNull { it.value == value } ?: NONE

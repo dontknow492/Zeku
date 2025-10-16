@@ -1,5 +1,6 @@
 package org.ghost.zeku.repository
 
+import android.net.Uri
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.toColorInt
@@ -19,6 +20,7 @@ import org.ghost.zeku.core.enum.VideoEncoding
 import org.ghost.zeku.core.enum.VideoFormat
 import org.ghost.zeku.core.enum.VideoQuality
 import org.ghost.zeku.ui.theme.AppTheme
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 import org.ghost.zeku.core.utils.PreferenceKeyDefaults as Defaults
@@ -54,8 +56,10 @@ class PreferenceRepository @Inject constructor(
      * default values from the [PreferenceKeyDefaults] object in a single transaction.
      */
     suspend fun populateDefaultsIfFirstRun() {
+        Timber.d("Populate Defaults Settings Request")
         dataStore.edit { prefs ->
             if (prefs[Keys.IS_INITIALIZED] != true) {
+                Timber.d("Populating Settings")
                 // System
                 prefs[Keys.SETTINGS_VERSION] = Defaults.SETTINGS_VERSION
                 // General
@@ -137,8 +141,11 @@ class PreferenceRepository @Inject constructor(
 
                 // Set the initialization flag to true so this doesn't run again
                 prefs[Keys.IS_INITIALIZED] = true
+            } else {
+                Timber.d("Settings already populated")
             }
         }
+
     }
 
     //region --- Flows for Reading Preferences ---
@@ -177,11 +184,32 @@ class PreferenceRepository @Inject constructor(
 
     // --- File & Directory Management ---
     val videoDirectoryFlow: Flow<String> =
-        dataStore.data.map { it[Keys.VIDEO_DIRECTORY] ?: Defaults.VIDEO_DIRECTORY }
+        // dataStore: DataStore<Preferences> (assumed to be available)
+        dataStore.data.map { preferences ->
+            preferences[Keys.VIDEO_DIRECTORY]
+            // Use stored value, OR compute default path
+                ?: (Defaults.DOWNLOADS_COLLECTION_URI.path + "/" + Defaults.VIDEO_DIRECTORY)
+                // Use a default relative directory name if the path is null (e.g., on content:// URIs)
+                ?: Defaults.VIDEO_DIRECTORY
+        }
     val audioDirectoryFlow: Flow<String> =
-        dataStore.data.map { it[Keys.AUDIO_DIRECTORY] ?: Defaults.AUDIO_DIRECTORY }
+        dataStore.data.map { preferences ->
+            preferences[Keys.AUDIO_DIRECTORY]
+            // Use stored value, OR compute default path
+                ?: (Defaults.DOWNLOADS_COLLECTION_URI.path + "/" + Defaults.AUDIO_DIRECTORY)
+                // Use a default relative directory name if the path is null
+                ?: Defaults.AUDIO_DIRECTORY
+        }
+
     val commandDirectoryFlow: Flow<String> =
-        dataStore.data.map { it[Keys.COMMAND_DIRECTORY] ?: Defaults.COMMAND_DIRECTORY }
+        dataStore.data.map { preferences ->
+            preferences[Keys.COMMAND_DIRECTORY]
+            // Use stored value, OR compute default path
+                ?: (Defaults.DOWNLOADS_COLLECTION_URI.path + "/" + Defaults.COMMAND_DIRECTORY)
+                // Use a default relative directory name if the path is null
+                ?: Defaults.COMMAND_DIRECTORY
+        }
+
     val subdirectoryPlaylistTitleFlow: Flow<Boolean> = dataStore.data.map {
         it[Keys.SUBDIRECTORY_PLAYLIST_TITLE] ?: Defaults.SUBDIRECTORY_PLAYLIST_TITLE
     }
@@ -286,8 +314,10 @@ class PreferenceRepository @Inject constructor(
         dataStore.data.map { it[Keys.SUBTITLE_LANGUAGE] ?: Defaults.SUBTITLE_LANGUAGE }
     val autoSubtitleFlow: Flow<Boolean> =
         dataStore.data.map { it[Keys.AUTO_SUBTITLE] ?: Defaults.AUTO_SUBTITLE }
-    val convertSubtitleFlow: Flow<String> =
-        dataStore.data.map { it[Keys.CONVERT_SUBTITLE] ?: Defaults.CONVERT_SUBTITLE }
+    val convertSubtitleFlow: Flow<SubtitlesFormat> =
+        dataStore.data.map {
+            SubtitlesFormat.fromValue(it[Keys.CONVERT_SUBTITLE] ?: Defaults.CONVERT_SUBTITLE)
+        }
     val autoTranslatedSubtitlesFlow: Flow<Boolean> = dataStore.data.map {
         it[Keys.AUTO_TRANSLATED_SUBTITLES] ?: Defaults.AUTO_TRANSLATED_SUBTITLES
     }
@@ -345,7 +375,10 @@ class PreferenceRepository @Inject constructor(
     //region --- Suspend Functions for Writing Preferences ---
 
     // --- General & Core Settings ---
-    suspend fun setConfigure(isEnabled: Boolean) = dataStore.edit { it[Keys.CONFIGURE] = isEnabled }
+    suspend fun setConfigure(isEnabled: Boolean) {
+        dataStore.edit { it[Keys.CONFIGURE] = isEnabled }
+    }
+
     suspend fun setDebug(isEnabled: Boolean) = dataStore.edit { it[Keys.DEBUG] = isEnabled }
     suspend fun setWelcomeDialog(isEnabled: Boolean) =
         dataStore.edit { it[Keys.WELCOME_DIALOG] = isEnabled }
@@ -372,10 +405,44 @@ class PreferenceRepository @Inject constructor(
         dataStore.edit { it[Keys.PREFERRED_DOWNLOAD_TYPE] = type.toString().lowercase() }
 
     // --- File & Directory Management ---
-    suspend fun setVideoDirectory(path: String) = dataStore.edit { it[Keys.VIDEO_DIRECTORY] = path }
-    suspend fun setAudioDirectory(path: String) = dataStore.edit { it[Keys.AUDIO_DIRECTORY] = path }
-    suspend fun setCommandDirectory(path: String) =
-        dataStore.edit { it[Keys.COMMAND_DIRECTORY] = path }
+    /**
+     * Saves or clears the video directory Uri.
+     * @param uri The Uri to save. Pass null to clear the setting.
+     */
+    suspend fun setVideoDirectory(uri: Uri?) {
+        dataStore.edit { preferences ->
+            if (uri != null) {
+                preferences[Keys.VIDEO_DIRECTORY] = uri.path
+                    ?: (Defaults.DOWNLOADS_COLLECTION_URI.path + "/" + Defaults.VIDEO_DIRECTORY)
+            }
+        }
+    }
+
+    /**
+     * Saves or clears the audio directory Uri.
+     * @param uri The Uri to save. Pass null to clear the setting.
+     */
+    suspend fun setAudioDirectory(uri: Uri?) {
+        dataStore.edit { preferences ->
+            if (uri != null) {
+                preferences[Keys.AUDIO_DIRECTORY] = uri.path
+                    ?: (Defaults.DOWNLOADS_COLLECTION_URI.path + "/" + Defaults.AUDIO_DIRECTORY)
+            }
+        }
+    }
+
+    /**
+     * Saves or clears the command directory Uri.
+     * @param uri The Uri to save. Pass null to clear the setting.
+     */
+    suspend fun setCommandDirectory(uri: Uri?) {
+        dataStore.edit { preferences ->
+            if (uri != null) {
+                preferences[Keys.COMMAND_DIRECTORY] = uri.path
+                    ?: (Defaults.DOWNLOADS_COLLECTION_URI.path + "/" + Defaults.COMMAND_DIRECTORY)
+            }
+        }
+    }
 
     suspend fun setSubdirectoryPlaylistTitle(isEnabled: Boolean) =
         dataStore.edit { it[Keys.SUBDIRECTORY_PLAYLIST_TITLE] = isEnabled }
@@ -406,7 +473,7 @@ class PreferenceRepository @Inject constructor(
                 setAccentColor(appTheme.seedColor)
 
             else -> {
-                dataStore.edit { it[Keys.THEME_COLOR] = appTheme.seedColor.toHexCode() }
+                dataStore.edit { it[Keys.THEME_COLOR] = appTheme.name }
             }
         }
     }
@@ -440,6 +507,9 @@ class PreferenceRepository @Inject constructor(
 
     suspend fun setAudioConvert(isEnabled: Boolean) =
         dataStore.edit { it[Keys.AUDIO_CONVERT] = isEnabled }
+
+    suspend fun setAudioEncoding(encoding: AudioEncoding) =
+        dataStore.edit { it[Keys.AUDIO_ENCODING] = encoding.value }
 
     suspend fun setAudioConversionFormat(format: AudioFormat) =
         dataStore.edit { it[Keys.AUDIO_CONVERSION_FORMAT] = format.value }

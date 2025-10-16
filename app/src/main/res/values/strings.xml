@@ -3,6 +3,17 @@
     <string name="settings">Settings</string>
     <string name="back">Back\n</string>
 
+<!--    About us-->
+    <string name="what_we_do">We empower you to save and control your online media. Our app is the
+        key to building your personal,offline library from countless sources, giving you the
+        freedom to watch and listen anytime, anywhere.</string>
+    <string name="follow_us">Join Our Community</string>
+    <string name="app_description">Experience the ultimate media downloader for Android.
+        Our app provides a seamless, powerful, and highly customizable way to save video and
+        audio from countless sources. Built with a sleek, modern interface, we harness the power
+        of youtube-dl, ffmpeg, and aria2c to give you unparalleled control over your offline library.</string>
+    <string name="app_slogan">Experience media freedom: download, manage, and enjoy your content, your way.</string>
+
 <!--    Settings-->
     <string name="settings_general_title">General</string>
     <string name="settings_general_description">Core app behavior, language, and startup options</string>
@@ -21,6 +32,10 @@
 
     <string name="settings_post_processing_title">Post-Processing</string>
     <string name="settings_post_processing_description">Automate actions after tasks complete</string>
+
+
+    <string name="settings_subtitle_title">Subtitles</string>
+    <string name="settings_subtitle_description">Manage subtitle languages and download options, format, etc</string>
 
     <string name="settings_advanced_title">Advanced</string>
     <string name="settings_advanced_description">Expert-level settings for power users. Change with caution.</string>
@@ -260,6 +275,33 @@
     <string name="title_merge_multiple_audio_streams">Merge Multiple Audio Streams</string>
     <string name="desc_merge_multiple_audio_streams">Include all available audio streams when merging/converting the final file.</string>
 
+
+    <!--    Subtitles-->
+    <string name="enable_subtitles_title">Show Subtitles</string>
+    <string name="enable_subtitles_description">Display subtitles during video playback.</string>
+
+    <string name="subtitle_language_title">Default Language</string>
+    <string name="subtitle_language_description">Choose the preferred language for subtitles.</string>
+    <string name="subtitle_language_placeholder">e.g., en, es, fr</string>
+
+    <string name="embed_subtitles_title">Hardcode Subtitles</string>
+    <string name="embed_subtitles_description">Permanently include subtitles within the video file.</string>
+
+    <string name="keep_subtitle_files_title">Keep Downloaded Files</string>
+    <string name="keep_subtitle_files_description">Save the separate subtitle files (e.g., .srt, .vtt) after viewing.</string>
+
+    <string name="auto_subtitle_title">Automatic Download</string>
+    <string name="auto_subtitle_description">Automatically search for and download subtitles when a video starts.</string>
+
+    <string name="convert_subtitle_format_title">Output Format</string>
+    <string name="convert_subtitle_format_description">Select the file format for saved or embedded subtitles.</string>
+
+    <string name="auto_translated_subtitles_title">Auto-Translate</string>
+    <string name="auto_translated_subtitles_description">Enable automatic translation of the subtitle text.</string>
+
+
+
+
     <!--  Dialog-->
     <string name="dismiss">Dismiss</string>
     <string name="confirm">Confirm</string>
@@ -352,6 +394,16 @@
     <string name="webpage_url">Webpage URL</string>
     <string name="video_description">Video Description</string>
     <string name="age_limit">Age Limit</string>
+
+
+    <!--    Exception message-->
+    <string name="invalid_filename_template">Invalid filename template. Supported format specifiers: %(title)s, %(id)s, %(upload_date)s, etc. Please check your template and try again.</string>
+    <string name="max_rate_range_exception">Max rate must be a positive integer.</string>
+    <string name="invalid_rate_exception_message">Please enter a valid integer (e.g., 123, 456, etc.)</string>
+    <string name="retries_range_exception">Retries must be a non-negative integer.</string>
+    <string name="retries_invalid_message">Please enter a valid integer (e.g., 0, 1, 2, etc.)</string>
+    <string name="fragment_retries_range_exception">Fragment retries must be a non-negative integer.</string>
+    <string name="invalid_fragment_retries_exception_message">Please enter a valid integer (e.g., 0, 1, 2, etc.)</string>
 
 
 

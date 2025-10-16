@@ -5,11 +5,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,14 +18,13 @@ import org.ghost.zeku.core.utils.FileTemplateUtils
 
 data class Template(
     val labelResId: Int,
-    val isSelected: Boolean = false // Default to not selected
 )
 
 /**
  * A responsive row of suggestion chips that wraps content to the next line.
  *
  * @param templates A map where the key is the String Resource ID for the label
- * and the value is the placeholder string to be returned on click.
+ * and the type is the placeholder string to be returned on click.
  * @param onTemplateClick A callback that is invoked with the placeholder string
  * (e.g., "%(title)s") when a chip is clicked.
  * @param modifier The modifier to be applied to the layout.
@@ -68,11 +63,6 @@ private fun TemplateChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val containerColor = if (template.isSelected) {
-        MaterialTheme.colorScheme.primaryContainer
-    } else {
-        AssistChipDefaults.assistChipColors().containerColor
-    }
 
     AssistChip(
         modifier = modifier,
@@ -83,16 +73,6 @@ private fun TemplateChip(
                 style = MaterialTheme.typography.bodySmall
             )
         },
-        colors = AssistChipDefaults.assistChipColors(containerColor = containerColor),
-        leadingIcon = {
-            if (template.isSelected) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-        }
     )
 }
 
@@ -103,7 +83,7 @@ private fun FilenameTemplateSuggestionPreview() {
 
 
     FilenameTemplateSuggestion(
-        templates = FileTemplateUtils.getAvailableTemplates().map { Template(it.key, !false) },
+        templates = FileTemplateUtils.getAvailableTemplates().map { Template(it.key) },
         onTemplateClick = { placeholder ->
             // In a real app, you would use this placeholder
             // to update your TextField's state.

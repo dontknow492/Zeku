@@ -1,6 +1,7 @@
 package org.ghost.zeku.ui.screen.settings.page
 
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,12 +45,14 @@ sealed interface AppearanceSettingsEvent {
 fun AppearanceSettings(
     modifier: Modifier = Modifier,
     state: AppearanceSettingsState,
+
     eventHandler: (AppearanceSettingsEvent) -> Unit,
     onBackClick: () -> Unit
 ) {
     SettingScaffold(
         modifier = modifier,
         title = stringResource(R.string.settings_appearance_title),
+        error = state.error,
         onBackClick = onBackClick
     ) {
         SingleChoiceSegmentedButtonRow(
@@ -73,6 +76,11 @@ fun AppearanceSettings(
             selectedTheme = state.theme,
             onSelectionChange = { theme ->
                 eventHandler(AppearanceSettingsEvent.OnThemeChange(theme))
+            },
+            isDark = when (state.themeMode) {
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
             }
         )
         // ### Accent Color ###
@@ -109,7 +117,13 @@ fun AppearanceSettings(
         )
         InputSettingItem(
             value = state.highContrast.toString(),
-            onValueChange = { value -> eventHandler(AppearanceSettingsEvent.OnHighContrastChange(value.toFloat())) },
+            onValueChange = { value ->
+                eventHandler(
+                    AppearanceSettingsEvent.OnHighContrastChange(
+                        value.toFloat()
+                    )
+                )
+            },
             title = stringResource(R.string.settings_appearance_high_contrast_title),
             description = "${stringResource(R.string.settings_appearance_high_contrast_description)}\n$contrastValue",
             icon = ImageVector.vectorResource(R.drawable.rounded_contrast_24),
@@ -125,7 +139,8 @@ fun AppearanceSettings(
 fun ThemeList(
     modifier: Modifier = Modifier,
     selectedTheme: AppTheme,
-    onSelectionChange: (AppTheme) -> Unit
+    onSelectionChange: (AppTheme) -> Unit,
+    isDark: Boolean = isSystemInDarkTheme()
 ) {
     Row(
         modifier = modifier
@@ -137,7 +152,8 @@ fun ThemeList(
             ThemeItem(
                 theme = theme,
                 selected = theme == selectedTheme,
-                onSelectionChange = onSelectionChange
+                onSelectionChange = onSelectionChange,
+                isDarkTheme = isDark
             )
         }
     }

@@ -1,5 +1,9 @@
 package org.ghost.zeku.core.utils
 
+import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -101,6 +105,18 @@ object PreferenceKeys {
 
 object PreferenceKeyDefaults {
 
+    val DOWNLOADS_COLLECTION_URI: Uri by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // Modern approach for Android 10 (API 29) and above
+            MediaStore.Downloads.EXTERNAL_CONTENT_URI
+        } else {
+            // Legacy approach for older versions
+            val downloadsDir =
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            Uri.fromFile(downloadsDir)
+        }
+    }
+
     // --- System Defaults ---
     const val SETTINGS_VERSION = 1
 
@@ -117,8 +133,8 @@ object PreferenceKeyDefaults {
     const val PREFERRED_DOWNLOAD_TYPE = "video"
 
     // File & Directory
-    const val VIDEO_DIRECTORY = "Downloads/Videos"
-    const val AUDIO_DIRECTORY = "Downloads/Audio"
+    const val VIDEO_DIRECTORY = "Videos"
+    const val AUDIO_DIRECTORY = "Audio"
     const val COMMAND_DIRECTORY = "Downloads"
     const val SUBDIRECTORY_PLAYLIST_TITLE = false
     const val FILENAME_TEMPLATE_VIDEO = "%(title)s.%(ext)s"
@@ -132,7 +148,7 @@ object PreferenceKeyDefaults {
 
     const val ACCENT_COLOR = "#000000"
     const val CONTRAST_VALUE = 0.0f
-    const val THEME_COLOR = "sky_blue"
+    const val THEME_COLOR = "Sky Blue"
     const val DYNAMIC_COLOR = true
 
     // Video

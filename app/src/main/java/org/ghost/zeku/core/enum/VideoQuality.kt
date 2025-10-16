@@ -13,7 +13,7 @@ enum class VideoQuality(
     override val label: String,     // The display name for the UI. Can be changed freely.
     val commandArg: String,  // The argument for the downloader process.
     @param: StringRes override val descriptionResId: Int? = null,
-) : SettingEnum  {
+) : SettingEnum {
     BEST("best", "Best quality", "bestvideo"),
     RESOLUTION_2160P("2160p", "2160p (4K)", "bestvideo[height<=2160]"),
     RESOLUTION_1440P("1440p", "1440p (2K)", "bestvideo[height<=1440]"),
@@ -28,7 +28,7 @@ enum class VideoQuality(
 
     companion object {
         /**
-         * Finds a VideoQuality enum by its stable storage 'value'.
+         * Finds a VideoQuality enum by its stable storage 'type'.
          * This is the correct and safe way to deserialize the stored preference.
          */
         fun fromValue(value: String?): VideoQuality {

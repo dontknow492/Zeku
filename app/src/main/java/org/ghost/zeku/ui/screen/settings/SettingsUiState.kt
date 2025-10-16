@@ -6,6 +6,7 @@ import org.ghost.zeku.core.enum.AudioEncoding
 import org.ghost.zeku.core.enum.AudioFormat
 import org.ghost.zeku.core.enum.AudioQuality
 import org.ghost.zeku.core.enum.PreventDuplicateDownload
+import org.ghost.zeku.core.enum.SubtitlesFormat
 import org.ghost.zeku.core.enum.ThemeMode
 import org.ghost.zeku.core.enum.VideoEncoding
 import org.ghost.zeku.core.enum.VideoFormat
@@ -49,7 +50,7 @@ data class SettingsUiState(
     val appearance: AppearanceSettingsState = AppearanceSettingsState(
         themeMode = ThemeMode.fromString(Defaults.THEME_MODE),
         accentColor = Defaults.ACCENT_COLOR.toColor(),
-        theme = AppTheme.fromName(Defaults.THEME_COLOR),
+        theme = AppTheme.ForestGreen,//AppTheme.fromName(Defaults.THEME_COLOR),
         amoled = Defaults.AMOLED_THEME,
         dynamicColor = Defaults.DYNAMIC_COLOR,
         highContrast = Defaults.CONTRAST_VALUE,
@@ -75,7 +76,7 @@ data class SettingsUiState(
         keepSubtitleFiles = Defaults.KEEP_SUBTITLE_FILES,
         subtitleLanguage = Defaults.SUBTITLE_LANGUAGE,
         autoSubtitle = Defaults.AUTO_SUBTITLE,
-        convertSubtitle = Defaults.CONVERT_SUBTITLE,
+        convertSubtitle = SubtitlesFormat.fromValue(Defaults.CONVERT_SUBTITLE),
         autoTranslatedSubtitles = Defaults.AUTO_TRANSLATED_SUBTITLES,
     ),
     val network: NetworkSettingsState = NetworkSettingsState(
@@ -194,11 +195,12 @@ data class SubtitleSettingsState(
     val keepSubtitleFiles: Boolean,
     val subtitleLanguage: String,
     val autoSubtitle: Boolean,
-    val convertSubtitle: String,
+    val convertSubtitle: SubtitlesFormat,
     val autoTranslatedSubtitles: Boolean,
 
     val error: String? = null
 )
+
 
 data class NetworkSettingsState(
     val concurrent: Int,

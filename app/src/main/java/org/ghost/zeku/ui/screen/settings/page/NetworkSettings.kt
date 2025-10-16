@@ -45,6 +45,7 @@ fun NetworkSettings(
     SettingScaffold(
         modifier = modifier,
         title = stringResource(R.string.settings_network_title),
+        error = state.error,
         onBackClick = onBackClick
     ) {
         // Force IPv4 Switch

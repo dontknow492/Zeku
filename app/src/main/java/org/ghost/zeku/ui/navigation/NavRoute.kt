@@ -31,6 +31,10 @@ sealed interface SettingsRoute {
     object PostProcessingSettings : SettingsRoute
 
     @Serializable
+    object SubtitlesSettings : SettingsRoute
+
+
+    @Serializable
     object AdvancedSettings : SettingsRoute
 
     @Serializable

@@ -107,6 +107,14 @@ fun SettingsScreen(
                 icon = Icons.Filled.Star,
                 onClick = { onSettingClick(SettingsRoute.PostProcessingSettings) }
             )
+            // Subtitle
+            SettingItem(
+                title = stringResource(R.string.settings_subtitle_title),
+                description = stringResource(R.string.settings_subtitle_description),
+                icon = ImageVector.vectorResource(R.drawable.baseline_subtitles_24),
+                onClick = { onSettingClick(SettingsRoute.SubtitlesSettings) }
+            )
+
 
             // Advanced
             SettingItem(

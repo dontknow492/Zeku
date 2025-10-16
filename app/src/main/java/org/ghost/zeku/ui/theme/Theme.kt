@@ -1,6 +1,7 @@
 package org.ghost.zeku.ui.theme
 
 import android.os.Build
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -12,6 +13,7 @@ import com.materialkolor.Contrast
 import com.materialkolor.DynamicMaterialTheme
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicMaterialThemeState
+import timber.log.Timber
 
 
 sealed class AppTheme(val name: String, val seedColor: Color) {
@@ -26,10 +28,19 @@ sealed class AppTheme(val name: String, val seedColor: Color) {
 
     // An object to hold all available themes
     companion object {
-        val default: AppTheme = SkyBlue
-        val themes = listOf(ForestGreen, SkyBlue, CherryBlossom, CrimsonRed, RoyalBlue, Periwinkle)
+        val default: AppTheme by lazy { SkyBlue }
+        val themes by lazy {
+            listOf(
+                ForestGreen,
+                SkyBlue,
+                CherryBlossom,
+                CrimsonRed,
+                RoyalBlue,
+                Periwinkle
+            )
+        }
 
-        fun fromName(name: String): AppTheme {
+        fun fromName(name: String?): AppTheme {
             return when (name) {
                 "Forest Green" -> ForestGreen
                 "Sky Blue" -> SkyBlue
@@ -37,7 +48,7 @@ sealed class AppTheme(val name: String, val seedColor: Color) {
                 "Crimson Red" -> CrimsonRed
                 "Royal Blue" -> RoyalBlue
                 "Periwinkle" -> Periwinkle
-                else -> default
+                else -> SkyBlue
             }
         }
     }
@@ -59,7 +70,7 @@ sealed class AppTheme(val name: String, val seedColor: Color) {
  */
 @Composable
 fun ZekuTheme(
-    appTheme: AppTheme = AppTheme.default,
+    appTheme: AppTheme = AppTheme.SkyBlue,
     darkTheme: Boolean = isSystemInDarkTheme(),
     isAmoled: Boolean = false,
     contrastLevel: Double = Contrast.Default.value,
@@ -67,6 +78,10 @@ fun ZekuTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
+
+    Timber.d("Appearance: $darkTheme, AMOLED: $isAmoled, Contrast: $contrastLevel, Dynamic: $dynamicColor, Theme: ${appTheme.name}")
+    Timber.d("Appearance: ${AppTheme.themes}")
+
     val state = when {
         // Condition for using system-level dynamic color
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
@@ -102,6 +117,7 @@ fun ZekuTheme(
     DynamicMaterialTheme(
         state = state,
         animate = true,
+        animationSpec = tween(durationMillis = 1000),
         typography = Typography,
         content = content,
     )

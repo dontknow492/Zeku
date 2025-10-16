@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -43,12 +44,14 @@ fun ThemeItem(
     modifier: Modifier = Modifier,
     theme: AppTheme,
     selected: Boolean = false,
+    isDarkTheme: Boolean = isSystemInDarkTheme(),
     onSelectionChange: (AppTheme) -> Unit
 ) {
     // ZekuTheme applies the specific theme to the preview composables inside it.
     ZekuTheme(
         appTheme = theme,
-        dynamicColor = false
+        dynamicColor = false,
+        darkTheme = isDarkTheme
     ) {
         Column(
             modifier = modifier

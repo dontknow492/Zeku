@@ -5,14 +5,14 @@ import androidx.annotation.StringRes
 /**
  * Represents the desired audio format after extraction.
  * @param uiName The user-friendly string to display in the UI.
- * @param commandArg The value for the downloader's `--audio-format` argument.
+ * @param commandArg The type for the downloader's `--audio-format` argument.
  */
 enum class AudioFormat(
     override val value: String,      // The stable ID for storage. THIS NEVER CHANGES.
     override val label: String,     // The display name for the UI. Can be changed freely.
     val commandArg: String,  // The argument for the downloader process.
     @param: StringRes override val descriptionResId: Int? = null,
-) : SettingEnum  {
+) : SettingEnum {
     AAC("aac", "AAC", "aac"),
     MP3("mp3", "MP3", "mp3"),
     FLAC("flac", "FLAC", "flac"),
@@ -26,7 +26,7 @@ enum class AudioFormat(
 
     companion object {
         /**
-         * Finds an AudioFormat enum by its stable storage 'value'.
+         * Finds an AudioFormat enum by its stable storage 'type'.
          */
         fun fromValue(value: String?): AudioFormat {
             return entries.find { it.value == value } ?: DEFAULT

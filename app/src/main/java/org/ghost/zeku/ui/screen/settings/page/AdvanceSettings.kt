@@ -35,6 +35,7 @@ fun AdvanceSettings(
     SettingScaffold(
         modifier = modifier,
         title = stringResource(R.string.settings_advanced_title),
+        error = state.error,
         onBackClick = onBackClick
     ) {
         // ### Custom Command ###

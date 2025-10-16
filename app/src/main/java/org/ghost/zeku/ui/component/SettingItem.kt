@@ -122,7 +122,9 @@ fun SettingItem(
                     modifier = Modifier
                         .padding(end = 16.dp)
                         .size(24.dp),
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
+                        alpha = 0.48f
+                    ),
                 )
             }
             SettingColumn(
@@ -175,7 +177,9 @@ fun SwitchSettingItem(
                     modifier = Modifier
                         .padding(end = 16.dp)
                         .size(24.dp),
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
+                        alpha = 0.48f
+                    ),
                 )
             }
             SettingColumn(
