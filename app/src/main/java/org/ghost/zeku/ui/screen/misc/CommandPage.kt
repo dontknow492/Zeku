@@ -12,8 +12,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -25,6 +30,7 @@ import org.ghost.zeku.R
 import org.ghost.zeku.core.enum.SORTING
 import org.ghost.zeku.database.models.CommandTemplate
 import org.ghost.zeku.database.repository.CommandTemplateRepository
+import org.ghost.zeku.ui.common.ErrorSnackBar
 import org.ghost.zeku.ui.component.CommandTemplateItem
 import org.ghost.zeku.ui.component.SearchableTopAppBar
 import org.ghost.zeku.viewModels.CommandTemplateUiState
@@ -56,9 +62,25 @@ fun CommandsPage(
 
     val isInSelectionMenu = rememberSaveable(state.selectedIds) { state.selectedIds.isNotEmpty() }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(state.error) {
+        if (state.error != null) {
+            snackbarHostState.showSnackbar(
+                state.error,
+                withDismissAction = true,
+                duration = SnackbarDuration.Long
+            )
+        }
+    }
 
     Scaffold(
         modifier = modifier,
+        snackbarHost = {
+            SnackbarHost(snackbarHostState) { snackbarData ->
+                ErrorSnackBar(snackbarData = snackbarData)
+            }
+        },
         topBar = {
             SearchableTopAppBar(
                 searchValue = state.query,
@@ -129,7 +151,9 @@ fun CommandPageBottomNavigation(
     onSelectAllClick: () -> Unit,
     onClearSelectionClick: () -> Unit
 ) {
-    NavigationBar {
+    NavigationBar(
+        modifier = Modifier
+    ) {
         NavigationBarItem(
             selected = false,
             onClick = onSelectAllClick,
