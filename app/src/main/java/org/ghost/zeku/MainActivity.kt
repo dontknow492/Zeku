@@ -18,7 +18,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import org.ghost.zeku.core.enum.ThemeMode
 import org.ghost.zeku.ui.navigation.AppNavigationGraph
 import org.ghost.zeku.ui.navigation.NavRoute
-import org.ghost.zeku.ui.screen.settings.SettingsViewModel
+import org.ghost.zeku.viewModels.SettingsViewModel
 import org.ghost.zeku.ui.theme.ZekuTheme
 
 @AndroidEntryPoint

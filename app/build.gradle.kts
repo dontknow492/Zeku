@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kotlin.parcelize)
 }
 
 android {
@@ -78,6 +79,9 @@ dependencies {
     implementation(libs.bundles.compose.ui)
     implementation(libs.bundles.core)
     implementation(libs.bundles.room)
+    implementation(libs.androidx.documentfile)
+    implementation(libs.androidx.preference.ktx)
+    implementation(libs.androidx.work.runtime.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.bundles.paging)
     implementation(libs.bundles.hilt)
@@ -98,6 +102,9 @@ dependencies {
 
     //datastore
     implementation(libs.androidx.datastore.preferences)
+
+    //json
+    implementation(libs.kotlinx.serialization.json)
 
     //navigation
     implementation(libs.androidx.compose.navigation)

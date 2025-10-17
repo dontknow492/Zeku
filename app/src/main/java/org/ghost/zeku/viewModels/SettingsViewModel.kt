@@ -1,4 +1,4 @@
-package org.ghost.zeku.ui.screen.settings
+package org.ghost.zeku.viewModels
 
 import android.content.Context
 import android.net.Uri
@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.ghost.zeku.R
 import org.ghost.zeku.core.DownloadType
 import org.ghost.zeku.core.enum.AudioEncoding
 import org.ghost.zeku.core.enum.AudioFormat
@@ -27,6 +28,16 @@ import org.ghost.zeku.core.enum.VideoFormat
 import org.ghost.zeku.core.enum.VideoQuality
 import org.ghost.zeku.core.utils.FileTemplateUtils
 import org.ghost.zeku.repository.PreferenceRepository
+import org.ghost.zeku.ui.screen.settings.AdvancedSettingsState
+import org.ghost.zeku.ui.screen.settings.AppearanceSettingsState
+import org.ghost.zeku.ui.screen.settings.FileSettingsState
+import org.ghost.zeku.ui.screen.settings.GeneralSettingsState
+import org.ghost.zeku.ui.screen.settings.MediaSettingsState
+import org.ghost.zeku.ui.screen.settings.NetworkSettingsState
+import org.ghost.zeku.ui.screen.settings.PostProcessingSettingsState
+import org.ghost.zeku.ui.screen.settings.SettingsUiState
+import org.ghost.zeku.ui.screen.settings.SubtitleSettingsState
+import org.ghost.zeku.ui.screen.settings.Template
 import org.ghost.zeku.ui.theme.AppTheme
 import javax.inject.Inject
 
@@ -505,7 +516,7 @@ class SettingsViewModel @Inject constructor(
                 _fileUiState.update {
                     it.copy(
                         isValidFilenameTemplateAudio = false,
-                        error = context.getString(org.ghost.zeku.R.string.invalid_filename_template)
+                        error = context.getString(R.string.invalid_filename_template)
                     )
                 }
             }
@@ -521,7 +532,7 @@ class SettingsViewModel @Inject constructor(
                 _fileUiState.update {
                     it.copy(
                         isValidFilenameTemplateVideo = false,
-                        error = context.getString(org.ghost.zeku.R.string.invalid_filename_template)
+                        error = context.getString(R.string.invalid_filename_template)
                     )
                 }
             }
@@ -652,7 +663,7 @@ class SettingsViewModel @Inject constructor(
                     _networkUiState.update {
                         it.copy(
                             isValidMaxRate = false,
-                            error = context.getString(org.ghost.zeku.R.string.max_rate_range_exception)
+                            error = context.getString(R.string.max_rate_range_exception)
                         )
                     }
                 } else {
@@ -663,7 +674,7 @@ class SettingsViewModel @Inject constructor(
                 _networkUiState.update {
                     it.copy(
                         isValidMaxRate = false,
-                        error = context.getString(org.ghost.zeku.R.string.invalid_rate_exception_message)
+                        error = context.getString(R.string.invalid_rate_exception_message)
                     )
                 }
             }
@@ -678,7 +689,7 @@ class SettingsViewModel @Inject constructor(
                     _networkUiState.update {
                         it.copy(
                             isValidRetries = false,
-                            error = context.getString(org.ghost.zeku.R.string.retries_range_exception)
+                            error = context.getString(R.string.retries_range_exception)
                         )
                     }
                 } else {
@@ -689,7 +700,7 @@ class SettingsViewModel @Inject constructor(
                 _networkUiState.update {
                     it.copy(
                         isValidRetries = false,
-                        error = context.getString(org.ghost.zeku.R.string.retries_invalid_message)
+                        error = context.getString(R.string.retries_invalid_message)
                     )
                 }
             }
@@ -704,7 +715,7 @@ class SettingsViewModel @Inject constructor(
                     _networkUiState.update {
                         it.copy(
                             isValidFragmentRetries = false,
-                            error = context.getString(org.ghost.zeku.R.string.fragment_retries_range_exception)
+                            error = context.getString(R.string.fragment_retries_range_exception)
                         )
                     }
                 } else {
@@ -715,7 +726,7 @@ class SettingsViewModel @Inject constructor(
                 _networkUiState.update {
                     it.copy(
                         isValidFragmentRetries = false,
-                        error = context.getString(org.ghost.zeku.R.string.invalid_fragment_retries_exception_message)
+                        error = context.getString(R.string.invalid_fragment_retries_exception_message)
                     )
                 }
             }

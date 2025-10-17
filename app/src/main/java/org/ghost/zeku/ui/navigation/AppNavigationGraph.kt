@@ -9,7 +9,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import org.ghost.zeku.ui.screen.settings.SettingsScreen
-import org.ghost.zeku.ui.screen.settings.SettingsViewModel
+import org.ghost.zeku.viewModels.SettingsViewModel
 import org.ghost.zeku.ui.screen.settings.page.AboutPage
 import org.ghost.zeku.ui.screen.settings.page.AdvanceSettings
 import org.ghost.zeku.ui.screen.settings.page.AppearanceSettings

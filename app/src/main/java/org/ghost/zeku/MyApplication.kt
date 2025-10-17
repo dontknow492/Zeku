@@ -9,6 +9,7 @@ import coil3.disk.DiskCache
 import coil3.memory.MemoryCache
 import coil3.util.DebugLogger
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
 import okio.Path.Companion.toOkioPath
 import timber.log.Timber
 
@@ -47,5 +48,11 @@ class MyApplication : Application(), SingletonImageLoader.Factory {
                 }
             }
             .build()
+    }
+
+    companion object {
+        private const val TAG = "App"
+        private lateinit var applicationScope: CoroutineScope
+        lateinit var instance: MyApplication
     }
 }

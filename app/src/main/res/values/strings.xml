@@ -404,7 +404,8 @@
     <string name="retries_invalid_message">Please enter a valid integer (e.g., 0, 1, 2, etc.)</string>
     <string name="fragment_retries_range_exception">Fragment retries must be a non-negative integer.</string>
     <string name="invalid_fragment_retries_exception_message">Please enter a valid integer (e.g., 0, 1, 2, etc.)</string>
-
+    <string name="download_rescheduled_to">Download rescheduled to</string>
+    <string name="metered_network_download_start_info">Metered network download start info</string>
 
 
     <!--    Ui-->
