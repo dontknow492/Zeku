@@ -17,7 +17,7 @@ interface CommandTemplateDao {
                 "CASE WHEN :sort = 'DESC' THEN id END DESC," +
                 "CASE WHEN :sort = '' THEN id END DESC "
     )
-    fun getCommandsSortedByID(query: String, sort: String): List<CommandTemplate>
+    fun getCommandsSortedByID(query: String, sort: String): Flow<List<CommandTemplate>>
 
 
     @Query(
@@ -26,7 +26,7 @@ interface CommandTemplateDao {
                 "CASE WHEN :sort = 'DESC' THEN title COLLATE NOCASE END DESC," +
                 "CASE WHEN :sort = '' THEN title COLLATE NOCASE END DESC "
     )
-    fun getCommandsSortedByTitle(query: String, sort: String): List<CommandTemplate>
+    fun getCommandsSortedByTitle(query: String, sort: String): Flow<List<CommandTemplate>>
 
     @Query(
         "SELECT * FROM commandTemplates WHERE (title LIKE '%'||:query||'%' OR content LIKE '%'||:query||'%') ORDER BY " +
@@ -34,7 +34,7 @@ interface CommandTemplateDao {
                 "CASE WHEN :sort = 'DESC' THEN length(content) END DESC," +
                 "CASE WHEN :sort = '' THEN length(content) END DESC "
     )
-    fun getCommandsSortedByContentLength(query: String, sort: String): List<CommandTemplate>
+    fun getCommandsSortedByContentLength(query: String, sort: String): Flow<List<CommandTemplate>>
 
     @Query("SELECT * FROM commandTemplates ORDER BY id DESC")
     fun getAllTemplates(): List<CommandTemplate>

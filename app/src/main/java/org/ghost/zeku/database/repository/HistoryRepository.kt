@@ -10,8 +10,9 @@ import org.ghost.zeku.core.utils.FileUtil
 import org.ghost.zeku.database.dao.HistoryDao
 import org.ghost.zeku.database.models.HistoryItem
 import java.io.File
+import javax.inject.Inject
 
-class HistoryRepository(private val historyDao: HistoryDao) {
+class HistoryRepository @Inject constructor(private val historyDao: HistoryDao) {
     val items: Flow<List<HistoryItem>> = historyDao.getAllHistory()
     val websites: Flow<List<String>> = historyDao.getWebsites()
     val count: Flow<Int> = historyDao.getCount()

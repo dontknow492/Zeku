@@ -3,9 +3,10 @@ package org.ghost.zeku.database.repository
 import kotlinx.coroutines.flow.Flow
 import org.ghost.zeku.database.dao.LogDao
 import org.ghost.zeku.database.models.LogItem
+import javax.inject.Inject
 
 
-class LogRepository(private val logDao: LogDao) {
+class LogRepository @Inject constructor(private val logDao: LogDao) {
     val items: Flow<List<LogItem>> = logDao.getAllLogsFlow()
 
     fun getAll(): List<LogItem> {

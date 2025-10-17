@@ -29,8 +29,9 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
-class DownloadRepository(private val downloadDao: DownloadDao) {
+class DownloadRepository @Inject constructor(private val downloadDao: DownloadDao) {
     val allDownloads: Pager<Int, DownloadItem> = Pager(
         config = PagingConfig(pageSize = 20, initialLoadSize = 20, prefetchDistance = 1),
         pagingSourceFactory = { downloadDao.getAllDownloads() }

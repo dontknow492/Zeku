@@ -13,13 +13,13 @@ data class CommandTemplate(
     var title: String,
     var content: String,
     @ColumnInfo(defaultValue = "0")
-    var useAsExtraCommand: Boolean,
+    var useAsExtraCommand: Boolean = false,
     @ColumnInfo(defaultValue = "1")
-    var useAsExtraCommandAudio: Boolean,
+    var useAsExtraCommandAudio: Boolean = true,
     @ColumnInfo(defaultValue = "1")
-    var useAsExtraCommandVideo: Boolean,
+    var useAsExtraCommandVideo: Boolean = true,
     @ColumnInfo(defaultValue = "0")
-    var useAsExtraCommandDataFetching: Boolean,
+    var useAsExtraCommandDataFetching: Boolean = false,
     @ColumnInfo(defaultValue = "0")
     var preferredCommandTemplate: Boolean = false,
     var urlRegex: MutableList<String> = mutableListOf()

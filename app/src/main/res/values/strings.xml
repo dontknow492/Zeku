@@ -404,11 +404,24 @@
     <string name="retries_invalid_message">Please enter a valid integer (e.g., 0, 1, 2, etc.)</string>
     <string name="fragment_retries_range_exception">Fragment retries must be a non-negative integer.</string>
     <string name="invalid_fragment_retries_exception_message">Please enter a valid integer (e.g., 0, 1, 2, etc.)</string>
-    <string name="download_rescheduled_to">Download rescheduled to</string>
-    <string name="metered_network_download_start_info">Metered network download start info</string>
 
 
     <!--    Ui-->
+    <string name="download_rescheduled_to">Download rescheduled to</string>
+    <string name="metered_network_download_start_info">Metered network download start info</string>
+    <string name="search">Search\n</string>
+    <string name="clear_search">Clear search</string>
+    <string name="close_search">Close search</string>
+
+<!--    Commands Page-->
+    <string name="command_title">Commands</string>
+    <string name="selected_commands">%d Selected</string>
+    <string name="add_command">Add Command</string>
+    <string name="delete_command">Delete command templates</string>
+    <string name="select_all">Select All</string>
+    <string name="invert">Invert</string>
+    <string name="clear">Clear</string>
+    <string name="delete">Delete</string>
 
 
 </resources>

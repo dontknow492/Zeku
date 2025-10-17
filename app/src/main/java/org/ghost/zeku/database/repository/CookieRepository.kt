@@ -3,8 +3,9 @@ package org.ghost.zeku.database.repository
 import kotlinx.coroutines.flow.Flow
 import org.ghost.zeku.database.dao.CookieDao
 import org.ghost.zeku.database.models.CookieItem
+import javax.inject.Inject
 
-class CookieRepository(private val cookieDao: CookieDao) {
+class CookieRepository @Inject constructor(private val cookieDao: CookieDao) {
     val items: Flow<List<CookieItem>> = cookieDao.getAllCookiesFlow()
 
     fun getAll(): List<CookieItem> {

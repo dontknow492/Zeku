@@ -5,8 +5,9 @@ import org.ghost.zeku.core.enum.SORTING
 import org.ghost.zeku.database.dao.CommandTemplateDao
 import org.ghost.zeku.database.models.CommandTemplate
 import org.ghost.zeku.database.models.TemplateShortcut
+import javax.inject.Inject
 
-class CommandTemplateRepository(private val commandDao: CommandTemplateDao) {
+class CommandTemplateRepository @Inject constructor(private val commandDao: CommandTemplateDao) {
     val items: Flow<List<CommandTemplate>> = commandDao.getAllTemplatesFlow()
     val shortcuts: Flow<List<TemplateShortcut>> = commandDao.getAllShortcutsFlow()
 
@@ -22,7 +23,7 @@ class CommandTemplateRepository(private val commandDao: CommandTemplateDao) {
         query: String,
         sortType: CommandTemplateSortType,
         sort: SORTING
-    ): List<CommandTemplate> {
+    ): Flow<List<CommandTemplate>> {
         return when (sortType) {
             CommandTemplateSortType.DATE -> commandDao.getCommandsSortedByID(query, sort.toString())
             CommandTemplateSortType.TITLE -> commandDao.getCommandsSortedByTitle(

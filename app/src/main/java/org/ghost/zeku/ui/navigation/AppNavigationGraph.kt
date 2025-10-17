@@ -9,7 +9,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import org.ghost.zeku.ui.screen.settings.SettingsScreen
-import org.ghost.zeku.viewModels.SettingsViewModel
 import org.ghost.zeku.ui.screen.settings.page.AboutPage
 import org.ghost.zeku.ui.screen.settings.page.AdvanceSettings
 import org.ghost.zeku.ui.screen.settings.page.AppearanceSettings
@@ -26,6 +25,7 @@ import org.ghost.zeku.ui.screen.settings.page.PostProcessingSettings
 import org.ghost.zeku.ui.screen.settings.page.PostProcessingSettingsEvent
 import org.ghost.zeku.ui.screen.settings.page.SubtitlesSettings
 import org.ghost.zeku.ui.screen.settings.page.SubtitlesSettingsEvent
+import org.ghost.zeku.viewModels.SettingsViewModel
 import timber.log.Timber
 
 @Composable
