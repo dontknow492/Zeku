@@ -1,15 +1,12 @@
-\<div align="center"\>  
-\<\!-- You can add a logo here if you have one \--\>  
-\<\!-- \<img src="link\_to\_your\_logo.png" alt="Zeku Logo" width="150"/\> \--\>
 
 # **Zeku**
 
 **Download video & audio from anywhere, beautifully.**  
 Zeku is a modern Android app for downloading video and audio from YouTube and over 1,000 other websites. Built with Material You and powered by yt-dlp, it offers a clean, intuitive interface without sacrificing powerful features.  
-\<\!-- Add badges for build status, license, etc. \--\>  
-\<\!-- Example:  
-\--\>  
-\</div\>
+
+> [!IMPORTANT]
+> Zeku is in a pre-alpha state, and only suitable for use by developers
+>
 
 ### **⚠️ Project Status: Alpha Stage**
 
@@ -33,13 +30,8 @@ Zeku combines a simple user experience with robust downloading capabilities.
     * **Resumable Downloads:** Don't worry about network interruptions; easily resume broken transfers.
     * **Privacy-Focused:** No trackers, no ads. Your data is your own.
 
-\<\!-- It's highly recommended to add screenshots here to showcase your app\! \--\>
 
 ## **📸 Screenshots**
-
-*(Add screenshots of your app's UI here to give users a visual preview.)*  
-\<\!--  
-\--\>
 
 ## **🛠️ Tech Stack & Architecture**
 
@@ -64,7 +56,7 @@ Ready to build and run the project? Follow these steps.
 ### **Build and Run**
 
 1. **Clone the Repository:**  
-   git clone \[https://github.com/your\_username/zeku.git\](https://github.com/your\_username/zeku.git)
+   git clone \[https://github.com/dontknow492/Zeku.git)
 
 2. **Open in Android Studio:**
     * Launch Android Studio.
