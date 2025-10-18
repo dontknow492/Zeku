@@ -31,6 +31,6 @@ fun String.appendLineToLog(line: String = ""): String {
 }
 
 
-fun List<Status>.toListString() : List<String>{
+fun List<Status>.toListString(): List<String> {
     return this.map { it.toString() }
 }

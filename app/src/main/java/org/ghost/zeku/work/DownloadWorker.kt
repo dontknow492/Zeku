@@ -1,17 +1,14 @@
 package org.ghost.zeku.work
 
 import android.content.Context
-import android.content.pm.ServiceInfo
-import android.os.Build
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
-import org.ghost.zeku.MyApplication
 
 class DownloadWorker(
     private val context: Context,
     workerParams: WorkerParameters
-) : CoroutineWorker(context, workerParams){
+) : CoroutineWorker(context, workerParams) {
     override suspend fun doWork(): Result {
         TODO("Not yet implemented")
     }

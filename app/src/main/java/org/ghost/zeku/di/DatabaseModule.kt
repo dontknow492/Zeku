@@ -6,7 +6,12 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import org.ghost.zeku.database.DBManager
-import org.ghost.zeku.database.dao.*
+import org.ghost.zeku.database.dao.CommandTemplateDao
+import org.ghost.zeku.database.dao.CookieDao
+import org.ghost.zeku.database.dao.DownloadDao
+import org.ghost.zeku.database.dao.HistoryDao
+import org.ghost.zeku.database.dao.LogDao
+import org.ghost.zeku.database.dao.TerminalDao
 import javax.inject.Singleton
 
 @Module

@@ -1,7 +1,6 @@
 package org.ghost.zeku.viewModels
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -10,7 +9,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
@@ -21,7 +19,6 @@ import org.ghost.zeku.database.models.CommandTemplate
 import org.ghost.zeku.database.models.TemplateShortcut
 import org.ghost.zeku.database.repository.CommandTemplateRepository
 import javax.inject.Inject
-
 
 
 data class CommandTemplateUiState(
@@ -37,12 +34,13 @@ data class CommandTemplateUiState(
 @HiltViewModel
 class CommandTemplateViewModel @Inject constructor(
     private val commandTemplateRepository: CommandTemplateRepository
-) : ViewModel(){
+) : ViewModel() {
     // PRIVATE: These are the mutable sources of state, changed only by the ViewModel
 //    private val _templates = commandTemplateRepository.getFiltered()
     // PRIVATE: These are the mutable sources of state, changed only by the ViewModel
     private val _sortOrder = MutableStateFlow(SORTING.DESC)
-    private val _sortType = MutableStateFlow(CommandTemplateRepository.CommandTemplateSortType.TITLE)
+    private val _sortType =
+        MutableStateFlow(CommandTemplateRepository.CommandTemplateSortType.TITLE)
     private val _query = MutableStateFlow("")
     private val _selectedIds = MutableStateFlow<Set<Long>>(emptySet())
 
@@ -53,9 +51,10 @@ class CommandTemplateViewModel @Inject constructor(
 
     // 2. Use flatMapLatest to react to filter changes and get a new data flow from the repository.
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val templatesFlow: Flow<List<CommandTemplate>> = filterParams.flatMapLatest { (query, sortType, sortOrder) ->
-        commandTemplateRepository.getFiltered(query, sortType, sortOrder)
-    }
+    private val templatesFlow: Flow<List<CommandTemplate>> =
+        filterParams.flatMapLatest { (query, sortType, sortOrder) ->
+            commandTemplateRepository.getFiltered(query, sortType, sortOrder)
+        }
 
     // PUBLIC: The single, observable state for the UI
     // 3. The final combine is now much simpler!
@@ -114,7 +113,6 @@ class CommandTemplateViewModel @Inject constructor(
     }
 
 
-
     fun getTemplate(itemId: Long): CommandTemplate {
         return commandTemplateRepository.getItem(itemId)
     }
@@ -123,7 +121,7 @@ class CommandTemplateViewModel @Inject constructor(
         return commandTemplateRepository.getAll()
     }
 
-    fun getAllShortcuts() : List<TemplateShortcut> {
+    fun getAllShortcuts(): List<TemplateShortcut> {
         return commandTemplateRepository.getAllShortCuts()
     }
 

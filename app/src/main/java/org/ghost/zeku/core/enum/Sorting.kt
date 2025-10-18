@@ -1,5 +1,5 @@
 package org.ghost.zeku.core.enum
 
-enum class SORTING{
+enum class SORTING {
     DESC, ASC
 }

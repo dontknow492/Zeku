@@ -5,18 +5,15 @@ import android.content.Context
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-
-import org.ghost.zeku.MyApplication
-import java.io.File
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
-import androidx.preference.PreferenceManager
-import org.ghost.zeku.repository.PreferenceRepository
+import org.ghost.zeku.MyApplication
+import java.io.File
 
 object FileUtil {
-    fun deleteFile(path: String){
+    fun deleteFile(path: String) {
         runCatching {
-            if (!File(path).delete()){
+            if (!File(path).delete()) {
                 DocumentFile.fromSingleUri(MyApplication.instance, path.toUri())?.delete()
             }
             deleteFileFromMediaStore(path)
@@ -24,7 +21,19 @@ object FileUtil {
     }
 
 
-    fun getCachePath(context: Context) : String {
+    fun getCookieFile(
+        context: Context,
+        ignoreIfExists: Boolean = false,
+        path: (path: String) -> Unit
+    ) {
+        val cookiesFile = File(context.cacheDir, "cookies.txt")
+        if (ignoreIfExists || cookiesFile.exists()) {
+            path(cookiesFile.absolutePath)
+        }
+    }
+
+
+    fun getCachePath(context: Context): String {
 //        PreferenceRepository
 //        val preference = PreferenceManager.getDefaultSharedPreferences(context).getString("cache_path", "")
 //        if (preference.isNullOrBlank() || !File(formatPath(preference)).canWrite()) {
@@ -71,7 +80,7 @@ object FileUtil {
         contentResolver.delete(uri, selection, selectionArgs)
     }
 
-    fun exists(path: String) : Boolean {
+    fun exists(path: String): Boolean {
         val file = File(path)
         if (path.isEmpty()) return false
         return file.exists()
