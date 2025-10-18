@@ -457,5 +457,16 @@
     <string name="empty_command_template_text">You haven\'t added any templates yet. Create one for customized downloaded experiece.</string>
     <string name="empty_command_template">Empty Command Template\n</string>
 
+<!--    History-->
+    <string name="history_title">History</string>
+    <string name="empty_history">Empty History</string>
+    <string name="empty_history_text">Empty History</string>
+    <string name="downloads_title">Downloads</string>
+    <string name="filter">Filter</string>
+
+
+<!--    Ui-->
+    <string name="selected">Selected</string>
+
 
 </resources>

@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import org.ghost.zeku.R
 import org.ghost.zeku.database.models.CookieItem
+import org.ghost.zeku.ui.common.SelectedItemsIndicator
 import org.ghost.zeku.ui.component.CookieListItem
 import org.ghost.zeku.ui.component.EmptyScreen
 import org.ghost.zeku.ui.component.SelectionBottomNavigation
@@ -78,10 +79,18 @@ fun CookiesPage(
     Scaffold(
         modifier = modifier,
         topBar = {
-            SimpleTopAppBar(
-                title = stringResource(R.string.title_authentication_cookies),
-                onBackClick = onBackClick
-            )
+            if (isInSelectionMenu){
+                SelectedItemsIndicator(
+                    selectedIds = state.selectedIds,
+                )
+            }
+            else{
+                SimpleTopAppBar(
+                    title = stringResource(R.string.title_authentication_cookies),
+                    onBackClick = onBackClick
+                )
+            }
+
         },
         floatingActionButton = {
             if (!isInSelectionMenu) {
@@ -138,7 +147,7 @@ fun CookiesPage(
                         cookie = item,
                         selected = selected,
                         onClick = {
-                            if (selected) {
+                            if (selected || isInSelectionMenu) {
                                 onEvent(CookiesPageEvent.OnCookieItemSelected(item))
                             } else {
                                 selectedCookie = item

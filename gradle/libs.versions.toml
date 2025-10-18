@@ -20,6 +20,7 @@ activityCompose = "1.11.0"
 composeNavigation = "2.9.5"
 foundation = "1.9.3"
 material3 = "1.4.0"
+constraintLayout = "1.1.1"
 
 # --- Data & Storage ---
 datastore = "1.1.7"
@@ -71,6 +72,7 @@ androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graph
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 androidx-material-icons-core = { module = "androidx.compose.material:material-icons-core" }
+androidx-constraintlayout-compose = { group = "androidx.constraintlayout", name = "constraintlayout-compose", version.ref = "constraintLayout" }
 
 # --- Jetpack Compose - Tooling & Testing ---
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
@@ -150,7 +152,8 @@ compose-ui = [
     "androidx-compose-foundation",
     "androidx-compose-material3",
     "androidx-compose-ui-tooling-preview",
-    "androidx-material-icons-core"
+    "androidx-material-icons-core",
+    "androidx-constraintlayout-compose"
 ]
 
 # Core package

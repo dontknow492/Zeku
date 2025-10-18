@@ -54,6 +54,7 @@ import org.ghost.zeku.core.enum.SORTING
 import org.ghost.zeku.database.models.CommandTemplate
 import org.ghost.zeku.database.repository.CommandTemplateRepository
 import org.ghost.zeku.ui.common.ErrorSnackBar
+import org.ghost.zeku.ui.common.SelectedItemsIndicator
 import org.ghost.zeku.ui.component.CommandTemplateItem
 import org.ghost.zeku.ui.component.EmptyScreen
 import org.ghost.zeku.ui.component.SearchableTopAppBar
@@ -110,12 +111,20 @@ fun CommandsPage(
             }
         },
         topBar = {
-            SearchableTopAppBar(
-                searchValue = state.query,
-                title = stringResource(id = R.string.command_title),
-                onBackClick = onBackClick,
-                onSearchValueChange = { query -> onEvent(CommandPageEvent.OnSearchQueryChange(query)) },
-            )
+            if (isInSelectionMenu){
+                SelectedItemsIndicator(
+                    selectedIds = state.selectedIds,
+                )
+            }
+            else{
+                SearchableTopAppBar(
+                    searchValue = state.query,
+                    title = stringResource(id = R.string.command_title),
+                    onBackClick = onBackClick,
+                    onSearchValueChange = { query -> onEvent(CommandPageEvent.OnSearchQueryChange(query)) },
+                )
+            }
+
         },
         floatingActionButton = {
             if (!isInSelectionMenu) {
@@ -177,7 +186,7 @@ fun CommandsPage(
                         commandTemplate = commandTemplate,
                         selected = selected,
                         onClick = {
-                            if (selected) {
+                            if (selected || isInSelectionMenu) {
                                 onEvent(CommandPageEvent.OnCommandTemplateSelected(commandTemplate))
                             } else {
                                 selectedTemplate = commandTemplate
