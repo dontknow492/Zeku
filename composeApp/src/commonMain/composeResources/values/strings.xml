@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Zeku</string>
+    <string name="error_loading">Error loading image</string>
+    <string name="score">Rating</string>
+    <string name="wide_bullet_separator">•</string>
+    <string name="wide_star_content_description">No description available</string>
+    <string name="wide_no_description">No description available"</string>
+    <string name="hero_watch_now">Watch Now</string>
+    <string name="hero_details">Details</string>
+    <string name="hero_watch_content_desc">Play</string>
+    <string name="hero_details_content_desc">More information</string>
+    <string name="hero_carousel_prev">Previous</string>
+    <string name="hero_carousel_next">Next</string>
+    <string name="no_media_found">No Media Found</string>
+</resources>
