@@ -13,12 +13,13 @@ import com.ghost.zeku.data.local.room.entities.MangaEntity
 import com.ghost.zeku.data.local.room.entities.MangaRemoteKeys
 import com.ghost.zeku.data.local.room.toEntity
 import com.ghost.zeku.domain.model.api.ApiResult
+import com.ghost.zeku.domain.model.api.getErrorMessage
 import com.ghost.zeku.domain.model.enum.MangaCategory
 import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.provider.MangaListProvider
 
 @OptIn(ExperimentalPagingApi::class)
-class MangaRemoteMediator(
+class MangaRemoteMediatorV1(
     private val category: MangaCategory,
     private val currentProviderType: ProviderType,
     private val provider: MangaListProvider,
@@ -93,7 +94,7 @@ class MangaRemoteMediator(
                     Success(endOfPaginationReached = endOfPaginationReached)
                 }
 
-                is ApiResult.Error -> Error(Exception(response.error.message))
+                is ApiResult.Error -> Error(response.error.cause ?: Exception(response.getErrorMessage()))
 
                 is ApiResult.Empty -> {
                     // If the API returns an explicitly empty result, there is no more data to load.

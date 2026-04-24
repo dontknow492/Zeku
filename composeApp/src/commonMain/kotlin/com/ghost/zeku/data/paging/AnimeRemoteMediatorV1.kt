@@ -13,12 +13,13 @@ import com.ghost.zeku.data.local.room.entities.AnimeEntity
 import com.ghost.zeku.data.local.room.entities.AnimeRemoteKeys
 import com.ghost.zeku.data.local.room.toEntity
 import com.ghost.zeku.domain.model.api.ApiResult
+import com.ghost.zeku.domain.model.api.getErrorMessage
 import com.ghost.zeku.domain.model.enum.AnimeCategory
 import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.provider.AnimeListProvider
 
 @OptIn(ExperimentalPagingApi::class)
-class AnimeRemoteMediator(
+class AnimeRemoteMediatorV1(
     private val category: AnimeCategory,
     private val currentProviderType: ProviderType,
     private val provider: AnimeListProvider,
@@ -93,7 +94,7 @@ class AnimeRemoteMediator(
                     Success(endOfPaginationReached = endOfPaginationReached)
                 }
 
-                is ApiResult.Error -> Error(Exception(response.error.message))
+                is ApiResult.Error -> Error(response.error.cause ?: Exception(response.getErrorMessage()))
                 is ApiResult.Empty -> {
                     // If the API returns an explicitly empty result, there is no more data to load.
                     // We tell Paging 3 that we have successfully reached the end of the list.

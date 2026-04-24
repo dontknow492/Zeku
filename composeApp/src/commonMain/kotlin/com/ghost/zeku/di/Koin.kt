@@ -15,6 +15,7 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) {
             databaseModule,
             platformSettingsModule(),
             settingsModule,
+            getPlatformAuthModule(),
             authModule
         )
     }

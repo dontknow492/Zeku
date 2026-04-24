@@ -3,7 +3,6 @@ package com.ghost.zeku.data.local.room
 
 import com.ghost.zeku.data.local.room.entities.*
 import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
-import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.model.media.*
 
 /**
@@ -100,10 +99,10 @@ fun AnimeDetailsEntity.toDomain(): AnimeDetails {
     return this.details
 }
 
-fun AnimeDetails.toEntity(source: ProviderType): AnimeDetailsEntity {
+fun AnimeDetails.toEntity(): AnimeDetailsEntity {
     return AnimeDetailsEntity(
         id = this.id,
-        source = source,
+        source = this.source,
         details = this, // The Room JSON converter handles this automatically
         updatedAt = System.currentTimeMillis()
     )
@@ -113,10 +112,10 @@ fun MangaDetailsEntity.toDomain(): MangaDetails {
     return this.details
 }
 
-fun MangaDetails.toEntity(source: ProviderType): MangaDetailsEntity {
+fun MangaDetails.toEntity(): MangaDetailsEntity {
     return MangaDetailsEntity(
         id = this.id,
-        source = source,
+        source = this.source,
         details = this,
         updatedAt = System.currentTimeMillis()
     )
@@ -131,10 +130,10 @@ fun MangaDetails.toEntity(source: ProviderType): MangaDetailsEntity {
  * Converts the rich Details object back into a lightweight List Entity.
  * Use this to update the Home Screen cache after fetching details!
  */
-fun AnimeDetails.toBaseEntity(source: ProviderType): AnimeEntity {
+fun AnimeDetails.toBaseEntity(): AnimeEntity {
     return AnimeEntity(
         id = this.id,
-        source = source,
+        source = this.source,
         title = this.title,
         coverImage = this.coverImage,
         bannerImage = this.bannerImage,
@@ -156,10 +155,10 @@ fun AnimeDetails.toBaseEntity(source: ProviderType): AnimeEntity {
     )
 }
 
-fun MangaDetails.toBaseEntity(source: ProviderType): MangaEntity {
+fun MangaDetails.toBaseEntity(): MangaEntity {
     return MangaEntity(
         id = this.id,
-        source = source,
+        source = this.source,
         title = this.title,
         coverImage = this.coverImage,
         bannerImage = this.bannerImage,

@@ -24,7 +24,8 @@ data class AnimeRemoteKeys(
 
     // Pagination pointers
     val prevPage: Int?,
-    val nextPage: Int?
+    val nextPage: Int?,
+    val lastUpdated: Long = System.currentTimeMillis()
 )
 
 

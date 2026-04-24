@@ -33,11 +33,14 @@ buildConfig {
     buildConfigField("String", "MAL_BASE_URL", localProperties.getProperty("MAL_BASE_URL") ?: "https://api.myanimelist.net/v2")
     buildConfigField("String", "JIKAN_BASE_URL", localProperties.getProperty("JIKAN_BASE_URL") ?: "https://api.jikan.moe/v4")
 
-    buildConfigField("String", "ANILIST_TOKEN", token)
-    buildConfigField("String", "MAL_TOKEN", malToken)
+    //REDIRECT URI
+    buildConfigField("String", "AUTH_REDIRECT_URI", localProperties.getProperty("AUTH_REDIRECT_URI") )
+
+
     buildConfigField("Boolean", "IS_DEBUG", true)
 
     buildConfigField("String", "ANILIST_CLIENT_ID", localProperties.getProperty("ANILIST_CLIENT_ID") ?: "")
+    buildConfigField("String", "ANILIST_CLIENT_SECRET", localProperties.getProperty("ANILIST_CLIENT_SECRET") ?: "")
     buildConfigField("String", "MAL_CLIENT_ID", localProperties.getProperty("MAL_CLIENT_ID") ?: "")
 
 }
@@ -140,6 +143,10 @@ kotlin {
             implementation(libs.kotlinx.coroutinesSwing)
             //ktor
             implementation(libs.ktor.client.cio)
+            implementation(libs.ktor.server.core)
+            implementation(libs.ktor.server.netty)
+
+            //settings
 
             implementation(libs.multiplatform.settings.jvm)
         }

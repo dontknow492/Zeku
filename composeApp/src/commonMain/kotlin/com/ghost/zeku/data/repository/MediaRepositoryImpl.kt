@@ -6,8 +6,13 @@ import com.ghost.zeku.data.local.room.AppDatabase
 import com.ghost.zeku.data.local.room.toBaseEntity
 import com.ghost.zeku.data.local.room.toDomain
 import com.ghost.zeku.data.local.room.toEntity
-import com.ghost.zeku.data.paging.*
+import com.ghost.zeku.data.paging.GenericPagingSource
+import com.ghost.zeku.data.paging.category.AnimeRemoteMediator
+import com.ghost.zeku.data.paging.category.MangaRemoteMediator
+import com.ghost.zeku.data.paging.item.ChapterRemoteMediator
+import com.ghost.zeku.data.paging.item.EpisodeRemoteMediator
 import com.ghost.zeku.domain.MediaSource
+import com.ghost.zeku.domain.model.api.ApiError
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.common.TrackEntry
 import com.ghost.zeku.domain.model.enum.AnimeCategory
@@ -17,6 +22,10 @@ import com.ghost.zeku.domain.model.enum.TrackStatus
 import com.ghost.zeku.domain.model.media.*
 import com.ghost.zeku.domain.model.search.AnimeSearchFilter
 import com.ghost.zeku.domain.model.search.MangaSearchFilter
+import com.ghost.zeku.domain.provider.AnimeDetailsProvider
+import com.ghost.zeku.domain.provider.AnimeListProvider
+import com.ghost.zeku.domain.provider.MangaDetailsProvider
+import com.ghost.zeku.domain.provider.MangaListProvider
 import com.ghost.zeku.domain.repository.MediaRepository
 import com.ghost.zeku.domain.repository.UserSettings
 import io.github.aakira.napier.Napier
@@ -26,10 +35,15 @@ import kotlinx.coroutines.flow.*
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * The single source of truth for all Media data in the app.
- * It intelligently routes requests to the user's active provider (AniList, MAL, etc.)
- * and protects the UI from requesting unsupported data.
+ * Result wrapper for Repository -> UI communication.
+ * Treats Errors and Loading states as Data to prevent flow crashes.
  */
+sealed class DataResult<out T> {
+    data class Loading(val progress: Float? = null) : DataResult<Nothing>()
+    data class Success<T>(val data: T, val isFromCache: Boolean = false) : DataResult<T>()
+    data class Error(val error: ApiError) : DataResult<Nothing>()
+}
+
 class MediaRepositoryImpl(
     private val settings: UserSettings,
     private val database: AppDatabase,
@@ -42,7 +56,6 @@ class MediaRepositoryImpl(
 
     private val searchDebounce: Long
         get() = settings.preferences.value.searchDebounceMillis
-
 
     override val activeProviderFlow: Flow<ProviderType> =
         settings.preferences.map { it.activeProvider }
@@ -58,355 +71,108 @@ class MediaRepositoryImpl(
         else sources.keys.first()
 
         val source = sources[actualType]!!
-        Napier.v { "Active provider resolved: requested=$currentType, using=$actualType" }
         return Pair(actualType, source)
     }
 
     // ========================================================================
-    // HOME SCREEN HELPERS
+    // REUSABLE OFFLINE-FIRST ENGINE
     // ========================================================================
 
-    override suspend fun getAvailableAnimeCategories(): List<AnimeCategory> {
-        val (type, source) = getActiveProviderInfo()
-        val categories = AnimeCategory.entries.filter { source.supportsCategory(it) }
-        Napier.d { "Available anime categories for $type: $categories" }
-        return categories
-    }
+    /**
+     * A generic, reflection-free engine that handles the Cache-Then-Network pattern.
+     * It completely removes boilerplate from individual detail fetching methods.
+     */
+    private fun <T, E> offlineFirstFlow(
+        identifier: String,
+        getCached: suspend (ProviderType) -> E?,
+        getUpdatedAt: (E) -> Long,
+        toDomain: (E) -> T,
+        fetchNetwork: suspend (MediaSource) -> ApiResult<T>,
+        saveToDb: suspend (T, ProviderType) -> Unit
+    ): Flow<DataResult<T>> = flow {
+        emit(DataResult.Loading())
+        val (sourceType, source) = getActiveProviderInfo()
 
-    override suspend fun getAvailableMangaCategories(): List<MangaCategory> {
-        val (type, source) = getActiveProviderInfo()
-        val categories = MangaCategory.entries.filter { source.supportsCategory(it) }
-        Napier.d { "Available manga categories for $type: $categories" }
-        return categories
-    }
+        // 1. Check local DB for instant UI load
+        val cachedEntity = getCached(sourceType)
+        var isCacheFresh = false
 
-    // ========================================================================
-    // PAGINATED LISTS (Offline-First via Room & RemoteMediator)
-    // ========================================================================
+        if (cachedEntity != null) {
+            Napier.v { "[$identifier] Cache HIT." }
+            emit(DataResult.Success(toDomain(cachedEntity), isFromCache = true))
 
-    @OptIn(ExperimentalCoroutinesApi::class, ExperimentalPagingApi::class)
-    override fun getAnimeList(
-        category: AnimeCategory,
-        perPage: Int // Driven by the ViewModel which reads it from UserPreferences!
-    ): Flow<PagingData<Anime>> {
-
-        return activeProviderFlow
-            .distinctUntilChanged()
-            .flatMapLatest { providerType ->
-
-                val source = sources[providerType]
-                if (source == null) {
-                    Napier.w { "No source found for provider: $providerType" }
-                    return@flatMapLatest flowOf(PagingData.empty())
-                }
-
-                if (!source.supportsCategory(category)) {
-                    Napier.w { "Category $category not supported by provider $providerType" }
-                    return@flatMapLatest flowOf(PagingData.empty())
-                }
-
-                Napier.v { "Providing anime list: category=$category, provider=$providerType, pageSize=$perPage" }
-                Pager(
-                    config = PagingConfig(
-                        pageSize = perPage,
-                        enablePlaceholders = false
-                    ),
-                    remoteMediator = AnimeRemoteMediator(
-                        category = category,
-                        currentProviderType = providerType,
-                        provider = source,
-                        database = database
-                    ),
-                    pagingSourceFactory = {
-                        database.animeDao().getAnimeByCategory(category, providerType)
-                    }
-                ).flow
-                    .map { pagingData -> pagingData.map { it.toDomain() } }
-                    .onStart { Napier.v { "Anime paging flow started for $category on $providerType" } }
-            }
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class, ExperimentalPagingApi::class)
-    override fun getMangaList(
-        category: MangaCategory,
-        perPage: Int
-    ): Flow<PagingData<Manga>> {
-
-        return activeProviderFlow
-            .distinctUntilChanged()
-            .flatMapLatest { providerType ->
-
-                val source = sources[providerType]
-                if (source == null) {
-                    Napier.w { "No source found for provider: $providerType" }
-                    return@flatMapLatest flowOf(PagingData.empty())
-                }
-
-                if (!source.supportsCategory(category)) {
-                    Napier.w { "Category $category not supported by provider $providerType" }
-                    return@flatMapLatest flowOf(PagingData.empty())
-                }
-
-                Napier.v { "Providing manga list: category=$category, provider=$providerType, pageSize=$perPage" }
-                Pager(
-                    config = PagingConfig(
-                        pageSize = perPage,
-                        enablePlaceholders = false
-                    ),
-                    remoteMediator = MangaRemoteMediator(
-                        category = category,
-                        currentProviderType = providerType,
-                        provider = source,
-                        database = database
-                    ),
-                    pagingSourceFactory = {
-                        database.mangaDao().getMangaByCategory(category, providerType)
-                    }
-                ).flow
-                    .map { pagingData -> pagingData.map { it.toDomain() } }
-                    .onStart { Napier.v { "Manga paging flow started for $category on $providerType" } }
-            }
-    }
-
-    // ========================================================================
-    // DISCOVERY & SEARCH (Online-Only)
-    // ========================================================================
-
-    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-    override fun searchAnime(
-        query: String?,
-        perPage: Int,
-        filter: AnimeSearchFilter
-    ): Flow<PagingData<Anime>> {
-
-        return activeProviderFlow
-            .distinctUntilChanged()
-            .combine(
-                flowOf(query)
-                    .debounce(searchDebounce.milliseconds)
-                    .distinctUntilChanged()
-            ) { providerType, q ->
-                providerType to q
-            }
-            .flatMapLatest { (providerType, q) ->
-
-                val source = sources[providerType]
-                if (source == null) {
-                    Napier.w { "No source for provider $providerType during anime search" }
-                    return@flatMapLatest flowOf(PagingData.empty())
-                }
-
-                Napier.d { "Anime search: query='$q', provider=$providerType, filter=$filter" }
-                Pager(
-                    config = PagingConfig(
-                        pageSize = perPage,
-                        enablePlaceholders = false
-                    ),
-                    pagingSourceFactory = {
-                        GenericPagingSource { page ->
-                            source.searchAnime(query = q, page = page, perPage = perPage, filter = filter)
-                        }
-                    }
-                ).flow
-                    .onStart { Napier.v { "Anime search paging started for query='$q'" } }
-            }
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-    override fun searchManga(
-        query: String?,
-        perPage: Int,
-        filter: MangaSearchFilter
-    ): Flow<PagingData<Manga>> {
-
-        return activeProviderFlow
-            .distinctUntilChanged()
-            .combine(
-                flowOf(query)
-                    .debounce(searchDebounce.milliseconds)
-                    .distinctUntilChanged()
-            ) { providerType, q ->
-                providerType to q
-            }
-            .flatMapLatest { (providerType, q) ->
-
-                val source = sources[providerType]
-                if (source == null) {
-                    Napier.w { "No source for provider $providerType during manga search" }
-                    return@flatMapLatest flowOf(PagingData.empty())
-                }
-
-                Napier.d { "Manga search: query='$q', provider=$providerType, filter=$filter" }
-                Pager(
-                    config = PagingConfig(
-                        pageSize = perPage,
-                        enablePlaceholders = false
-                    ),
-                    pagingSourceFactory = {
-                        GenericPagingSource { page ->
-                            source.searchManga(query = q, page = page, perPage = perPage, filter = filter)
-                        }
-                    }
-                ).flow
-                    .onStart { Napier.v { "Manga search paging started for query='$q'" } }
-            }
-    }
-
-    // ========================================================================
-    // USER TRACKING / LISTS
-    // ========================================================================
-
-    override suspend fun getUserAnimeList(
-        userId: Int,
-        status: TrackStatus,
-        page: Int,
-        perPage: Int,
-        accessToken: String
-    ): ApiResult<PageResult<Anime>> {
-        Napier.d { "Fetching user anime list: userId=$userId, status=$status, page=$page, perPage=$perPage" }
-        val result = getActiveProviderInfo().second.getUserAnimeList(userId, status, page, perPage, accessToken)
-        when (result) {
-            is ApiResult.Success -> Napier.i { "User anime list fetched successfully (page $page, ${result.data.items.size} items)" }
-            is ApiResult.Error -> Napier.e(result.error.cause) { "Failed to fetch user anime list: ${result.error.message}" }
-            else -> {}
-        }
-        return result
-    }
-
-    override suspend fun getUserMangaList(
-        userId: Int,
-        status: TrackStatus,
-        page: Int,
-        perPage: Int,
-        accessToken: String
-    ): ApiResult<PageResult<Manga>> {
-        Napier.d { "Fetching user manga list: userId=$userId, status=$status, page=$page, perPage=$perPage" }
-        val result = getActiveProviderInfo().second.getUserMangaList(userId, status, page, perPage, accessToken)
-        when (result) {
-            is ApiResult.Success -> Napier.i { "User manga list fetched successfully (page $page, ${result.data.items.size} items)" }
-            is ApiResult.Error -> Napier.e(result.error.cause) { "Failed to fetch user manga list: ${result.error.message}" }
-            else -> {}
-        }
-        return result
-    }
-
-    override suspend fun updateMediaListEntry(
-        accessToken: String,
-        mediaId: Int,
-        progress: Int?,
-        status: TrackStatus?,
-        score: Double?
-    ): ApiResult<TrackEntry> {
-        val result = getActiveProviderInfo().second.updateMediaListEntry(accessToken, mediaId, progress, status, score)
-        when (result) {
-            is ApiResult.Success -> Napier.i { "Media list entry updated: mediaId=$mediaId -> ${result.data}" }
-            is ApiResult.Error -> Napier.e(result.error.cause) { "Update failed for mediaId=$mediaId: ${result.error.message}" }
-            else -> {}
-        }
-        return result
-    }
-
-    override suspend fun deleteMediaListEntry(accessToken: String, entryId: Int): Boolean {
-        val success = getActiveProviderInfo().second.deleteMediaListEntry(accessToken, entryId)
-        if (success) Napier.i { "Media list entry deleted: entryId=$entryId" }
-        else Napier.w { "Failed to delete media list entry: entryId=$entryId" }
-        return success
-    }
-
-    // ========================================================================
-    // EAGER DETAILS CACHING
-    // ========================================================================
-
-    override fun getAnimeDetails(id: Int): Flow<AnimeDetails> = flow {
-        val (source, provider) = getActiveProviderInfo()
-        Napier.v { "getAnimeDetails: id=$id, provider=$source" }
-
-        // 1. INSTANT OFFLINE LOAD: Read the JSON cache from Room and emit immediately
-        val cached = database.animeDao().observeAnimeDetails(id, source).firstOrNull()
-        if (cached != null) {
-            Napier.v { "Anime details cache HIT for id=$id" }
-            emit(cached.toDomain())
-
-            val cacheAgeMillis = System.currentTimeMillis() - cached.updatedAt
-
-            // Replaced hardcoded value with dynamic preference check
-            if (cacheAgeMillis < detailTtl) {
-                Napier.v { "Anime details cache is still fresh. Skipping network fetch for id=$id" }
-                return@flow
-            }
+            val cacheAgeMillis = System.currentTimeMillis() - getUpdatedAt(cachedEntity)
+            isCacheFresh = cacheAgeMillis < detailTtl
         } else {
-            Napier.v { "Anime details cache MISS for id=$id" }
+            Napier.v { "[$identifier] Cache MISS." }
         }
 
-        // 2. BACKGROUND NETWORK FETCH
-        when (val result = provider.getAnimeDetails(id)) {
+        // 2. Skip network if data is recent
+        if (isCacheFresh) {
+            Napier.v { "[$identifier] Cache is fresh. Skipping network fetch." }
+            return@flow
+        }
+
+        // 3. Fetch fresh data from API
+        Napier.v { "[$identifier] Fetching fresh data from network..." }
+        when (val result = fetchNetwork(source)) {
             is ApiResult.Success -> {
-                val freshDetails = result.data
-                database.useWriterConnection {
-                    database.animeDao().upsertAnimeDetails(freshDetails.toEntity(source))
-                    database.animeDao().upsert(freshDetails.toBaseEntity(source))
-                }
-                Napier.v { "Saved anime details to cache: id=$id" }
-                emit(freshDetails)
+                saveToDb(result.data, sourceType)
+                emit(DataResult.Success(result.data, isFromCache = false))
             }
 
             is ApiResult.Error -> {
-                Napier.e(result.error.cause) { "Network error fetching anime details id=$id: ${result.error.message}" }
-                if (cached == null) throw Exception(result.error.message)
+                Napier.e(result.error.cause) { "[$identifier] Network error: ${result.error.message}" }
+                emit(DataResult.Error(result.error))
             }
 
             else -> {}
         }
     }
 
-    override fun getMangaDetails(id: Int): Flow<MangaDetails> = flow {
-        val (source, provider) = getActiveProviderInfo()
-        Napier.v { "getMangaDetails: id=$id, provider=$source" }
+    // ========================================================================
+    // EAGER DETAILS CACHING (Using DataResult & Offline-First Engine)
+    // ========================================================================
 
-        val cached = database.mangaDao().observeMangaDetails(id, source).firstOrNull()
-        if (cached != null) {
-            Napier.v { "Manga details cache HIT for id=$id" }
-            emit(cached.toDomain())
-
-            val cacheAgeMillis = System.currentTimeMillis() - cached.updatedAt
-
-            // Replaced hardcoded value with dynamic preference check
-            if (cacheAgeMillis < detailTtl) {
-                Napier.v { "Manga details cache is still fresh. Skipping network fetch for id=$id" }
-                return@flow
-            }
-        } else {
-            Napier.v { "Manga details cache MISS for id=$id" }
-        }
-
-        when (val result = provider.getMangaDetails(id)) {
-            is ApiResult.Success -> {
-                val freshDetails = result.data
+    override fun getAnimeDetails(id: Int): Flow<DataResult<AnimeDetails>> {
+        return offlineFirstFlow(
+            identifier = "AnimeDetails:id=$id",
+            getCached = { type -> database.animeDao().observeAnimeDetails(id, type).firstOrNull() },
+            getUpdatedAt = { it.updatedAt },
+            toDomain = { it.toDomain() },
+            fetchNetwork = { it.getAnimeDetails(id) },
+            saveToDb = { freshDetails, type ->
                 database.useWriterConnection {
-                    database.mangaDao().upsertMangaDetails(freshDetails.toEntity(source))
-                    database.mangaDao().upsert(freshDetails.toBaseEntity(source))
+                    database.animeDao().upsertAnimeDetails(freshDetails.toEntity())
+                    database.animeDao().upsert(freshDetails.toBaseEntity())
                 }
-                Napier.v { "Saved manga details to cache: id=$id" }
-                emit(freshDetails)
             }
+        )
+    }
 
-            is ApiResult.Error -> {
-                Napier.e(result.error.cause) { "Network error fetching manga details id=$id: ${result.error.message}" }
-                if (cached == null) throw Exception(result.error.message)
+    override fun getMangaDetails(id: Int): Flow<DataResult<MangaDetails>> {
+        return offlineFirstFlow(
+            identifier = "MangaDetails:id=$id",
+            getCached = { type -> database.mangaDao().observeMangaDetails(id, type).firstOrNull() },
+            getUpdatedAt = { it.updatedAt },
+            toDomain = { it.toDomain() },
+            fetchNetwork = { it.getMangaDetails(id) },
+            saveToDb = { freshDetails, type ->
+                database.useWriterConnection {
+                    database.mangaDao().upsertMangaDetails(freshDetails.toEntity())
+                    database.mangaDao().upsert(freshDetails.toBaseEntity())
+                }
             }
-
-            else -> {}
-        }
+        )
     }
 
     override suspend fun refreshAnimeDetails(id: Int): ApiResult<Unit> {
-        val (source, provider) = getActiveProviderInfo()
+        val (sourceType, provider) = getActiveProviderInfo()
         return when (val result = provider.getAnimeDetails(id)) {
             is ApiResult.Success -> {
-                val freshDetails = result.data
                 database.useWriterConnection {
-                    database.animeDao().upsertAnimeDetails(freshDetails.toEntity(source))
-                    database.animeDao().upsert(freshDetails.toBaseEntity(source))
+                    database.animeDao().upsertAnimeDetails(result.data.toEntity())
+                    database.animeDao().upsert(result.data.toBaseEntity())
                 }
                 ApiResult.Success(Unit)
             }
@@ -418,13 +184,12 @@ class MediaRepositoryImpl(
     }
 
     override suspend fun refreshMangaDetails(id: Int): ApiResult<Unit> {
-        val (source, provider) = getActiveProviderInfo()
+        val (sourceType, provider) = getActiveProviderInfo()
         return when (val result = provider.getMangaDetails(id)) {
             is ApiResult.Success -> {
-                val freshDetails = result.data
                 database.useWriterConnection {
-                    database.mangaDao().upsertMangaDetails(freshDetails.toEntity(source))
-                    database.mangaDao().upsert(freshDetails.toBaseEntity(source))
+                    database.mangaDao().upsertMangaDetails(result.data.toEntity())
+                    database.mangaDao().upsert(result.data.toBaseEntity())
                 }
                 ApiResult.Success(Unit)
             }
@@ -436,59 +201,172 @@ class MediaRepositoryImpl(
     }
 
     // ========================================================================
-    // LAZY PAGINATED FETCHES (Online Only)
+    // HOME SCREEN HELPERS
+    // ========================================================================
+
+    override fun getAvailableAnimeCategories(): Flow<List<AnimeCategory>> {
+        return activeProviderFlow.map { currentType ->
+            val actualType = if (sources.containsKey(currentType)) currentType else sources.keys.first()
+            val source = sources[actualType]!!
+
+            AnimeCategory.entries.filter { source.supportsCategory(it) }.also {
+                Napier.d { "Available anime categories for $actualType: $it" }
+            }
+        }.distinctUntilChanged() // Prevents UI recomposition if the list hasn't actually changed
+    }
+
+    override fun getAvailableMangaCategories(): Flow<List<MangaCategory>> {
+        return activeProviderFlow.map { currentType ->
+            val actualType = if (sources.containsKey(currentType)) currentType else sources.keys.first()
+            val source = sources[actualType]!!
+
+            MangaCategory.entries.filter { source.supportsCategory(it) }.also {
+                Napier.d { "Available manga categories for $actualType: $it" }
+            }
+        }.distinctUntilChanged()
+    }
+
+    // ========================================================================
+    // PAGINATED LISTS (Offline-First via Room & RemoteMediator)
+    // ========================================================================
+
+    @OptIn(ExperimentalCoroutinesApi::class, ExperimentalPagingApi::class)
+    override fun getAnimeList(category: AnimeCategory, perPage: Int): Flow<PagingData<Anime>> {
+        return activeProviderFlow.distinctUntilChanged().flatMapLatest { providerType ->
+            val source = sources[providerType]
+            if (source == null || !source.supportsCategory(category)) {
+                return@flatMapLatest flowOf(PagingData.empty())
+            }
+
+            Pager(
+                config = PagingConfig(pageSize = perPage, enablePlaceholders = false),
+                remoteMediator = AnimeRemoteMediator(
+                    category = category,
+                    currentProviderType = providerType,
+                    provider = source as AnimeListProvider,
+                    database = database,
+
+                    ),
+                pagingSourceFactory = { database.animeDao().getAnimeByCategory(category, providerType) }
+            ).flow.map { it.map { entity -> entity.toDomain() } }
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class, ExperimentalPagingApi::class)
+    override fun getMangaList(category: MangaCategory, perPage: Int): Flow<PagingData<Manga>> {
+        return activeProviderFlow.distinctUntilChanged().flatMapLatest { providerType ->
+            val source = sources[providerType]
+            if (source == null || !source.supportsCategory(category)) {
+                return@flatMapLatest flowOf(PagingData.empty())
+            }
+
+            Pager(
+                config = PagingConfig(pageSize = perPage, enablePlaceholders = false),
+                remoteMediator = MangaRemoteMediator(
+                    category = category,
+                    currentProviderType = providerType,
+                    provider = source as MangaListProvider,
+                    database = database
+                ),
+                pagingSourceFactory = { database.mangaDao().getMangaByCategory(category, providerType) }
+            ).flow.map { it.map { entity -> entity.toDomain() } }
+        }
+    }
+
+    // ========================================================================
+    // DISCOVERY & SEARCH (Online-Only)
+    // ========================================================================
+
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+    override fun searchAnime(query: String?, perPage: Int, filter: AnimeSearchFilter): Flow<PagingData<Anime>> {
+        return activeProviderFlow.distinctUntilChanged()
+            .combine(
+                flowOf(query).debounce(searchDebounce.milliseconds).distinctUntilChanged()
+            ) { type, q -> type to q }
+            .flatMapLatest { (providerType, q) ->
+                val source = sources[providerType] ?: return@flatMapLatest flowOf(PagingData.empty())
+
+                Pager(
+                    config = PagingConfig(pageSize = perPage, enablePlaceholders = false),
+                    pagingSourceFactory = {
+                        GenericPagingSource { page ->
+                            source.searchAnime(
+                                q,
+                                page,
+                                perPage,
+                                filter
+                            )
+                        }
+                    }
+                ).flow
+            }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+    override fun searchManga(query: String?, perPage: Int, filter: MangaSearchFilter): Flow<PagingData<Manga>> {
+        return activeProviderFlow.distinctUntilChanged()
+            .combine(
+                flowOf(query).debounce(searchDebounce.milliseconds).distinctUntilChanged()
+            ) { type, q -> type to q }
+            .flatMapLatest { (providerType, q) ->
+                val source = sources[providerType] ?: return@flatMapLatest flowOf(PagingData.empty())
+
+                Pager(
+                    config = PagingConfig(pageSize = perPage, enablePlaceholders = false),
+                    pagingSourceFactory = {
+                        GenericPagingSource { page ->
+                            source.searchManga(
+                                q,
+                                page,
+                                perPage,
+                                filter
+                            )
+                        }
+                    }
+                ).flow
+            }
+    }
+
+    // ========================================================================
+    // LAZY PAGINATED FETCHES (Online Only or RemoteMediator driven)
     // ========================================================================
 
     @OptIn(ExperimentalPagingApi::class, ExperimentalCoroutinesApi::class)
     override fun getAnimeEpisodes(id: Int): Flow<PagingData<Episode>> {
-        Napier.v { "Lazy fetch anime episodes for id=$id" }
-
         return activeProviderFlow.flatMapLatest { currentType ->
             val actualType = if (sources.containsKey(currentType)) currentType else sources.keys.first()
             val source = sources[actualType]!!
 
             Pager(
-                // Use the user's preferred page size directly from Settings!
                 config = PagingConfig(pageSize = settings.preferences.value.perPage, enablePlaceholders = false),
                 remoteMediator = EpisodeRemoteMediator(
                     mediaId = id,
                     currentProviderType = actualType,
-                    provider = source,
+                    provider = source as AnimeDetailsProvider,
                     database = database,
-                    // NOTE: Make sure to update your EpisodeRemoteMediator constructor to accept `cacheTimeoutMillis: Long`
                     cacheTimeoutMillis = settings.preferences.value.episodeTimeout
                 ),
-                pagingSourceFactory = {
-                    database.episodeDao().getEpisodesByMedia(id, actualType)
-                }
-            ).flow.map { pagingData ->
-                pagingData.map { it.toDomain() }
-            }
-        }.onStart { Napier.v { "Anime episodes paging started for id=$id" } }
+                pagingSourceFactory = { database.episodeDao().getEpisodesByMedia(id, actualType) }
+            ).flow.map { it.map { ep -> ep.toDomain() } }
+        }
     }
 
     override fun getAnimeRecommendations(id: Int): Flow<PagingData<Anime>> {
         val pageSize = settings.preferences.value.perPage
         return Pager(config = PagingConfig(pageSize = pageSize)) {
-            GenericPagingSource { page ->
-                getActiveProviderInfo().second.getAnimeRecommendations(id, page)
-            }
+            GenericPagingSource { page -> getActiveProviderInfo().second.getAnimeRecommendations(id, page) }
         }.flow
     }
 
     override fun getAnimeReviews(id: Int): Flow<PagingData<Review>> {
         val pageSize = settings.preferences.value.perPage
         return Pager(config = PagingConfig(pageSize = pageSize)) {
-            GenericPagingSource { page ->
-                getActiveProviderInfo().second.getAnimeReviews(id, page, pageSize)
-            }
+            GenericPagingSource { page -> getActiveProviderInfo().second.getAnimeReviews(id, page, pageSize) }
         }.flow
     }
 
     @OptIn(ExperimentalPagingApi::class, ExperimentalCoroutinesApi::class)
     override fun getMangaChapters(id: Int): Flow<PagingData<Chapter>> {
-        Napier.v { "Lazy fetch manga chapters for id=$id" }
-
         return activeProviderFlow.flatMapLatest { currentType ->
             val actualType = if (sources.containsKey(currentType)) currentType else sources.keys.first()
             val source = sources[actualType]!!
@@ -498,35 +376,52 @@ class MediaRepositoryImpl(
                 remoteMediator = ChapterRemoteMediator(
                     mediaId = id,
                     currentProviderType = actualType,
-                    provider = source,
+                    provider = source as MangaDetailsProvider,
                     database = database,
-                    // NOTE: Make sure to update your ChapterRemoteMediator constructor to accept `cacheTimeoutMillis: Long`
                     cacheTimeoutMillis = settings.preferences.value.chapterTimeout
                 ),
-                pagingSourceFactory = {
-                    database.chapterDao().getChaptersByMedia(id, actualType)
-                }
-            ).flow.map { pagingData ->
-                pagingData.map { it.toDomain() }
-            }
-        }.onStart { Napier.v { "Manga chapters paging started for id=$id" } }
+                pagingSourceFactory = { database.chapterDao().getChaptersByMedia(id, actualType) }
+            ).flow.map { it.map { ch -> ch.toDomain() } }
+        }
     }
 
     override fun getMangaRecommendations(id: Int): Flow<PagingData<Manga>> {
         val pageSize = settings.preferences.value.perPage
         return Pager(config = PagingConfig(pageSize = pageSize)) {
-            GenericPagingSource { page ->
-                getActiveProviderInfo().second.getMangaRecommendations(id, page)
-            }
+            GenericPagingSource { page -> getActiveProviderInfo().second.getMangaRecommendations(id, page) }
         }.flow
     }
 
     override fun getMangaReviews(id: Int): Flow<PagingData<Review>> {
         val pageSize = settings.preferences.value.perPage
         return Pager(config = PagingConfig(pageSize = pageSize)) {
-            GenericPagingSource { page ->
-                getActiveProviderInfo().second.getMangaReviews(id, page, pageSize)
-            }
+            GenericPagingSource { page -> getActiveProviderInfo().second.getMangaReviews(id, page, pageSize) }
         }.flow
+    }
+
+    // ========================================================================
+    // USER TRACKING / LISTS
+    // ========================================================================
+
+    override suspend fun getUserAnimeList(
+        userId: Int, status: TrackStatus, page: Int, perPage: Int, accessToken: String
+    ): ApiResult<PageResult<Anime>> {
+        return getActiveProviderInfo().second.getUserAnimeList(userId, status, page, perPage, accessToken)
+    }
+
+    override suspend fun getUserMangaList(
+        userId: Int, status: TrackStatus, page: Int, perPage: Int, accessToken: String
+    ): ApiResult<PageResult<Manga>> {
+        return getActiveProviderInfo().second.getUserMangaList(userId, status, page, perPage, accessToken)
+    }
+
+    override suspend fun updateMediaListEntry(
+        accessToken: String, mediaId: Int, progress: Int?, status: TrackStatus?, score: Double?
+    ): ApiResult<TrackEntry> {
+        return getActiveProviderInfo().second.updateMediaListEntry(accessToken, mediaId, progress, status, score)
+    }
+
+    override suspend fun deleteMediaListEntry(accessToken: String, entryId: Int): Boolean {
+        return getActiveProviderInfo().second.deleteMediaListEntry(accessToken, entryId)
     }
 }

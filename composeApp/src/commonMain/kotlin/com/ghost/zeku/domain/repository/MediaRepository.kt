@@ -1,6 +1,7 @@
 package com.ghost.zeku.domain.repository
 
 import androidx.paging.PagingData
+import com.ghost.zeku.data.repository.DataResult
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.common.TrackEntry
 import com.ghost.zeku.domain.model.enum.AnimeCategory
@@ -33,9 +34,9 @@ interface MediaRepository {
      * It returns a list of ONLY the categories the active provider supports.
      * You can then loop through this list to generate your UI Rows.
      */
-    suspend fun getAvailableAnimeCategories(): List<AnimeCategory>
+    fun getAvailableAnimeCategories(): Flow<List<AnimeCategory>>
 
-    suspend fun getAvailableMangaCategories(): List<MangaCategory>
+    fun getAvailableMangaCategories(): Flow<List<MangaCategory>>
 
     // ========================================================================
     // DISCOVERY & SEARCH
@@ -97,9 +98,9 @@ interface MediaRepository {
      * Returns a stream that first emits cached data, then fetches fresh data
      * from the network, updates the cache, and emits the fresh data.
      */
-    fun getAnimeDetails(id: Int): Flow<AnimeDetails>
+    fun getAnimeDetails(id: Int): Flow<DataResult<AnimeDetails>>
 
-    fun getMangaDetails(id: Int): Flow<MangaDetails>
+    fun getMangaDetails(id: Int): Flow<DataResult<MangaDetails>>
 
     // NEW: Manual force refresh
     suspend fun refreshAnimeDetails(id: Int): ApiResult<Unit>

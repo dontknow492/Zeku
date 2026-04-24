@@ -77,6 +77,7 @@ fun MalNode<MalMangaDto>.toMangaDomain(): Manga? {
 fun MalAnimeDto.toAnimeDetailsDomain(jikanCharacters: List<JikanCharacterEdge>? = null): AnimeDetails {
     return AnimeDetails(
         id = this.id ?: 0,
+        source = ProviderType.MYANIMELIST,
         title = MediaTitle(
             romaji = this.title,
             english = this.alternativeTitles?.en,
@@ -117,6 +118,7 @@ fun MalAnimeDto.toAnimeDetailsDomain(jikanCharacters: List<JikanCharacterEdge>? 
 fun MalMangaDto.toMangaDetailsDomain(jikanCharacters: List<JikanCharacterEdge>? = null): MangaDetails {
     return MangaDetails(
         id = this.id ?: 0,
+        source = ProviderType.MYANIMELIST,
         title = MediaTitle(
             romaji = this.title,
             english = this.alternativeTitles?.en,

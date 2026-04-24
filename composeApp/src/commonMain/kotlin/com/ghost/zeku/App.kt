@@ -13,15 +13,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.ghost.zeku.data.local.room.AppDatabase
 import com.ghost.zeku.data.local.room.toEntity
+import com.ghost.zeku.data.repository.DataResult
 import com.ghost.zeku.domain.model.common.MediaDate
 import com.ghost.zeku.domain.model.common.MediaTitle
 import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
 import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.model.media.Anime
+import com.ghost.zeku.domain.model.media.AnimeDetails
 import com.ghost.zeku.domain.model.media.Manga
 import com.ghost.zeku.domain.repository.MediaRepository
 import com.ghost.zeku.domain.repository.UserSettings
@@ -36,19 +39,45 @@ import com.ghost.zeku.presentation.components.section.MediaSection
 import com.ghost.zeku.presentation.components.section.SectionLayout
 import com.ghost.zeku.presentation.theme.AppTheme
 import io.github.aakira.napier.Napier
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import org.koin.compose.koinInject
+import kotlin.time.Duration.Companion.seconds
 
 
 @Composable
 fun App() {
 
+
+//    val redirectListener: AuthRedirectListener = koinInject()
+//    TestAuthScreen(
+//        viewModel = AuthViewModel(koinInject(), koinInject())
+//    )
+
     val mediaRepository: MediaRepository = koinInject()
     val userSettings: UserSettings = koinInject()
+
+    val preferences by userSettings.preferences.collectAsStateWithLifecycle()
+
+    Text(preferences.toString())
+
+    LaunchedEffect(Unit) {
+        delay(3.seconds)
+        userSettings.updatePreferences {
+            it.copy(activeProvider = ProviderType.ANILIST)
+        }
+    }
+
 
 //    userSettings.setActiveProvider(ProviderType.MYANIMELIST)
 
     var animeList by remember { mutableStateOf<Flow<PagingData<Anime>>?>(null) }
+
+
+    val mediaId = when (preferences.activeProvider) {
+        ProviderType.MYANIMELIST -> 40748
+        ProviderType.ANILIST -> 113415
+    }
 
 //    val animeData: PagingData<Anime> by remember { mutableStateOf(PagingData.empty()) }
 
@@ -59,16 +88,19 @@ fun App() {
 //    }
 
 
-    animeList?.collectAsLazyPagingItems().let { pagingItems ->
-        Text(
-            text = "Total Anime: ${pagingItems?.itemCount}",
-            style = MaterialTheme.typography.displayLarge
-        )
-    }
+//    animeList?.collectAsLazyPagingItems().let { pagingItems ->
+//        Text(
+//            text = "Total Anime: ${pagingItems?.itemCount}",
+//            style = MaterialTheme.typography.displayLarge
+//        )
+//    }
 
 //    TestReview(mediaRepository)
 
 //    TestApp()
+
+
+    TestAnimeDetail(mediaRepository, mediaId)
 
 
 }
@@ -125,6 +157,26 @@ fun TestRecommendations(mediaRepository: MediaRepository) {
             Text(text = anime.toString(), style = MaterialTheme.typography.displayMedium)
         }
     }
+}
+
+@Composable
+fun TestAnimeDetail(mediaRepository: MediaRepository, id: Int) {
+    val animeDetailsFlow = remember { mediaRepository.getAnimeDetails(id) } // Flow<PagingData<Anime>>
+    var animeDetails: DataResult<AnimeDetails>? by remember { mutableStateOf(null) }
+
+    LaunchedEffect(animeDetailsFlow) {
+        Napier.i("Anime details: $animeDetailsFlow")
+        animeDetailsFlow.collect {
+            Napier.i("Anime details: $it")
+            animeDetails = it
+        }
+    }
+
+    Text(
+        text = animeDetails.toString(),
+        style = MaterialTheme.typography.displaySmall
+    )
+
 }
 
 

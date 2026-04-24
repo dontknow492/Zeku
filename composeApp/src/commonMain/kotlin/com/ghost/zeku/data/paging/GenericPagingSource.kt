@@ -4,6 +4,7 @@ package com.ghost.zeku.data.paging
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.ghost.zeku.domain.model.api.ApiResult
+import com.ghost.zeku.domain.model.api.getErrorMessage
 import com.ghost.zeku.domain.model.media.PageResult
 
 /**
@@ -34,7 +35,7 @@ class GenericPagingSource<T : Any>(
             }
 
             is ApiResult.Error -> {
-                LoadResult.Error(Exception(response.error.message))
+                LoadResult.Error(response.error.cause ?: Exception(response.getErrorMessage()))
             }
 
             is ApiResult.Empty -> {

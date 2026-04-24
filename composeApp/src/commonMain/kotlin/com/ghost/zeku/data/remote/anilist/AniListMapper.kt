@@ -65,6 +65,7 @@ fun AniListMedia.toMangaDomain(): Manga {
 fun AniListMedia.toAnimeDetailsDomain(): AnimeDetails {
     return AnimeDetails(
         id = this.id,
+        source = ProviderType.ANILIST,
         title = this.title.toDomain(), // Assuming you have this mapper already
         coverImage = this.coverImage?.large ?: "",
         bannerImage = this.bannerImage,
@@ -88,6 +89,7 @@ fun AniListMedia.toAnimeDetailsDomain(): AnimeDetails {
 fun AniListMedia.toMangaDetailsDomain(): MangaDetails {
     return MangaDetails(
         id = this.id,
+        source = ProviderType.ANILIST,
         title = this.title.toDomain(),
         coverImage = this.coverImage?.large ?: "",
         bannerImage = this.bannerImage,

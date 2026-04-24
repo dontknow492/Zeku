@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "68aaba59d9c354e206b51e0245813f48",
+    "identityHash": "a89ade9c1bb1e37d0f3b83f00ce137b5",
     "entities": [
       {
         "tableName": "anime",
@@ -585,7 +585,7 @@
       },
       {
         "tableName": "manga_remote_keys",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `source` TEXT NOT NULL, `category` TEXT NOT NULL, `sortOrder` INTEGER NOT NULL, `prevPage` INTEGER, `nextPage` INTEGER, PRIMARY KEY(`id`, `source`, `category`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `source` TEXT NOT NULL, `category` TEXT NOT NULL, `sortOrder` INTEGER NOT NULL, `prevPage` INTEGER, `nextPage` INTEGER, `lastUpdated` INTEGER NOT NULL, PRIMARY KEY(`id`, `source`, `category`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -620,6 +620,12 @@
             "fieldPath": "nextPage",
             "columnName": "nextPage",
             "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastUpdated",
+            "columnName": "lastUpdated",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -633,7 +639,7 @@
       },
       {
         "tableName": "anime_remote_keys",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `source` TEXT NOT NULL, `category` TEXT NOT NULL, `sortOrder` INTEGER NOT NULL, `prevPage` INTEGER, `nextPage` INTEGER, PRIMARY KEY(`id`, `source`, `category`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `source` TEXT NOT NULL, `category` TEXT NOT NULL, `sortOrder` INTEGER NOT NULL, `prevPage` INTEGER, `nextPage` INTEGER, `lastUpdated` INTEGER NOT NULL, PRIMARY KEY(`id`, `source`, `category`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -668,6 +674,12 @@
             "fieldPath": "nextPage",
             "columnName": "nextPage",
             "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastUpdated",
+            "columnName": "lastUpdated",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -776,7 +788,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '68aaba59d9c354e206b51e0245813f48')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a89ade9c1bb1e37d0f3b83f00ce137b5')"
     ]
   }
 }

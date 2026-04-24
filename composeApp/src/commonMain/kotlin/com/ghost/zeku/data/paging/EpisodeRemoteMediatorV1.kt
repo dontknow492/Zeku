@@ -14,7 +14,7 @@ import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.provider.AnimeDetailsProvider
 
 @OptIn(ExperimentalPagingApi::class)
-class EpisodeRemoteMediator(
+class EpisodeRemoteMediatorV1(
     private val mediaId: Int,
     private val currentProviderType: ProviderType,
     private val provider: AnimeDetailsProvider,

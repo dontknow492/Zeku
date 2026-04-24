@@ -3,16 +3,14 @@ package com.ghost.zeku.domain.model.media
 
 import com.ghost.zeku.domain.model.common.MediaTitle
 import com.ghost.zeku.domain.model.common.TrackEntry
-import com.ghost.zeku.domain.model.enum.CharacterRole
-import com.ghost.zeku.domain.model.enum.MediaFormat
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.enum.RelationType
+import com.ghost.zeku.domain.model.enum.*
 import kotlinx.serialization.Serializable
 
 
 @Serializable
 data class AnimeDetails(
     val id: Int,
+    val source: ProviderType,
     val title: MediaTitle,
     val coverImage: String,
     val bannerImage: String?,
@@ -37,6 +35,7 @@ data class AnimeDetails(
 @Serializable
 data class MangaDetails(
     val id: Int,
+    val source: ProviderType,
     val title: MediaTitle,
     val coverImage: String,
     val bannerImage: String?,
