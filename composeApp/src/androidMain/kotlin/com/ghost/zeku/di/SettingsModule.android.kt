@@ -1,13 +1,13 @@
 package com.ghost.zeku.di
 
+import com.ghost.zeku.data.settings.SettingsFactory
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.module.Module
+import org.koin.dsl.module
 
-import android.content.Context
-import com.russhwolf.settings.Settings
-import com.russhwolf.settings.SharedPreferencesSettings
-
-actual fun createSettings(): Settings {
-    val context: Context = org.koin.core.context.GlobalContext.get().get()
-    return SharedPreferencesSettings(
-        context.getSharedPreferences("settings", Context.MODE_PRIVATE),
-    )
+/**
+ * Android-specific module to provide the Factory with Context.
+ */
+actual fun platformSettingsModule() = module {
+    single { SettingsFactory(androidContext()) }
 }

@@ -71,5 +71,3 @@ interface AnimeDao {
 
 
 
-
-

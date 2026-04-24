@@ -5,7 +5,9 @@ import io.ktor.client.engine.okhttp.*
 
 actual fun provideHttpClientEngine(): HttpClientEngine {
     return OkHttp.create {
-        // You can add Android-specific OkHttp configurations here later
-        // config { retryOnConnectionFailure(true) }
+        config {
+            // Crucial for mobile devices switching between WiFi and Cellular
+            retryOnConnectionFailure(true)
+        }
     }
 }

@@ -41,12 +41,14 @@ kotlinx-datetime = "0.7.1"
 
 #room
 room = "2.8.4"
+securityCrypto = "1.1.0"
 sqlite = "2.6.2"
 ksp = "2.3.6"
 
 paging = "3.4.2"
 
 [libraries]
+androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { module = "junit:junit", version.ref = "junit" }

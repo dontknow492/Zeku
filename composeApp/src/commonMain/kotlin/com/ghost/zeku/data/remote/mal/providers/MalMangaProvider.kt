@@ -1,11 +1,10 @@
-package com.ghost.zeku.data.remote.mal.provider
+package com.ghost.zeku.data.remote.mal.providers
 
 
 import com.ghost.zeku.data.remote.jikan.JikanApi
 import com.ghost.zeku.data.remote.jikan.toDomain
 import com.ghost.zeku.data.remote.jikan.toMangaDomain
 import com.ghost.zeku.data.remote.mal.*
-import com.ghost.zeku.data.repository.MalAuthRepositoryImpl
 import com.ghost.zeku.domain.model.api.ApiError
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.api.ErrorType
@@ -23,7 +22,6 @@ import kotlinx.coroutines.coroutineScope
 
 class MalMangaProvider(
     private val api: MalApi,
-    private val authRepository: MalAuthRepositoryImpl,
     private val parser: MalResponseParser
 ) : MangaListProvider {
 
@@ -40,8 +38,7 @@ class MalMangaProvider(
 
         return parser.safeApiCall(
             apiCall = {
-                val token = authRepository.getAccessToken()
-                api.fetchMangaList(category = category, page = page, limit = 20, token = token)
+                api.fetchMangaList(category = category, page = page, limit = 20)
             },
             transform = { response ->
                 PageResult(
@@ -62,7 +59,6 @@ class MalMangaProvider(
 
 class MalMangaSearchProvider(
     private val api: MalApi,
-    private val authRepository: MalAuthRepositoryImpl,
     private val parser: MalResponseParser
 ) : MangaSearchProvider {
 
@@ -92,7 +88,6 @@ class MalMangaSearchProvider(
     ): ApiResult<PageResult<Manga>> {
         return parser.safeApiCall(
             apiCall = {
-                val token = authRepository.getAccessToken()
 
                 val genreIds = filter.includedGenres
                     .mapNotNull { malGenreMap[it] }
@@ -113,8 +108,8 @@ class MalMangaSearchProvider(
                     limit = perPage,
                     status = statusString,
                     genres = genreIds,
-                    token = token
-                )
+
+                    )
             },
             transform = { response ->
                 PageResult(
@@ -131,7 +126,6 @@ class MalMangaSearchProvider(
 class MalMangaDetailsProvider(
     private val malApi: MalApi,
     private val jikanApi: JikanApi,
-    private val authRepository: MalAuthRepositoryImpl,
     private val parser: MalResponseParser
 ) : MangaDetailsProvider {
 
@@ -140,7 +134,7 @@ class MalMangaDetailsProvider(
             apiCall = {
                 coroutineScope {
                     val malDeferred = async {
-                        malApi.getMangaDetails(id = id, token = authRepository.getAccessToken())
+                        malApi.getMangaDetails(id = id)
                     }
                     val jikanDeferred = async {
                         try {

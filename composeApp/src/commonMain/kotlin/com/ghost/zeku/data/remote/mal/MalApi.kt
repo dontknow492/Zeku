@@ -14,15 +14,7 @@ import io.ktor.http.*
 import zeku.composeApp.BuildConfig
 
 class MalApi(private val client: HttpClient) {
-    private val baseUrl = "https://api.myanimelist.net/v2"
-
-    // Helper function to add Auth header
-    private fun HttpRequestBuilder.addAuthHeader(token: String?) {
-        token?.let {
-            header(HttpHeaders.Authorization, "Bearer $it")
-            header("X-MAL-CLIENT-ID", BuildConfig.MAL_CLIENT_ID)
-        }
-    }
+    private val baseUrl = BuildConfig.MAL_BASE_URL
 
     // Helper to calculate offset from page number
     private fun calculateOffset(page: Int, limit: Int): Int {
@@ -35,7 +27,6 @@ class MalApi(private val client: HttpClient) {
         category: AnimeCategory,
         page: Int,
         limit: Int = 20,
-        token: String? = null
     ): MalPagedResponse<MalAnimeDto> {
         val offset = calculateOffset(page, limit)
 
@@ -43,7 +34,6 @@ class MalApi(private val client: HttpClient) {
             // 1. Handle Seasonal Anime (Custom Endpoint)
             val (season, year) = getCurrentSeasonAndYear()
             client.get("$baseUrl/anime/season/$year/${season.lowercase()}") {
-                addAuthHeader(token)
                 parameter("limit", limit)
                 parameter("offset", offset)
                 parameter("fields", MalApiConstants.ANIME_FIELDS)
@@ -55,7 +45,6 @@ class MalApi(private val client: HttpClient) {
                 ?: throw IllegalArgumentException("Category ${category.name} not supported by MAL.")
 
             client.get("$baseUrl/anime/ranking") {
-                addAuthHeader(token)
                 parameter("ranking_type", rankingType)
                 parameter("limit", limit)
                 parameter("offset", offset)
@@ -68,15 +57,14 @@ class MalApi(private val client: HttpClient) {
         category: MangaCategory,
         page: Int,
         limit: Int = 20,
-        token: String? = null
-    ): MalPagedResponse<MalMangaDto> {
+
+        ): MalPagedResponse<MalMangaDto> {
         // 1. Get the MAL-specific ranking type
         val rankingType = category.toMalRankingType()
             ?: throw IllegalArgumentException("Category ${category.name} is not supported by MAL ranking API.")
 
         // 2. Execute the request with centralized constants
         return client.get("$baseUrl/manga/ranking") {
-            addAuthHeader(token)
             parameter("ranking_type", rankingType)
             parameter("limit", limit)
             parameter("offset", calculateOffset(page, limit))
@@ -90,10 +78,8 @@ class MalApi(private val client: HttpClient) {
         limit: Int = 20,
         status: String? = null,
         genres: String? = null,
-        token: String? = null
     ): MalPagedResponse<MalAnimeDto> {
         return client.get("$baseUrl/anime") {
-            addAuthHeader(token)
             // MAL requires a 'q' parameter, but it fails if empty.
             // Some endpoints allow empty 'q' if genres are provided.
             if (query.isNotBlank()) {
@@ -117,10 +103,8 @@ class MalApi(private val client: HttpClient) {
         limit: Int = 20,
         status: String? = null,
         genres: String? = null,
-        token: String? = null
     ): MalPagedResponse<MalMangaDto> {
         return client.get("$baseUrl/manga") {
-            addAuthHeader(token)
             if (query.isNotBlank()) {
                 parameter("q", query)
             }
@@ -136,16 +120,14 @@ class MalApi(private val client: HttpClient) {
     }
 
 
-    suspend fun getAnimeDetails(id: Int, token: String? = null): MalAnimeDto {
+    suspend fun getAnimeDetails(id: Int): MalAnimeDto {
         return client.get("$baseUrl/anime/$id") {
-            addAuthHeader(token)
             parameter("fields", MalApiConstants.ANIME_DETAILS_FIELDS)
         }.body()
     }
 
-    suspend fun getMangaDetails(id: Int, token: String? = null): MalMangaDto {
+    suspend fun getMangaDetails(id: Int): MalMangaDto {
         return client.get("$baseUrl/manga/$id") {
-            addAuthHeader(token)
             parameter("fields", MalApiConstants.MANGA_DETAILS_FIELDS)
         }.body()
     }
@@ -157,10 +139,8 @@ class MalApi(private val client: HttpClient) {
         status: String? = null,
         page: Int = 1,
         limit: Int = 20,
-        token: String? = null
     ): MalPagedResponse<MalAnimeDto> {
         return client.get("$baseUrl/users/$username/animelist") {
-            addAuthHeader(token)
             status?.let { parameter("status", it) }
             parameter("limit", limit)
             parameter("offset", calculateOffset(page, limit))
@@ -174,11 +154,9 @@ class MalApi(private val client: HttpClient) {
         status: String? = null,
         page: Int = 1,
         limit: Int = 20,
-        token: String? = null
     ): MalPagedResponse<MalMangaDto> {
         Napier.d("Get user manga list")
         val response = client.get("$baseUrl/users/$username/mangalist") {
-            addAuthHeader(token)
             status?.let { parameter("status", it) }
             parameter("limit", limit)
             parameter("offset", calculateOffset(page, limit))
@@ -190,14 +168,9 @@ class MalApi(private val client: HttpClient) {
     // ========== MEDIA LIST MUTATIONS (Requires Auth) ==========
 
     suspend fun updateAnimeListEntry(
-        mediaId: Int,
-        status: String? = null,
-        progress: Int? = null,
-        score: Int? = null,
-        token: String
+        mediaId: Int, status: String? = null, progress: Int? = null, score: Int? = null
     ): MalListStatus {
         return client.put("$baseUrl/anime/$mediaId/my_list_status") {
-            addAuthHeader(token)
             setBody(FormDataContent(Parameters.build {
                 status?.let { append("status", it) }
                 progress?.let { append("num_watched_episodes", it.toString()) }
@@ -212,10 +185,8 @@ class MalApi(private val client: HttpClient) {
         progress: Int? = null,
         volumes: Int? = null,
         score: Int? = null,
-        token: String
     ): MalListStatus {
         return client.put("$baseUrl/manga/$mediaId/my_list_status") {
-            addAuthHeader(token)
             setBody(FormDataContent(Parameters.build {
                 status?.let { append("status", it) }
                 progress?.let { append("num_chapters_read", it.toString()) }
@@ -225,23 +196,18 @@ class MalApi(private val client: HttpClient) {
         }.body()
     }
 
-    suspend fun deleteAnimeListEntry(mediaId: Int, token: String) {
-        client.delete("$baseUrl/anime/$mediaId/my_list_status") {
-            addAuthHeader(token)
-        }
+    suspend fun deleteAnimeListEntry(mediaId: Int) {
+        client.delete("$baseUrl/anime/$mediaId/my_list_status") {}
     }
 
-    suspend fun deleteMangaListEntry(mediaId: Int, token: String) {
-        client.delete("$baseUrl/manga/$mediaId/my_list_status") {
-            addAuthHeader(token)
-        }
+    suspend fun deleteMangaListEntry(mediaId: Int) {
+        client.delete("$baseUrl/manga/$mediaId/my_list_status") {}
     }
 
     // ========== USER PROFILE ==========
 
-    suspend fun getCurrentUser(token: String): MalUserDto {
+    suspend fun getCurrentUser(): MalUserDto {
         return client.get("$baseUrl/users/@me") {
-            addAuthHeader(token)
             parameter("fields", "id,name,picture,anime_statistics")
         }.body()
     }

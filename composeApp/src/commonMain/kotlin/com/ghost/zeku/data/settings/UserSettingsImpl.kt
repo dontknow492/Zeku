@@ -1,7 +1,5 @@
 package com.ghost.zeku.data.settings
 
-//import com.russhwolf.settings.Settings
-import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.model.settings.UserPreferences
 import com.ghost.zeku.domain.repository.UserSettings
 import com.russhwolf.settings.Settings
@@ -9,44 +7,95 @@ import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.serialization.json.Json
 
 class UserSettingsImpl(
     private val settings: Settings
 ) : UserSettings {
 
     companion object {
-        private const val KEY_ACTIVE_PROVIDER = "active_provider"
+        private const val KEY_PREFS_JSON = "user_preferences_json"
     }
 
-    // Initialize the flow by loading the saved state from disk once
+    private val json = Json {
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+        isLenient = true
+    }
+
     private val _preferences = MutableStateFlow(loadPreferences())
     override val preferences = _preferences.asStateFlow()
 
-    /**
-     * Loads the initial state from Multiplatform Settings.
-     * We use this only once during class initialization.
-     */
     private fun loadPreferences(): UserPreferences {
-        val providerName = settings.getString(KEY_ACTIVE_PROVIDER, ProviderType.ANILIST.name)
+        val jsonString = settings.getString(KEY_PREFS_JSON, "")
 
-        val provider = try {
-            ProviderType.valueOf(providerName)
-        } catch (e: Exception) {
-            Napier.w("Saved provider '$providerName' is invalid, falling back to ANILIST", e)
-            ProviderType.ANILIST
+        if (jsonString.isBlank()) {
+            return UserPreferences()
         }
 
-        return UserPreferences(activeProvider = provider)
+        return try {
+            json.decodeFromString(jsonString)
+        } catch (e: Exception) {
+            Napier.e(e) { "Failed to parse UserPreferences JSON. Corrupted data? Falling back to defaults." }
+            UserPreferences()
+        }
     }
 
-    /**
-     * Updates both the persistent storage and the reactive flow.
-     */
-    override fun setActiveProvider(type: ProviderType) {
-        // 1. Persist to disk
-        settings.putString(KEY_ACTIVE_PROVIDER, type.name)
+    override fun updatePreferences(transform: (UserPreferences) -> UserPreferences) {
+        _preferences.update { currentPrefs ->
+            val newPrefs = transform(currentPrefs)
+            saveToDisk(newPrefs)
+            newPrefs
+        }
+    }
 
-        // 2. Notify all observers (like MediaRepository and UI)
-        _preferences.update { it.copy(activeProvider = type) }
+    private fun saveToDisk(prefs: UserPreferences) {
+        try {
+            val jsonString = json.encodeToString(prefs)
+            settings.putString(KEY_PREFS_JSON, jsonString)
+        } catch (e: Exception) {
+            Napier.e(e) { "Failed to save UserPreferences to disk." }
+        }
+    }
+
+    // ========================================================================
+    // BACKUP & RESTORE
+    // ========================================================================
+
+    override fun exportSettingsJson(): String {
+        return try {
+            // Encode the current state flow value to a pretty/standard JSON string
+            json.encodeToString(_preferences.value)
+        } catch (e: Exception) {
+            Napier.e(e) { "Failed to export settings to JSON string." }
+            ""
+        }
+    }
+
+    override fun importSettingsJson(jsonString: String): Boolean {
+        if (jsonString.isBlank()) return false
+
+        return try {
+            // 1. Attempt to decode the string. If it's bad JSON, it throws an exception here.
+            val importedPrefs = json.decodeFromString<UserPreferences>(jsonString)
+
+            // 2. If decoding succeeds, apply it using our unified updater!
+            updatePreferences { importedPrefs }
+
+            Napier.i { "Successfully restored settings from backup." }
+            true
+        } catch (e: Exception) {
+            Napier.e(e) { "Failed to restore settings. The provided JSON is invalid or corrupted." }
+            false
+        }
     }
 }
+
+
+
+
+
+
+
+
+

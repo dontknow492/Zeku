@@ -3,7 +3,6 @@ package com.ghost.zeku.data.remote.anilist.providers
 import com.ghost.zeku.data.remote.anilist.AniListApi
 import com.ghost.zeku.data.remote.anilist.AniListResponseParser
 import com.ghost.zeku.data.remote.anilist.toAnimeDomain
-import com.ghost.zeku.data.repository.AniListAuthRepositoryImpl
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.enum.AnimeCategory
 import com.ghost.zeku.domain.model.media.Anime
@@ -12,19 +11,16 @@ import com.ghost.zeku.domain.provider.AnimeListProvider
 
 class AniListAnimeProvider(
     private val api: AniListApi,
-    private val authRepository: AniListAuthRepositoryImpl,
     private val parser: AniListResponseParser
 ) : AnimeListProvider {
 
     override suspend fun getAnimeList(category: AnimeCategory, page: Int, perPage: Int): ApiResult<PageResult<Anime>> {
         return parser.safeApiCall(
             apiCall = {
-                val token = authRepository.getAccessToken()
                 api.fetchAnimeList(
                     category = category,
                     page = page,
                     perPage = perPage,
-                    token = token
                 )
             },
             transform = { data ->

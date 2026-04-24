@@ -7,7 +7,6 @@ import com.ghost.zeku.data.remote.mal.MalApi
 import com.ghost.zeku.data.remote.mal.MalResponseParser
 import com.ghost.zeku.data.remote.mal.toAnimeDetailsDomain
 import com.ghost.zeku.data.remote.mal.toAnimeDomain
-import com.ghost.zeku.data.repository.MalAuthRepositoryImpl
 import com.ghost.zeku.domain.model.api.ApiError
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.enum.AnimeCategory
@@ -25,7 +24,6 @@ import kotlinx.coroutines.coroutineScope
 
 class MalAnimeProvider(
     private val api: MalApi,
-    private val authRepository: MalAuthRepositoryImpl,
     private val parser: MalResponseParser
 ) : AnimeListProvider {
 
@@ -42,8 +40,7 @@ class MalAnimeProvider(
         }
         return parser.safeApiCall(
             apiCall = {
-                val token = authRepository.getAccessToken()
-                api.fetchAnimeList(category = category, page = page, limit = perPage, token = token)
+                api.fetchAnimeList(category = category, page = page, limit = perPage)
             },
             transform = { response ->
                 PageResult(
@@ -64,7 +61,6 @@ class MalAnimeProvider(
 
 class MalAnimeSearchProvider(
     private val api: MalApi,
-    private val authRepository: MalAuthRepositoryImpl,
     private val parser: MalResponseParser
 ) : AnimeSearchProvider {
 
@@ -95,7 +91,6 @@ class MalAnimeSearchProvider(
     ): ApiResult<PageResult<Anime>> {
         return parser.safeApiCall(
             apiCall = {
-                val token = authRepository.getAccessToken()
 
                 // Translate list of string genres to a comma-separated list of IDs
                 val genreIds = filter.includedGenres
@@ -117,8 +112,8 @@ class MalAnimeSearchProvider(
                     limit = perPage,
                     status = statusString,
                     genres = genreIds,
-                    token = token
-                )
+
+                    )
             },
             transform = { response ->
                 PageResult(
@@ -135,7 +130,6 @@ class MalAnimeSearchProvider(
 class MalAnimeDetailsProvider(
     private val malApi: MalApi,
     private val jikanApi: JikanApi, // Injected!
-    private val authRepository: MalAuthRepositoryImpl,
     private val parser: MalResponseParser
 ) : AnimeDetailsProvider {
 
@@ -145,7 +139,7 @@ class MalAnimeDetailsProvider(
                 // Fetch Official Data and Unofficial Characters AT THE SAME TIME
                 coroutineScope {
                     val malDeferred = async {
-                        malApi.getAnimeDetails(id = id, token = authRepository.getAccessToken())
+                        malApi.getAnimeDetails(id = id)
                     }
                     val jikanDeferred = async {
                         // Wrap in try-catch so Jikan being down doesn't crash the core MAL load

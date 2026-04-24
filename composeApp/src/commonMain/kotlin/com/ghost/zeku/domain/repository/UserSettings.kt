@@ -1,14 +1,23 @@
 package com.ghost.zeku.domain.repository
 
-import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.model.settings.UserPreferences
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
-// UserSettings interface (Implementation would come from your DataStore/Preferences)
 interface UserSettings {
-    // A Flow allows the UI to react instantly when the provider changes
+    val preferences: StateFlow<UserPreferences>
 
-    val preferences: Flow<UserPreferences>
+    fun updatePreferences(transform: (UserPreferences) -> UserPreferences)
 
-    fun setActiveProvider(type: ProviderType)
+
+    /**
+     * Exports the current UserPreferences as a serialized JSON string.
+     * The UI can save this string to a .json file on the device.
+     */
+    fun exportSettingsJson(): String
+
+    /**
+     * Imports a JSON string, validates it, and overwrites the current preferences.
+     * @return true if successful, false if the JSON is corrupted/invalid.
+     */
+    fun importSettingsJson(jsonString: String): Boolean
 }

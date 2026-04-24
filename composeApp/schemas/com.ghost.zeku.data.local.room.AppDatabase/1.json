@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "6c8907de6e3ec922e0f6edfa1a9ac566",
+    "identityHash": "68aaba59d9c354e206b51e0245813f48",
     "entities": [
       {
         "tableName": "anime",
@@ -317,6 +317,273 @@
         ]
       },
       {
+        "tableName": "episodes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `mediaId` INTEGER NOT NULL, `source` TEXT NOT NULL, `number` REAL NOT NULL, `title` TEXT, `description` TEXT, `thumbnail` TEXT, `isFiller` INTEGER NOT NULL, `isWatched` INTEGER NOT NULL, `watchProgressMillis` INTEGER NOT NULL, `downloadStatus` TEXT NOT NULL, `localFilePath` TEXT, PRIMARY KEY(`id`, `source`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mediaId",
+            "columnName": "mediaId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "number",
+            "columnName": "number",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "thumbnail",
+            "columnName": "thumbnail",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "isFiller",
+            "columnName": "isFiller",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isWatched",
+            "columnName": "isWatched",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "watchProgressMillis",
+            "columnName": "watchProgressMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "downloadStatus",
+            "columnName": "downloadStatus",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "localFilePath",
+            "columnName": "localFilePath",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id",
+            "source"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_episodes_mediaId_source",
+            "unique": false,
+            "columnNames": [
+              "mediaId",
+              "source"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_episodes_mediaId_source` ON `${TABLE_NAME}` (`mediaId`, `source`)"
+          },
+          {
+            "name": "index_episodes_number",
+            "unique": false,
+            "columnNames": [
+              "number"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_episodes_number` ON `${TABLE_NAME}` (`number`)"
+          }
+        ]
+      },
+      {
+        "tableName": "chapters",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `mediaId` INTEGER NOT NULL, `source` TEXT NOT NULL, `number` REAL NOT NULL, `title` TEXT, `volume` INTEGER, `isRead` INTEGER NOT NULL, `lastReadPage` INTEGER NOT NULL, `downloadStatus` TEXT NOT NULL, `localFolderPath` TEXT, PRIMARY KEY(`id`, `source`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mediaId",
+            "columnName": "mediaId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "number",
+            "columnName": "number",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "volume",
+            "columnName": "volume",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "isRead",
+            "columnName": "isRead",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastReadPage",
+            "columnName": "lastReadPage",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "downloadStatus",
+            "columnName": "downloadStatus",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "localFolderPath",
+            "columnName": "localFolderPath",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id",
+            "source"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_chapters_mediaId_source",
+            "unique": false,
+            "columnNames": [
+              "mediaId",
+              "source"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_chapters_mediaId_source` ON `${TABLE_NAME}` (`mediaId`, `source`)"
+          },
+          {
+            "name": "index_chapters_number",
+            "unique": false,
+            "columnNames": [
+              "number"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_chapters_number` ON `${TABLE_NAME}` (`number`)"
+          }
+        ]
+      },
+      {
+        "tableName": "anime_details",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `source` TEXT NOT NULL, `details` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`, `source`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "details",
+            "columnName": "details",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id",
+            "source"
+          ]
+        }
+      },
+      {
+        "tableName": "manga_details",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `source` TEXT NOT NULL, `details` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`, `source`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "details",
+            "columnName": "details",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id",
+            "source"
+          ]
+        }
+      },
+      {
         "tableName": "manga_remote_keys",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `source` TEXT NOT NULL, `category` TEXT NOT NULL, `sortOrder` INTEGER NOT NULL, `prevPage` INTEGER, `nextPage` INTEGER, PRIMARY KEY(`id`, `source`, `category`))",
         "fields": [
@@ -413,13 +680,13 @@
         }
       },
       {
-        "tableName": "anime_details",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `source` TEXT NOT NULL, `details` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`, `source`))",
+        "tableName": "episode_remote_keys",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `source` TEXT NOT NULL, `mediaId` INTEGER NOT NULL, `prevPage` INTEGER, `nextPage` INTEGER, `lastUpdated` INTEGER NOT NULL, PRIMARY KEY(`id`, `source`))",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
-            "affinity": "INTEGER",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -429,14 +696,24 @@
             "notNull": true
           },
           {
-            "fieldPath": "details",
-            "columnName": "details",
-            "affinity": "TEXT",
+            "fieldPath": "mediaId",
+            "columnName": "mediaId",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
-            "fieldPath": "updatedAt",
-            "columnName": "updatedAt",
+            "fieldPath": "prevPage",
+            "columnName": "prevPage",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "nextPage",
+            "columnName": "nextPage",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastUpdated",
+            "columnName": "lastUpdated",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -450,13 +727,13 @@
         }
       },
       {
-        "tableName": "manga_details",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `source` TEXT NOT NULL, `details` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`, `source`))",
+        "tableName": "chapter_remote_keys",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `source` TEXT NOT NULL, `mediaId` INTEGER NOT NULL, `prevPage` INTEGER, `nextPage` INTEGER, `lastUpdated` INTEGER NOT NULL, PRIMARY KEY(`id`, `source`))",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
-            "affinity": "INTEGER",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -466,14 +743,24 @@
             "notNull": true
           },
           {
-            "fieldPath": "details",
-            "columnName": "details",
-            "affinity": "TEXT",
+            "fieldPath": "mediaId",
+            "columnName": "mediaId",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
-            "fieldPath": "updatedAt",
-            "columnName": "updatedAt",
+            "fieldPath": "prevPage",
+            "columnName": "prevPage",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "nextPage",
+            "columnName": "nextPage",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastUpdated",
+            "columnName": "lastUpdated",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -489,7 +776,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6c8907de6e3ec922e0f6edfa1a9ac566')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '68aaba59d9c354e206b51e0245813f48')"
     ]
   }
 }

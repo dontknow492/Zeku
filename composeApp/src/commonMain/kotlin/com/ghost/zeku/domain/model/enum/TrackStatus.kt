@@ -14,3 +14,9 @@ enum class TrackStatus(val displayName: String, val color: Color) {
 }
 
 
+enum class ThemeMode(val displayName: String) {
+    LIGHT("Light"),
+    DARK("Dark"),
+    SYSTEM("System")
+}
+

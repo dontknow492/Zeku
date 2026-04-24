@@ -1,8 +1,10 @@
 package com.ghost.zeku.domain.model.api
 
-sealed class AuthState {
-    data object Loading : AuthState()
-    data object Unauthenticated : AuthState()
-    data class Authenticated(val accessToken: String) : AuthState()
-    data class Error(val message: String) : AuthState()
+sealed interface AuthState {
+    data object LoggedOut : AuthState
+    data object Loading : AuthState
+    data object LoggedIn : AuthState
+
+    // The superpower of Sealed Classes: Holding data!
+    data class Error(val message: String) : AuthState
 }

@@ -2,9 +2,7 @@ package com.ghost.zeku.data.local.room
 
 import androidx.room.*
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
-import com.ghost.zeku.data.local.room.dao.AnimeDao
-import com.ghost.zeku.data.local.room.dao.MangaDao
-import com.ghost.zeku.data.local.room.dao.RemoteKeysDao
+import com.ghost.zeku.data.local.room.dao.*
 import com.ghost.zeku.data.local.room.entities.*
 import kotlinx.coroutines.Dispatchers
 
@@ -12,10 +10,15 @@ import kotlinx.coroutines.Dispatchers
     entities = [
         AnimeEntity::class,
         MangaEntity::class,
+        EpisodeEntity::class,
+        ChapterEntity::class,
+        AnimeDetailsEntity::class,
+        MangaDetailsEntity::class,
         MangaRemoteKeys::class,
         AnimeRemoteKeys::class,
-        AnimeDetailsEntity::class,
-        MangaDetailsEntity::class
+        EpisodeRemoteKeys::class,
+        ChapterRemoteKeys::class,
+
     ],
     version = 1
 )
@@ -25,6 +28,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun animeDao(): AnimeDao
     abstract fun mangaDao(): MangaDao
     abstract fun remoteKeysDao(): RemoteKeysDao
+    abstract fun chapterDao(): ChapterDao
+    abstract fun episodeDao(): EpisodeDao
 }
 
 

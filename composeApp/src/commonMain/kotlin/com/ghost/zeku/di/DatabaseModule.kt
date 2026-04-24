@@ -25,5 +25,7 @@ val databaseModule = module {
     single { get<AppDatabase>().animeDao() }
     single { get<AppDatabase>().mangaDao() }
     single { get<AppDatabase>().remoteKeysDao() }
+    single { get<AppDatabase>().chapterDao() }
+    single { get<AppDatabase>().episodeDao() }
 
 }

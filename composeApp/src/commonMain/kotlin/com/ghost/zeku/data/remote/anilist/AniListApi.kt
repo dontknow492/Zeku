@@ -7,22 +7,15 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import zeku.composeApp.BuildConfig
 
 class AniListApi(private val client: HttpClient) {
-    private val baseUrl = "https://graphql.anilist.co"
-
-    // Helper function to add Auth header if token is present
-    private fun HttpRequestBuilder.addAuthHeader(token: String?) {
-        token?.let {
-            header(HttpHeaders.Authorization, "Bearer $it")
-        }
-    }
+    private val baseUrl = BuildConfig.ANILIST_BASE_URL
 
     suspend fun fetchAnimeList(
         category: AnimeCategory,
         page: Int,
         perPage: Int = 20,
-        token: String? = null
     ): AniListResponse<AniListPageData> {
         val requestBody = GraphQLRequest(
             query = AniListQueries.FETCH_ANIME_LIST,
@@ -31,7 +24,6 @@ class AniListApi(private val client: HttpClient) {
 
         return client.post(baseUrl) {
             contentType(ContentType.Application.Json)
-            addAuthHeader(token)
             setBody(requestBody)
         }.body()
     }
@@ -40,7 +32,6 @@ class AniListApi(private val client: HttpClient) {
         category: MangaCategory,
         page: Int,
         perPage: Int = 20,
-        token: String? = null
     ): AniListResponse<AniListPageData> {
         val requestBody = GraphQLRequest(
             query = AniListQueries.FETCH_MANGA_LIST,
@@ -52,14 +43,12 @@ class AniListApi(private val client: HttpClient) {
         )
         return client.post(baseUrl) {
             contentType(ContentType.Application.Json)
-            addAuthHeader(token)
             setBody(requestBody)
         }.body()
     }
 
     suspend fun searchAnime(
         variables: GraphQLRequest.Variables,
-        token: String? = null
     ): AniListResponse<AniListPageData> {
         val requestBody = GraphQLRequest(
             query = AniListQueries.SEARCH_ANIME,
@@ -68,14 +57,12 @@ class AniListApi(private val client: HttpClient) {
 
         return client.post(baseUrl) {
             contentType(ContentType.Application.Json)
-            addAuthHeader(token)
             setBody(requestBody)
         }.body()
     }
 
     suspend fun searchManga(
         variables: GraphQLRequest.Variables,
-        token: String? = null
     ): AniListResponse<AniListPageData> {
         val requestBody = GraphQLRequest(
             query = AniListQueries.SEARCH_MANGA,
@@ -84,31 +71,28 @@ class AniListApi(private val client: HttpClient) {
 
         return client.post(baseUrl) {
             contentType(ContentType.Application.Json)
-            addAuthHeader(token)
             setBody(requestBody)
         }.body()
     }
 
-    suspend fun getAnimeDetails(id: Int, token: String? = null): AniListResponse<AniListSingleMediaData> {
+    suspend fun getAnimeDetails(id: Int): AniListResponse<AniListSingleMediaData> {
         val requestBody = GraphQLRequest(
             query = AniListQueries.GET_ANIME_DETAILS,
             variables = GraphQLRequest.Variables(id = id)
         )
         return client.post(baseUrl) {
             contentType(ContentType.Application.Json)
-            addAuthHeader(token)
             setBody(requestBody)
         }.body()
     }
 
-    suspend fun getMangaDetails(id: Int, token: String? = null): AniListResponse<AniListSingleMediaData> {
+    suspend fun getMangaDetails(id: Int): AniListResponse<AniListSingleMediaData> {
         val requestBody = GraphQLRequest(
             query = AniListQueries.GET_MANGA_DETAILS,
             variables = GraphQLRequest.Variables(id = id)
         )
         return client.post(baseUrl) {
             contentType(ContentType.Application.Json)
-            addAuthHeader(token)
             setBody(requestBody)
         }.body()
     }
@@ -116,7 +100,6 @@ class AniListApi(private val client: HttpClient) {
     suspend fun getMediaRecommendations(
         id: Int,
         page: Int,
-        token: String? = null
     ): AniListResponse<AniListRecommendationsResponse> {
         val requestBody = GraphQLRequest(
             query = AniListQueries.GET_MEDIA_RECOMMENDATIONS,
@@ -124,19 +107,17 @@ class AniListApi(private val client: HttpClient) {
         )
         return client.post(baseUrl) {
             contentType(ContentType.Application.Json)
-            addAuthHeader(token)
             setBody(requestBody)
         }.body()
     }
 
-    suspend fun getMediaReviews(id: Int, page: Int, token: String? = null): AniListResponse<AniListReviewsResponse> {
+    suspend fun getMediaReviews(id: Int, page: Int): AniListResponse<AniListReviewsResponse> {
         val requestBody = GraphQLRequest(
             query = AniListQueries.GET_MEDIA_REVIEWS,
             variables = GraphQLRequest.Variables(id = id, page = page)
         )
         return client.post(baseUrl) {
             contentType(ContentType.Application.Json)
-            addAuthHeader(token)
             setBody(requestBody)
         }.body()
     }
@@ -156,7 +137,6 @@ class AniListApi(private val client: HttpClient) {
         status: String,
         page: Int = 1,
         perPage: Int = 20,
-        token: String? = null
     ): AniListResponse<AniListUserPageData> {
         val requestBody = GraphQLRequest(
             query = AniListQueries.GET_USER_ANIME_LIST,
@@ -170,7 +150,6 @@ class AniListApi(private val client: HttpClient) {
 
         return client.post(baseUrl) {
             contentType(ContentType.Application.Json)
-            addAuthHeader(token)
             setBody(requestBody)
         }.body()
     }
@@ -188,7 +167,6 @@ class AniListApi(private val client: HttpClient) {
         status: String,
         page: Int = 1,
         perPage: Int = 20,
-        token: String? = null
     ): AniListResponse<AniListUserPageData> {
         val requestBody = GraphQLRequest(
             query = AniListQueries.GET_USER_MANGA_LIST,
@@ -202,7 +180,6 @@ class AniListApi(private val client: HttpClient) {
 
         return client.post(baseUrl) {
             contentType(ContentType.Application.Json)
-            addAuthHeader(token)
             setBody(requestBody)
         }.body()
     }
@@ -222,7 +199,6 @@ class AniListApi(private val client: HttpClient) {
         search: String,
         page: Int = 1,
         perPage: Int = 20,
-        token: String? = null
     ): AniListResponse<AniListPageData> {
         val requestBody = GraphQLRequest(
             query = AniListQueries.SEARCH_USER_LIST,
@@ -237,7 +213,6 @@ class AniListApi(private val client: HttpClient) {
 
         return client.post(baseUrl) {
             contentType(ContentType.Application.Json)
-            addAuthHeader(token)
             setBody(requestBody)
         }.body()
     }
@@ -258,8 +233,8 @@ class AniListApi(private val client: HttpClient) {
         progress: Int? = null,
         status: String? = null,
         score: Float? = null,
-        token: String
-    ): AniListResponse<AniListUpdateData> { // Fixed Return Type
+
+        ): AniListResponse<AniListUpdateData> { // Fixed Return Type
         val requestBody = GraphQLRequest(
             query = AniListQueries.UPDATE_ENTRY,
             variables = GraphQLRequest.Variables(
@@ -272,7 +247,6 @@ class AniListApi(private val client: HttpClient) {
 
         return client.post(baseUrl) {
             contentType(ContentType.Application.Json)
-            addAuthHeader(token)
             setBody(requestBody)
         }.body()
     }
@@ -285,7 +259,6 @@ class AniListApi(private val client: HttpClient) {
      */
     suspend fun deleteMediaListEntry(
         entryId: Int,
-        token: String
     ): AniListResponse<AniListDeleteData> { // Fixed Return Type
         val requestBody = GraphQLRequest(
             query = AniListQueries.DELETE_ENTRY,
@@ -296,13 +269,12 @@ class AniListApi(private val client: HttpClient) {
 
         return client.post(baseUrl) {
             contentType(ContentType.Application.Json)
-            addAuthHeader(token)
             setBody(requestBody)
         }.body()
     }
 
 
-    suspend fun getCurrentUser(token: String): AniListResponse<ViewerWrapper> {
+    suspend fun getCurrentUser(): AniListResponse<ViewerWrapper> {
         val requestBody = GraphQLRequest(
             query = AniListQueries.GET_USER_VIEWER,
             variables = GraphQLRequest.Variables()
@@ -311,7 +283,6 @@ class AniListApi(private val client: HttpClient) {
 
         val response = client.post(baseUrl) {
             contentType(ContentType.Application.Json)
-            addAuthHeader(token)
             setBody(requestBody)
         }
         return response.body()

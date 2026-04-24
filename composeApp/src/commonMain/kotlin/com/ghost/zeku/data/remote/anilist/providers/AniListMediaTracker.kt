@@ -30,7 +30,6 @@ class AniListMediaTracker(
                     mapDomainToTrackStatus(status),
                     page,
                     perPage,
-                    accessToken
                 )
             },
             transform = { data ->
@@ -61,7 +60,6 @@ class AniListMediaTracker(
                     mapDomainToTrackStatus(status),
                     page,
                     perPage,
-                    accessToken
                 )
             },
             transform = { data ->
@@ -87,7 +85,6 @@ class AniListMediaTracker(
         return parser.safeApiCall(
             apiCall = {
                 aniListApi.updateMediaListEntry(
-                    token = accessToken, // Format auth token if not done by OkHttp Interceptor
                     mediaId = mediaId,
                     progress = progress,
                     status = status?.let { mapDomainToTrackStatus(it) },
@@ -110,7 +107,6 @@ class AniListMediaTracker(
         // we use a standard try/catch block here.
         return try {
             val response = aniListApi.deleteMediaListEntry(
-                token = accessToken,
                 entryId = entryId
             )
 

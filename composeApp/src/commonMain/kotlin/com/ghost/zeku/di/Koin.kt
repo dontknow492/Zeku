@@ -12,7 +12,10 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) {
             repoModule,
             settingsModule,
             platformDatabaseModule(),
-            databaseModule
+            databaseModule,
+            platformSettingsModule(),
+            settingsModule,
+            authModule
         )
     }
 }

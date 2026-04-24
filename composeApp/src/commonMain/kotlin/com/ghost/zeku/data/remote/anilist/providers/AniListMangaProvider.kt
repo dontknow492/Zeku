@@ -3,7 +3,6 @@ package com.ghost.zeku.data.remote.anilist.providers
 import com.ghost.zeku.data.remote.anilist.AniListApi
 import com.ghost.zeku.data.remote.anilist.AniListResponseParser
 import com.ghost.zeku.data.remote.anilist.toMangaDomain
-import com.ghost.zeku.data.repository.AniListAuthRepositoryImpl
 import com.ghost.zeku.domain.model.api.ApiError
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.api.ErrorType
@@ -14,7 +13,6 @@ import com.ghost.zeku.domain.provider.MangaListProvider
 
 class AniListMangaProvider(
     private val api: AniListApi,
-    private val authRepository: AniListAuthRepositoryImpl,
     private val parser: AniListResponseParser
 ) : MangaListProvider {
 
@@ -30,8 +28,7 @@ class AniListMangaProvider(
         }
         return parser.safeApiCall(
             apiCall = {
-                val token = authRepository.getAccessToken()
-                api.fetchMangaList(category = category, page = page, perPage = perPage, token = token)
+                api.fetchMangaList(category = category, page = page, perPage = perPage)
             },
             transform = { data ->
                 data.page?.let { pageData ->

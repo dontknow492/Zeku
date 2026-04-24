@@ -1,10 +1,13 @@
 package com.ghost.zeku.di
 
-import com.russhwolf.settings.PreferencesSettings
-import com.russhwolf.settings.Settings
-import java.util.prefs.Preferences
+import com.ghost.zeku.data.settings.SettingsFactory
+import org.koin.core.module.Module
+import org.koin.dsl.module
 
-actual fun createSettings(): Settings {
-    return PreferencesSettings(Preferences.userRoot().node("com/ghost/zeku/settings"))
+
+/**
+ * Desktop-specific module.
+ */
+actual fun platformSettingsModule() = module {
+    single { SettingsFactory() }
 }
-

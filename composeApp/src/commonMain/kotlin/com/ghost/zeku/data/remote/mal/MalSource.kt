@@ -1,12 +1,6 @@
 package com.ghost.zeku.data.remote.mal
 
-import com.ghost.zeku.data.remote.mal.provider.MalMangaDetailsProvider
-import com.ghost.zeku.data.remote.mal.provider.MalMangaProvider
-import com.ghost.zeku.data.remote.mal.provider.MalMangaSearchProvider
-import com.ghost.zeku.data.remote.mal.providers.MalAnimeDetailsProvider
-import com.ghost.zeku.data.remote.mal.providers.MalAnimeProvider
-import com.ghost.zeku.data.remote.mal.providers.MalAnimeSearchProvider
-import com.ghost.zeku.data.remote.mal.providers.MalMediaTracker
+import com.ghost.zeku.data.remote.mal.providers.*
 import com.ghost.zeku.domain.MediaSource
 import com.ghost.zeku.domain.provider.*
 

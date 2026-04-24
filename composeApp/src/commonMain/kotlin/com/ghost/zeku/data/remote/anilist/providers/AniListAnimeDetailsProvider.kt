@@ -1,7 +1,6 @@
 package com.ghost.zeku.data.remote.anilist.providers
 
 import com.ghost.zeku.data.remote.anilist.*
-import com.ghost.zeku.data.repository.AniListAuthRepositoryImpl
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.api.ApiResult.Success
 import com.ghost.zeku.domain.model.media.*
@@ -9,13 +8,12 @@ import com.ghost.zeku.domain.provider.AnimeDetailsProvider
 
 class AniListAnimeDetailsProvider(
     private val api: AniListApi,
-    private val authRepository: AniListAuthRepositoryImpl,
     private val parser: AniListResponseParser
 ) : AnimeDetailsProvider {
 
     override suspend fun getAnimeDetails(id: Int): ApiResult<AnimeDetails> {
         return parser.safeApiCall(
-            apiCall = { api.getAnimeDetails(id, authRepository.getAccessToken()) },
+            apiCall = { api.getAnimeDetails(id) },
             transform = { data -> data.media?.toAnimeDetailsDomain()!! }
         )
     }
@@ -29,7 +27,7 @@ class AniListAnimeDetailsProvider(
 
     override suspend fun getAnimeRecommendations(id: Int, page: Int): ApiResult<PageResult<Anime>> {
         return parser.safeApiCall(
-            apiCall = { api.getMediaRecommendations(id, page, authRepository.getAccessToken()) },
+            apiCall = { api.getMediaRecommendations(id, page) },
             transform = { data ->
                 val connection = data.media?.recommendations
                 PageResult(
@@ -44,7 +42,7 @@ class AniListAnimeDetailsProvider(
 
     override suspend fun getAnimeReviews(id: Int, page: Int, perPage: Int): ApiResult<PageResult<Review>> {
         return parser.safeApiCall(
-            apiCall = { api.getMediaReviews(id, page, authRepository.getAccessToken()) },
+            apiCall = { api.getMediaReviews(id, page) },
             transform = { data ->
                 val connection = data.media?.reviews
                 PageResult(

@@ -30,7 +30,6 @@ class MalMediaTracker(
                     status = status.toMalAnimeStatus(),
                     page = page,
                     limit = perPage,
-                    token = accessToken
                 )
             },
             transform = { response ->
@@ -58,7 +57,6 @@ class MalMediaTracker(
                     status = status.toMalMangaStatus(),
                     page = page,
                     limit = perPage,
-                    token = accessToken
                 )
             },
             transform = { response ->
@@ -88,7 +86,6 @@ class MalMediaTracker(
                     status = status?.toMalAnimeStatus(),
                     progress = progress,
                     score = score?.toInt(),
-                    token = accessToken
                 )
             },
             transform = { malListStatus ->
@@ -103,7 +100,7 @@ class MalMediaTracker(
     ): Boolean {
         return try {
             // FIXME: Assuming Anime here because the interface lacks a type discriminator.
-            api.deleteAnimeListEntry(mediaId = entryId, token = accessToken)
+            api.deleteAnimeListEntry(mediaId = entryId)
             true
         } catch (e: Exception) {
             false

@@ -1,16 +1,10 @@
 package com.ghost.zeku.data.local.room
 
 
-import com.ghost.zeku.data.local.room.entities.AnimeDetailsEntity
-import com.ghost.zeku.data.local.room.entities.AnimeEntity
-import com.ghost.zeku.data.local.room.entities.MangaDetailsEntity
-import com.ghost.zeku.data.local.room.entities.MangaEntity
+import com.ghost.zeku.data.local.room.entities.*
 import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
 import com.ghost.zeku.domain.model.enum.ProviderType
-import com.ghost.zeku.domain.model.media.Anime
-import com.ghost.zeku.domain.model.media.AnimeDetails
-import com.ghost.zeku.domain.model.media.Manga
-import com.ghost.zeku.domain.model.media.MangaDetails
+import com.ghost.zeku.domain.model.media.*
 
 /**
  * Converts a Room AnimeEntity to the Anime Domain Model.
@@ -181,5 +175,26 @@ fun MangaDetails.toBaseEntity(source: ProviderType): MangaEntity {
         volumes = this.totalVolumes,
 
         updatedAt = System.currentTimeMillis()
+    )
+}
+
+
+fun EpisodeEntity.toDomain(): Episode {
+    return Episode(
+        id = this.id,
+        number = this.number.toInt(), // Domain model uses Int, Entity uses Float to support x.5 episodes safely
+        title = this.title,
+        description = this.description,
+        thumbnail = this.thumbnail,
+        isFiller = this.isFiller
+    )
+}
+
+fun ChapterEntity.toDomain(): Chapter {
+    return Chapter(
+        id = this.id,
+        number = this.number,
+        title = this.title,
+        volume = this.volume
     )
 }

@@ -3,6 +3,7 @@ package com.ghost.zeku
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -36,7 +37,6 @@ import com.ghost.zeku.presentation.components.section.SectionLayout
 import com.ghost.zeku.presentation.theme.AppTheme
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import org.koin.compose.koinInject
 
 
@@ -46,15 +46,18 @@ fun App() {
     val mediaRepository: MediaRepository = koinInject()
     val userSettings: UserSettings = koinInject()
 
-    userSettings.setActiveProvider(ProviderType.ANILIST)
+//    userSettings.setActiveProvider(ProviderType.MYANIMELIST)
 
     var animeList by remember { mutableStateOf<Flow<PagingData<Anime>>?>(null) }
 
+//    val animeData: PagingData<Anime> by remember { mutableStateOf(PagingData.empty()) }
 
-    LaunchedEffect(Unit) {
-        val animeDetails = mediaRepository.getAnimeDetails(199221).first()
-        Napier.i("Details: $animeDetails")
-    }
+
+//    LaunchedEffect(Unit) {
+//        val animeDetails = mediaRepository.getAnimeRecommendations(199221).first()
+//        Napier.i("Details: $animeDetails")
+//    }
+
 
     animeList?.collectAsLazyPagingItems().let { pagingItems ->
         Text(
@@ -63,10 +66,65 @@ fun App() {
         )
     }
 
+//    TestReview(mediaRepository)
 
-    TestApp()
+//    TestApp()
 
 
+}
+
+
+@Composable
+fun TestReview(mediaRepository: MediaRepository) {
+    val pagerFlow = remember { mediaRepository.getAnimeReviews(52991) } // Flow<PagingData<Anime>>
+    val lazyItems = pagerFlow.collectAsLazyPagingItems()
+
+    LaunchedEffect(lazyItems.itemCount) {
+        Napier.i("Paging items count: ${lazyItems.itemCount}")
+        // Log first few items
+        for (i in 0 until minOf(10, lazyItems.itemCount)) {
+            val item = lazyItems.peek(i) ?: continue
+            Napier.i("Item[$i]: $item")
+        }
+    }
+
+
+    LazyColumn {
+        item {
+            Text(text = "Total Anime: ${lazyItems.itemCount}", style = MaterialTheme.typography.displayLarge)
+        }
+        items(lazyItems.itemCount) { anime ->
+            val anime = lazyItems[anime] ?: return@items
+            Text(text = anime.toString(), style = MaterialTheme.typography.displayMedium)
+        }
+    }
+}
+
+
+@Composable
+fun TestRecommendations(mediaRepository: MediaRepository) {
+    val pagerFlow = remember { mediaRepository.getAnimeRecommendations(52991) } // Flow<PagingData<Anime>>
+    val lazyItems = pagerFlow.collectAsLazyPagingItems()
+
+    LaunchedEffect(lazyItems.itemCount) {
+        Napier.i("Paging items count: ${lazyItems.itemCount}")
+        // Log first few items
+        for (i in 0 until minOf(10, lazyItems.itemCount)) {
+            val item = lazyItems.peek(i) ?: continue
+            Napier.i("Item[$i]: $item")
+        }
+    }
+
+
+    LazyColumn {
+        item {
+            Text(text = "Total Anime: ${lazyItems.itemCount}", style = MaterialTheme.typography.displayLarge)
+        }
+        items(lazyItems.itemCount) { anime ->
+            val anime = lazyItems[anime] ?: return@items
+            Text(text = anime.toString(), style = MaterialTheme.typography.displayMedium)
+        }
+    }
 }
 
 

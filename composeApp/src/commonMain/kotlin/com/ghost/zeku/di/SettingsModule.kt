@@ -1,19 +1,22 @@
 package com.ghost.zeku.di
 
+import com.ghost.zeku.data.settings.SettingsFactory
 import com.ghost.zeku.data.settings.UserSettingsImpl
 import com.ghost.zeku.domain.repository.UserSettings
-import com.russhwolf.settings.Settings
+import org.koin.core.module.Module
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 
-expect fun createSettings(): Settings
-
+expect fun platformSettingsModule(): Module
 
 val settingsModule = module {
-    // Provides the platform-specific implementation of Settings
-    single<Settings> { createSettings() }
 
-    single<UserSettings> {
-        UserSettingsImpl(get())
-    }
+
+    // 1. Create the named Settings instances using our new Factory
+    single(named("standardSettings")) { get<SettingsFactory>().createStandardSettings() }
+    single(named("secureSettings")) { get<SettingsFactory>().createSecureSettings() }
+
+
+    single<UserSettings> { UserSettingsImpl(settings = get(named("standardSettings"))) }
 }

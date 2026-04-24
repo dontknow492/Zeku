@@ -101,6 +101,10 @@ interface MediaRepository {
 
     fun getMangaDetails(id: Int): Flow<MangaDetails>
 
+    // NEW: Manual force refresh
+    suspend fun refreshAnimeDetails(id: Int): ApiResult<Unit>
+    suspend fun refreshMangaDetails(id: Int): ApiResult<Unit>
+
     // ========================================================================
     // LAZY DETAILS (Paginated Online-Only Flow)
     // ========================================================================

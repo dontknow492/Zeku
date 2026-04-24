@@ -4,9 +4,10 @@ package com.ghost.zeku.data.remote.jikan
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
+import zeku.composeApp.BuildConfig
 
 class JikanApi(private val client: HttpClient) {
-    private val baseUrl = "https://api.jikan.moe/v4"
+    private val baseUrl = BuildConfig.JIKAN_BASE_URL
 
     // --- Characters (Eager Load) ---
 

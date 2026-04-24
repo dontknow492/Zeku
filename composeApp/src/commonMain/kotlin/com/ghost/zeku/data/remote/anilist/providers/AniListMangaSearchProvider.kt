@@ -5,7 +5,6 @@ import com.ghost.zeku.data.remote.anilist.AniListResponseParser
 import com.ghost.zeku.data.remote.anilist.model.GraphQLRequest
 import com.ghost.zeku.data.remote.anilist.toAniListSort
 import com.ghost.zeku.data.remote.anilist.toMangaDomain
-import com.ghost.zeku.data.repository.AniListAuthRepositoryImpl
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.media.Manga
 import com.ghost.zeku.domain.model.media.PageResult
@@ -16,7 +15,6 @@ import com.ghost.zeku.domain.provider.MangaSearchProvider
 
 class AniListMangaSearchProvider(
     private val api: AniListApi,
-    private val authRepository: AniListAuthRepositoryImpl,
     private val parser: AniListResponseParser
 ) : MangaSearchProvider {
 
@@ -75,7 +73,7 @@ class AniListMangaSearchProvider(
         )
 
         return parser.safeApiCall(
-            apiCall = { api.searchManga(variables, token = authRepository.getAccessToken()) },
+            apiCall = { api.searchManga(variables) },
             transform = { data ->
                 data.page?.let { pageData ->
                     PageResult(

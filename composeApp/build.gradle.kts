@@ -28,10 +28,18 @@ buildConfig {
     val malToken = localProperties.getProperty("MYANIMELIST_TOKEN") ?: "\"\""
     val malClientID = localProperties.getProperty("MAL_CLIENT_ID") ?: "\"\""
 
+    // base url
+    buildConfigField("String", "ANILIST_BASE_URL", localProperties.getProperty("ANILIST_BASE_URL") ?: "https://graphql.anilist.co")
+    buildConfigField("String", "MAL_BASE_URL", localProperties.getProperty("MAL_BASE_URL") ?: "https://api.myanimelist.net/v2")
+    buildConfigField("String", "JIKAN_BASE_URL", localProperties.getProperty("JIKAN_BASE_URL") ?: "https://api.jikan.moe/v4")
+
     buildConfigField("String", "ANILIST_TOKEN", token)
     buildConfigField("String", "MAL_TOKEN", malToken)
-    buildConfigField("String", "MAL_CLIENT_ID", malClientID)
     buildConfigField("Boolean", "IS_DEBUG", true)
+
+    buildConfigField("String", "ANILIST_CLIENT_ID", localProperties.getProperty("ANILIST_CLIENT_ID") ?: "")
+    buildConfigField("String", "MAL_CLIENT_ID", localProperties.getProperty("MAL_CLIENT_ID") ?: "")
+
 }
 
 room {
@@ -63,6 +71,9 @@ kotlin {
 
             //room
             implementation(libs.androidx.room.sqlite.wrapper)
+
+            //
+            implementation(libs.androidx.security.crypto)
 
 
 //            implementation(libs.multiplatform.settings.android)
@@ -118,7 +129,6 @@ kotlin {
             implementation(libs.androidx.sqlite.bundled)
             implementation(libs.androidx.room.paging)
 //            implementation(libs.androidx.room.ktx)
-
 
 
         }
