@@ -1,4 +1,4 @@
-package com.ghost.zeku.presentation.components.list
+package com.ghost.zeku.presentation.components.media.list
 
 import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
 import com.ghost.zeku.domain.model.media.Anime

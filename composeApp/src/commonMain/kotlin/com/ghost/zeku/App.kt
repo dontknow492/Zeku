@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.ghost.zeku.data.local.room.AppDatabase
 import com.ghost.zeku.data.local.room.toEntity
@@ -23,31 +22,19 @@ import com.ghost.zeku.domain.model.common.MediaDate
 import com.ghost.zeku.domain.model.common.MediaTitle
 import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
 import com.ghost.zeku.domain.model.enum.ProviderType
-import com.ghost.zeku.domain.model.media.Anime
 import com.ghost.zeku.domain.model.media.AnimeDetails
 import com.ghost.zeku.domain.model.media.Manga
 import com.ghost.zeku.domain.repository.MediaRepository
 import com.ghost.zeku.domain.repository.UserSettings
 import com.ghost.zeku.presentation.components.hero.HeroCarousel
 import com.ghost.zeku.presentation.components.hero.toHeroUiData
-import com.ghost.zeku.presentation.components.list.MediaListCard
-import com.ghost.zeku.presentation.components.list.toMediaListUiData
-import com.ghost.zeku.presentation.components.poster.MediaPosterCard
-import com.ghost.zeku.presentation.components.poster.PosterStyle.OVERLAY
-import com.ghost.zeku.presentation.components.poster.toPosterUiData
-import com.ghost.zeku.presentation.components.section.MediaSection
-import com.ghost.zeku.presentation.components.section.SectionLayout
 import com.ghost.zeku.presentation.theme.AppTheme
 import io.github.aakira.napier.Napier
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import org.koin.compose.koinInject
-import kotlin.time.Duration.Companion.seconds
 
 
 @Composable
-fun App() {
-
+fun App() = AppTheme {
 
 //    val redirectListener: AuthRedirectListener = koinInject()
 //    TestAuthScreen(
@@ -59,25 +46,25 @@ fun App() {
 
     val preferences by userSettings.preferences.collectAsStateWithLifecycle()
 
-    Text(preferences.toString())
+//    Text(preferences.toString())
 
-    LaunchedEffect(Unit) {
-        delay(3.seconds)
-        userSettings.updatePreferences {
-            it.copy(activeProvider = ProviderType.ANILIST)
-        }
-    }
+//    LaunchedEffect(Unit) {
+//        delay(3.seconds)
+//        userSettings.updatePreferences {
+//            it.copy(activeProvider = ProviderType.ANILIST)
+//        }
+//    }
 
 
 //    userSettings.setActiveProvider(ProviderType.MYANIMELIST)
 
-    var animeList by remember { mutableStateOf<Flow<PagingData<Anime>>?>(null) }
+//    var animeList by remember { mutableStateOf<Flow<PagingData<Anime>>?>(null) }
 
 
-    val mediaId = when (preferences.activeProvider) {
-        ProviderType.MYANIMELIST -> 40748
-        ProviderType.ANILIST -> 113415
-    }
+//    val mediaId = when (preferences.activeProvider) {
+//        ProviderType.MYANIMELIST -> 40748
+//        ProviderType.ANILIST -> 113415
+//    }
 
 //    val animeData: PagingData<Anime> by remember { mutableStateOf(PagingData.empty()) }
 
@@ -100,7 +87,7 @@ fun App() {
 //    TestApp()
 
 
-    TestAnimeDetail(mediaRepository, mediaId)
+//    TestAnimeDetail(mediaRepository, mediaId)
 
 
 }
@@ -626,77 +613,6 @@ private fun TestApp() {
                     onDetailsClick = {},
                 )
 
-
-                MediaSection(
-                    title = "Trending Now",
-                    items = mangaList,
-                    layout = SectionLayout.HORIZONTAL_ROW,
-                    onViewAllClick = { /* Navigate to grid */ }
-                ) { item, modifier ->
-                    MediaPosterCard(
-                        data = item.toPosterUiData(),
-                        style = OVERLAY,
-                        onClick = {},
-                        modifier = modifier,
-                    )
-                }
-
-                MediaSection(
-                    title = "Popular",
-                    items = mangaList,
-                    layout = SectionLayout.HORIZONTAL_ROW,
-                    onViewAllClick = { /* Navigate to grid */ }
-                ) { item, modifier ->
-                    MediaPosterCard(
-                        data = item.toPosterUiData(),
-                        style = OVERLAY,
-                        onClick = {},
-                        modifier = modifier
-                    )
-                }
-
-                MediaSection(
-                    title = "Upcoming",
-                    items = mangaList,
-                    layout = SectionLayout.HORIZONTAL_ROW,
-                    onViewAllClick = { /* Navigate to grid */ }
-                ) { item, modifier ->
-                    MediaPosterCard(
-                        data = item.toPosterUiData(),
-                        style = OVERLAY,
-                        onClick = {},
-                        modifier = modifier
-                    )
-                }
-
-
-                MediaSection(
-                    title = "Trending Now",
-                    items = mangaList,
-                    layout = SectionLayout.HORIZONTAL_ROW,
-                    onViewAllClick = { /* Navigate to grid */ }
-                ) { item, modifier ->
-                    MediaPosterCard(
-                        data = item.toPosterUiData(),
-                        style = OVERLAY,
-                        onClick = {},
-                        modifier = modifier
-                    )
-                }
-
-                MediaSection(
-                    title = "Recommended for You",
-                    items = mangaList,
-                    layout = SectionLayout.VERTICAL_LIST,
-                    isLoading = !true,
-                    onViewAllClick = {}
-                ) { item, modifier ->
-                    MediaListCard(
-                        data = item.toMediaListUiData(),
-                        onClick = { TODO() },
-                        modifier = modifier
-                    )
-                }
 
             }
         }

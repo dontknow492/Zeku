@@ -1,7 +1,8 @@
-package com.ghost.zeku.presentation.components.list
+package com.ghost.zeku.presentation.components.media.list
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -215,7 +216,7 @@ private fun ScoreChip(score: Float) {
     Surface(
         shape = RoundedCornerShape(20.dp),
         color = color.copy(alpha = 0.12f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.3f))
+        border = BorderStroke(1.dp, color.copy(alpha = 0.3f))
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(4.dp),

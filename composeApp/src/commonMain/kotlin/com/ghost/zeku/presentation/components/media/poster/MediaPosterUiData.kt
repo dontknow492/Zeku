@@ -1,4 +1,4 @@
-package com.ghost.zeku.presentation.components.poster
+package com.ghost.zeku.presentation.components.media.poster
 
 import com.ghost.zeku.domain.model.media.Anime
 import com.ghost.zeku.domain.model.media.Manga
@@ -14,9 +14,10 @@ data class MediaPosterUiData(
     val title: String,
     val imageUrl: String,
     val score: Float? = null,
-    val badgeText: String? = null, // e.g., "12 Eps", "Finished", or "Ch. 45"
-    val subTitle: String? = null, // e.g., "Finished", "Unknown, etc
-    val progress: Float? = null // 0.0f to 1.0f for a progress bar
+    val badgeText: String? = null,
+    val subTitle: String? = null,
+    val progress: Float? = null,
+    val isNsfw: Boolean = false // 👈 new
 )
 
 // ============================================================================

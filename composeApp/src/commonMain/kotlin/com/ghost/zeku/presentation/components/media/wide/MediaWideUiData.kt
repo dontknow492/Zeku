@@ -1,4 +1,4 @@
-package com.ghost.zeku.presentation.components.wide
+package com.ghost.zeku.presentation.components.media.wide
 
 
 import androidx.compose.animation.core.Spring
