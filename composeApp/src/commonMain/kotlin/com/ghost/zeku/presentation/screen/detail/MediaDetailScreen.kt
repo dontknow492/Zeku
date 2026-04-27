@@ -1,69 +1,103 @@
 package com.ghost.zeku.presentation.screen.detail
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ChatBubble
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.*
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.paging.compose.LazyPagingItems
 import coil3.compose.AsyncImage
 import com.ghost.zeku.domain.model.common.MediaDate
 import com.ghost.zeku.domain.model.common.MediaTitle
 import com.ghost.zeku.domain.model.enum.*
 import com.ghost.zeku.domain.model.media.*
+import com.ghost.zeku.presentation.common.GlassCard
 import com.ghost.zeku.presentation.common.MediaAsyncImage
 import com.ghost.zeku.presentation.common.chips.GenreChip
+import com.ghost.zeku.presentation.common.chips.MyChips
 import com.ghost.zeku.presentation.common.isDesktop
 import com.ghost.zeku.presentation.common.rememberPlatformConfiguration
 import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.components.media.character.MediaCharacterCard
 import com.ghost.zeku.presentation.components.media.character.MediaCharacterCardConfig
-import com.ghost.zeku.presentation.components.media.episode.EpisodeCard
 import com.ghost.zeku.presentation.components.media.poster.MediaPosterCard
 import com.ghost.zeku.presentation.components.media.poster.PosterConfig
 import com.ghost.zeku.presentation.components.media.poster.toPosterUiData
 import com.ghost.zeku.presentation.components.media.relation.MediaRelationCard
 import com.ghost.zeku.presentation.components.media.relation.MediaRelationCardConfig
+import com.ghost.zeku.presentation.components.media.relation.RelationCardLayout
 import com.ghost.zeku.presentation.components.media.review.ReviewCard
 import com.ghost.zeku.presentation.components.media.review.ReviewCardConfig
-import com.ghost.zeku.presentation.components.section.*
+import com.ghost.zeku.presentation.components.section.MediaSection
+import com.ghost.zeku.presentation.components.section.MediaSectionConfig
+import com.ghost.zeku.presentation.components.section.PagedMediaSection
+import com.ghost.zeku.presentation.components.section.SectionLayout
 import com.ghost.zeku.utils.formatTimestamp
 import com.ghost.zeku.utils.toPagingItems
 import org.jetbrains.compose.resources.stringResource
 import zeku.composeapp.generated.resources.*
 
+// Centralized dimensions for consistency
+object MediaDetailDimens {
+    val horizontalPadding = 16.dp
+    val verticalPadding = 16.dp
+    val spacingSmall = 8.dp
+    val spacingMedium = 12.dp
+    val spacingLarge = 24.dp
+    val sectionHeaderVertical = 12.dp
+    val iconSize = 18.dp
+    val cardCornerRadius = 12.dp
+    val glassCardCornerRadius = 12.dp
+    val chipSpacing = 8.dp
+    val buttonHeight = 56.dp
+    val fabPadding = 16.dp
+    val posterWidth = 200.dp
+    val posterAspectRatio = 2f / 3f
+    val trailerAspectRatio = 16f / 9f
+    val trailerPlayIconSize = 64.dp
+    val blurRadius = 24.dp
+}
 
 @Immutable
 data class MediaDetailUiConfig(
-    // Section configs
     val characterSection: MediaSectionConfig = MediaSectionConfig(),
     val relationSection: MediaSectionConfig = MediaSectionConfig(),
     val reviewSection: MediaSectionConfig = MediaSectionConfig(
@@ -71,18 +105,23 @@ data class MediaDetailUiConfig(
     ),
     val recommendationSection: MediaSectionConfig = MediaSectionConfig(),
 
-    // Card configs
     val characterCard: MediaCharacterCardConfig = MediaCharacterCardConfig(),
     val relationCard: MediaRelationCardConfig = MediaRelationCardConfig(),
     val reviewCard: ReviewCardConfig = ReviewCardConfig(),
     val recommendationCard: PosterConfig = PosterConfig(),
 
-
-    // Feature flags (only when needed)
     val showTrailer: Boolean = true,
-    val showExternalLinks: Boolean = true
-)
+    val showExternalLinks: Boolean = true,
 
+    val desktopSideBarWidth: Dp = 390.dp,
+    val desktopItemSpacing: Dp = 24.dp,
+    val desktopHeroBannerSize: Dp = 716.dp,
+    val desktopHeroMetaOffset: Dp = 140.dp,
+
+    val androidItemSpacing: Dp = 16.dp,
+    val androidHeroBannerHeight: Dp = 590.dp,
+    val androidHeroMetaOffset: Dp = 140.dp,
+)
 
 @Composable
 fun MediaDetailContent(
@@ -95,6 +134,7 @@ fun MediaDetailContent(
     isDesktop: Boolean = false
 ) {
     val layoutDirection = LocalLayoutDirection.current
+    val dimens = MediaDetailDimens
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
@@ -122,16 +162,15 @@ fun MediaDetailContent(
                 contentColor = MaterialTheme.colorScheme.onSecondary,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(16.dp)
-                    .scale(1f) // enable press animation
-                    .clip(RoundedCornerShape(16.dp))
+                    .padding(dimens.fabPadding)
+                    .scale(1f)
+                    .clip(RoundedCornerShape(dimens.cardCornerRadius))
             ) {
-                Icon(Icons.Outlined.ChatBubble, contentDescription = null)
+                Icon(Icons.Outlined.ChatBubble, contentDescription = stringResource(Res.string.chat))
             }
         }
     }
 }
-
 
 // ---------- Desktop Layout ----------
 @Composable
@@ -143,95 +182,126 @@ private fun DesktopLayout(
     config: MediaDetailUiConfig,
     onEvent: (MediaDetailContract.Event) -> Unit
 ) {
-    // The ROOT is a LazyColumn so the whole page, including the Hero, scrolls together.
+    val dimens = MediaDetailDimens
     LazyColumn(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 80.dp),
     ) {
-        // 1. HERO SECTION (Full Width, at the top)
+        // 1. HERO SECTION
         item {
             Box(
                 modifier = Modifier.layout { measurable, constraints ->
-                    // Measure the HeroSection normally (e.g., 530.dp)
                     val placeable = measurable.measure(constraints)
-
-                    // The exact amount you want the bottom content to overlap the Hero
-                    val overlap = 140.dp.roundToPx()
-
-                    // Report a smaller height to the LazyColumn so it pulls the next items up!
+                    val overlap = config.desktopHeroMetaOffset.roundToPx()
                     layout(placeable.width, placeable.height - overlap) {
                         placeable.placeRelative(0, 0)
                     }
                 }
             ) {
-                HeroSection(state, isDesktop = true)
+                HeroSection(state, isDesktop = true, config)
             }
         }
 
-        // 2. THE SPLIT ROW (Contains everything EXCEPT the paged reviews)
+        // 2. SPLIT ROW
         item {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(config.desktopItemSpacing)
             ) {
-                // LEFT PANEL (Static Content)
-                // We use a standard Column here because it's already inside a scrolling parent
+                // LEFT PANEL
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                    verticalArrangement = Arrangement.spacedBy(config.desktopItemSpacing)
                 ) {
                     SynopsisSection(state.description)
                     AnimatedVisibility(config.showTrailer) {
                         TrailerSection(state.trailer, onEvent)
                     }
 
-                    RecommendationSection(
-                        modifier = Modifier,
-                        recommendations = recommendations,
-                        sectionConfig = config.recommendationSection,
-                        cardConfig = config.recommendationCard,
-                        onAction = { /* TODO */ })
                     CharacterSection(
-                        modifier = Modifier, characters = state.characters, onAction = { /* TODO */ },
+                        modifier = Modifier,
+                        characters = state.characters,
+                        onAction = { /* TODO */ },
                         sectionConfig = config.characterSection,
                         cardConfig = config.characterCard
                     )
+
+                    val reviewsPreview = reviews.itemSnapshotList.take(6)
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(dimens.spacingMedium)
+                    ) {
+                        SectionHeader(title = stringResource(Res.string.reviews))
+                        reviewsPreview.forEach { review ->
+                            if (review != null) {
+                                ReviewCard(
+                                    modifier = Modifier.padding(start = dimens.horizontalPadding),
+                                    review = review,
+                                    config = config.reviewCard,
+                                    onAction = { /* TODO */ }
+                                )
+                            }
+                        }
+                    }
                 }
 
                 // RIGHT PANEL (Sidebar)
                 Column(
-                    modifier = Modifier.width(320.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                    modifier = Modifier
+                        .width(config.desktopSideBarWidth)
+                        .padding(config.desktopItemSpacing),
+                    verticalArrangement = Arrangement.spacedBy(config.desktopItemSpacing)
                 ) {
                     InfoPanel(state)
                     AnimatedVisibility(config.showExternalLinks) {
                         ExternalLinksPanel(state.externalLinks, isMobile = false)
                     }
-                    RelationSection(
-                        modifier = Modifier,
-                        relations = state.relations,
-                        sectionConfig = config.relationSection,
-                        cardConfig = config.relationCard,
-                        onAction = { /* TODO */ })
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(dimens.spacingMedium),
+                        modifier = Modifier.padding(start = dimens.horizontalPadding)
+                    ) {
+                        SectionHeader(title = stringResource(Res.string.relations))
+                        state.relations.forEach {
+                            MediaRelationCard(
+                                relation = it,
+                                config = config.relationCard.copy(
+                                    layout = RelationCardLayout.WIDE
+                                ),
+                                onAction = { /* TODO */ }
+                            )
+                        }
+                    }
+
+                    val previewItems = recommendations.itemSnapshotList.items.take(6)
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(dimens.spacingMedium),
+                        modifier = Modifier.padding(start = dimens.horizontalPadding)
+                    ) {
+                        SectionHeader(title = stringResource(Res.string.more_like_this))
+                        previewItems.chunked(2).forEach { row ->
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(dimens.spacingMedium),
+                            ) {
+                                row.forEach { item ->
+                                    MediaPosterCard(
+                                        data = item.toPosterUiData(),
+                                        modifier = Modifier.weight(1f),
+                                        onAction = { /* TODO */ },
+                                        config = config.recommendationCard
+                                    )
+                                }
+                                if (row.size == 1) {
+                                    Spacer(Modifier.weight(1f))
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-
-        // 3. THE PAGED REVIEWS
-        // Because reviewSection operates on the LazyListScope, it goes directly in the root here.
-        reviewSection(
-            reviews = reviews,
-            isDesktop = true,
-            sectionConfig = config.reviewSection,
-            cardConfig = config.reviewCard
-        )
     }
 }
 
-
 // ---------- Mobile Layout ----------
-
 @Composable
 private fun MobileLayout(
     state: MediaDetailContract.State,
@@ -241,56 +311,51 @@ private fun MobileLayout(
     config: MediaDetailUiConfig,
     onEvent: (MediaDetailContract.Event) -> Unit
 ) {
+    val dimens = MediaDetailDimens
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 80.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(config.androidItemSpacing)
     ) {
-        // 1. THE OVERLAP TRICK
+        // 1. HERO OVERLAP
         item {
             Box(
                 modifier = Modifier.layout { measurable, constraints ->
-                    // Measure the HeroSection normally (e.g., 530.dp)
                     val placeable = measurable.measure(constraints)
-
-                    // The exact amount you want the bottom content to overlap the Hero
-                    val overlap = 100.dp.roundToPx()
-
-                    // Report a smaller height to the LazyColumn so it pulls the next items up!
+                    val overlap = config.androidHeroMetaOffset.roundToPx() // fixed: now uses config
                     layout(placeable.width, placeable.height - overlap) {
                         placeable.placeRelative(0, 0)
                     }
                 }
             ) {
-                HeroSection(state, isDesktop = false)
+                HeroSection(state, isDesktop = false, config)
             }
         }
 
-        // Because of the layout modifier above, this Spacer and Button
-        // will now draw DIRECTLY on top of the bottom 100dp of the HeroSection!
-//        item { Spacer(Modifier.height(16.dp)) }
-
+        // Watch button right on top of the hero
         item {
             Button(
                 onClick = { /* TODO */ },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(56.dp),
-                shape = RoundedCornerShape(12.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = dimens.horizontalPadding)
+                    .height(dimens.buttonHeight),
+                shape = RoundedCornerShape(dimens.cardCornerRadius)
             ) {
                 Icon(
                     Icons.Filled.PlayArrow,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onTertiaryContainer
                 )
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(dimens.spacingSmall))
                 Text(stringResource(Res.string.watch_now), style = MaterialTheme.typography.titleMedium)
             }
         }
+
         item { SynopsisSection(state.description) }
         if (config.showTrailer) {
             item { TrailerSection(state.trailer, onEvent) }
         }
-
-
 
         item {
             CharacterSection(
@@ -322,29 +387,42 @@ private fun MobileLayout(
                 recommendations = recommendations,
                 sectionConfig = config.recommendationSection,
                 cardConfig = config.recommendationCard,
-                onAction = { /* TODO */ })
+                onAction = { /* TODO */ }
+            )
         }
 
-        reviewSection(
-            reviews = reviews,
-            isDesktop = false,
-            sectionConfig = config.reviewSection,
-            cardConfig = config.reviewCard
-        )
+        item {
+            SectionHeader(
+                stringResource(Res.string.reviews),
+                modifier = Modifier.padding(horizontal = dimens.horizontalPadding)
+            )
+        }
+        items(reviews.itemCount) { index ->
+            val review = reviews[index]
+            if (review != null) {
+                ReviewCard(
+                    review = review,
+                    config = config.reviewCard,
+                    modifier = Modifier.animateItem().padding(horizontal = dimens.horizontalPadding),
+                    onAction = { /* TODO */ }
+                )
+            }
+        }
     }
 }
 
-
+// ---------- Hero Section ----------
 @Composable
-private fun HeroSection(state: MediaDetailContract.State, isDesktop: Boolean) {
+private fun HeroSection(state: MediaDetailContract.State, isDesktop: Boolean, config: MediaDetailUiConfig) {
+    val dimens = MediaDetailDimens
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(if (isDesktop) 716.dp else 590.dp)
+            .height(if (isDesktop) config.desktopHeroBannerSize else config.androidHeroBannerHeight)
     ) {
         val imageUrl = state.bannerImage ?: state.coverImage
 
-        // 1. Base Background Image (Sharp)
+        // 1. Base Background Image
         MediaAsyncImage(
             url = imageUrl,
             contentDescription = state.title,
@@ -352,58 +430,37 @@ private fun HeroSection(state: MediaDetailContract.State, isDesktop: Boolean) {
             contentScale = ContentScale.Crop
         )
 
-        // 2. The Gradient Blur Mask
-        // This layers a blurred version of the image on top, but fades it in at the bottom.
+        // 2. Gradient Blur Mask
         if (isDesktop) {
             MediaAsyncImage(
                 url = imageUrl,
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxSize()
-                    .blur(24.dp)
+                    .blur(dimens.blurRadius)
                     .graphicsLayer {
                         compositingStrategy = CompositingStrategy.Offscreen
                     }
-                    // Use drawWithCache instead of drawWithContent to prevent recreating
-                    // the Brushes on every single frame, which saves memory!
                     .drawWithCache {
-                        // 1. The Left-to-Right Blur Mask
-                        // Note: For DstIn masks, the color doesn't matter, ONLY the alpha matters.
-                        // Black = 100% Blur visible. Transparent = 0% Blur visible.
                         val horizontalMask = Brush.horizontalGradient(
                             colors = listOf(Color.Black, Color.Transparent),
                             startX = 0f,
-                            endX = size.width * 0.9f // Fades out at 60% of the screen width
+                            endX = size.width * 0.9f
                         )
-
-                        // 2. The Top-to-Bottom Blur Mask
                         val verticalMask = Brush.verticalGradient(
                             colors = listOf(Color.Transparent, Color.Black),
                             startY = size.height * 0.4f,
                             endY = size.height
                         )
-
                         onDrawWithContent {
-                            // Draw the blurred image onto the canvas
                             drawContent()
-
-                            // Open a raw Canvas layer to combine our gradients
                             drawIntoCanvas { canvas ->
-                                // saveLayer tells Compose: "Group everything I draw next into a single
-                                // flat layer, and when I'm done, apply it to the image using DstIn."
                                 canvas.saveLayer(
                                     bounds = Rect(0f, 0f, size.width, size.height),
                                     paint = Paint().apply { blendMode = BlendMode.DstIn }
                                 )
-
-                                // Draw the horizontal mask
                                 drawRect(horizontalMask)
-
-                                // Draw the vertical mask ON TOP of the horizontal one.
-                                // Compose naturally merges them together into a perfect "L" shape.
                                 drawRect(verticalMask)
-
-                                // Apply the finished mask to the blurred image!
                                 canvas.restore()
                             }
                         }
@@ -413,80 +470,79 @@ private fun HeroSection(state: MediaDetailContract.State, isDesktop: Boolean) {
         } else {
             MediaAsyncImage(
                 url = imageUrl,
-                contentDescription = null, // decorative
+                contentDescription = null,
                 modifier = Modifier
                     .fillMaxSize()
-                    .blur(24.dp) // The intensity of the blur
+                    .blur(dimens.blurRadius)
                     .graphicsLayer {
-                        // Offscreen compositing is required for BlendMode masking to work
                         compositingStrategy = CompositingStrategy.Offscreen
                     }
                     .drawWithContent {
                         drawContent()
-                        // Draw a gradient mask that reveals the blur at the bottom
                         drawRect(
                             brush = Brush.verticalGradient(
                                 colors = listOf(Color.Transparent, Color.Black),
-                                startY = size.height * 0.4f, // Start blurring 40% down the image
+                                startY = size.height * 0.4f,
                                 endY = size.height
                             ),
-                            blendMode = BlendMode.DstIn // Keeps the image only where the gradient is Black
+                            blendMode = BlendMode.DstIn
                         )
                     },
                 contentScale = ContentScale.Crop
             )
         }
 
-        // 3. The Color Scrim
-        // Fades into your actual MaterialTheme background color
+        // 3. Color Scrim
         Box(
-            modifier = Modifier.fillMaxSize().background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color.Transparent,
-                        MaterialTheme.colorScheme.background.copy(alpha = 0.6f),
-                        MaterialTheme.colorScheme.background
-                    ),
-                    startY = 0f // Let Compose automatically calculate the endY based on the Box height
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            MaterialTheme.colorScheme.background.copy(alpha = 0.6f),
+                            MaterialTheme.colorScheme.background
+                        ),
+                        startY = 0f
+                    )
                 )
-            )
         )
 
         if (isDesktop) {
             Box(
-                modifier = Modifier.fillMaxSize().background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.background.copy(alpha = 0.6f),
-                            Color.Transparent,
-                        ),
-                        startX = 0f,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.background.copy(alpha = 0.6f),
+                                Color.Transparent,
+                            ),
+                            startX = 0f,
+                        )
                     )
-                )
             )
         }
-
 
         // 4. Content
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(16.dp)
-                .padding(bottom = if (isDesktop) 140.dp else 100.dp)
+                .padding(dimens.horizontalPadding)
+                .padding(bottom = if (isDesktop) config.desktopHeroMetaOffset else config.androidHeroMetaOffset)
         ) {
             if (isDesktop) {
                 Row(verticalAlignment = Alignment.Bottom) {
-                    // Poster on desktop
                     MediaAsyncImage(
                         url = state.coverImage,
                         contentDescription = stringResource(Res.string.poster),
                         modifier = Modifier
-                            .width(200.dp)
-                            .aspectRatio(2f / 3f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                            .width(dimens.posterWidth)
+                            .aspectRatio(dimens.posterAspectRatio)
+                            .clip(RoundedCornerShape(dimens.cardCornerRadius))
+                            .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(dimens.cardCornerRadius))
                     )
-                    Spacer(Modifier.width(24.dp))
+                    Spacer(Modifier.width(dimens.spacingLarge))
                     Column(modifier = Modifier.weight(1f)) {
                         MetadataAndActions(state, isDesktop = true)
                     }
@@ -498,169 +554,62 @@ private fun HeroSection(state: MediaDetailContract.State, isDesktop: Boolean) {
     }
 }
 
-
+// ---------- Metadata & Actions ----------
 @Composable
-private fun MetadataAndActionsV2(state: MediaDetailContract.State, isDesktop: Boolean) {
-    // 1. Define a smooth, dark shadow
-    val textShadow = Shadow(
-        color = Color.Black.copy(alpha = 0.8f),
-        offset = Offset(0f, 4f), // Drop it down slightly
-        blurRadius = 12f // Blur it out so it looks like a natural glow, not a hard duplicate
-    )
-
-    // 2. Force light text colors since it's sitting on an image
-    // (The gradient scrim we added earlier is usually dark)
-    val primaryTextColor = Color.White
-    val secondaryTextColor = Color.White.copy(alpha = 0.7f)
-
-    // Genres (These are already in Surface chips, so they are highly visible)
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+private fun MetadataAndActions(state: MediaDetailContract.State, isDesktop: Boolean) {
+    val dimens = MediaDetailDimens
+    // Genres
+    Row(horizontalArrangement = Arrangement.spacedBy(dimens.chipSpacing)) {
         state.genres.forEach { genre ->
-            val isFirst = genre == state.genres.first()
-            Surface(
-                shape = RoundedCornerShape(50),
-                color = if (isFirst) MaterialTheme.colorScheme.secondaryContainer
-                else Color.White.copy(alpha = 0.2f), // Frosted look for secondary genres
-                contentColor = if (isFirst) MaterialTheme.colorScheme.onSecondaryContainer
-                else Color.White
-            ) {
-                Text(
-                    text = genre,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
+            GenreChip(genre)
         }
     }
+    Spacer(Modifier.height(dimens.spacingSmall))
 
-    Spacer(Modifier.height(8.dp))
-
-    // Title with Shadow
     Text(
         text = state.title,
-        style = MaterialTheme.typography.displaySmall.copy(
-            fontWeight = FontWeight.ExtraBold,
-            shadow = textShadow // Apply shadow here
-        ),
-        color = primaryTextColor
+        style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold),
+        color = Color.White
     )
 
-    Spacer(Modifier.height(8.dp))
+    Spacer(Modifier.height(dimens.spacingSmall))
 
-    // Metadata Row
+    // Rating, Release date, Studio/Author
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             Icons.Filled.Star,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.secondary,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(dimens.iconSize)
         )
         Text(
             text = " ${state.rating}",
-            style = MaterialTheme.typography.titleSmall.copy(shadow = textShadow),
-            color = primaryTextColor
-        )
-
-        Text(
-            stringResource(Res.string.dot_separator),
-            color = secondaryTextColor,
-            style = TextStyle(shadow = textShadow)
-        )
-
-        Text(
-            text = state.releaseDate.toString() ?: "Unknown",
-            style = MaterialTheme.typography.labelMedium.copy(shadow = textShadow),
-            color = secondaryTextColor
-        )
-
-        Text(
-            stringResource(Res.string.dot_separator),
-            color = secondaryTextColor,
-            style = TextStyle(shadow = textShadow)
-        )
-
-        Text(
-            text = state.studio ?: state.author ?: "Unknown",
-            style = MaterialTheme.typography.labelMedium.copy(shadow = textShadow),
-            color = secondaryTextColor
-        )
-    }
-
-    if (isDesktop) {
-        Spacer(Modifier.height(16.dp))
-        // Desktop Actions
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(
-                onClick = {},
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                shape = RoundedCornerShape(50)
-            ) {
-                Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondary)
-                Text(stringResource(Res.string.watch_now), color = MaterialTheme.colorScheme.onSecondary)
-            }
-
-            // Replaced OutlinedButton with a transparent Surface for better visibility over images
-            Surface(
-                onClick = {},
-                shape = RoundedCornerShape(50),
-                color = Color.White.copy(alpha = 0.2f),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.4f))
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(Icons.Outlined.Add, contentDescription = null, tint = Color.White)
-                    Text(
-                        stringResource(Res.string.watchlist),
-                        color = Color.White,
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
-            }
-        }
-    }
-}
-
-
-@Composable
-private fun MetadataAndActions(state: MediaDetailContract.State, isDesktop: Boolean) {
-    // Genres
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        state.genres.forEach { genre ->
-            GenreChip(genre)
-        }
-    }
-    Spacer(Modifier.height(8.dp))
-    Text(state.title, style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold))
-    Spacer(Modifier.height(8.dp))
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            Icons.Filled.Star, contentDescription = null, tint = MaterialTheme.colorScheme.secondary,
-            modifier = Modifier.size(18.dp)
-        )
-        Text(
-            " ${state.rating}",
             style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurface
+            color = Color.White
         )
-        Text(stringResource(Res.string.dot_separator), color = MaterialTheme.colorScheme.outline)
         Text(
-            text = formatTimestamp(state.releaseDate ?: 0),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            stringResource(Res.string.dot_separator),
+            color = MaterialTheme.colorScheme.outline
         )
-        Text(stringResource(Res.string.dot_separator), color = MaterialTheme.colorScheme.outline)
         Text(
-            state.studio ?: state.author ?: stringResource(Res.string.unknown),
+            text = state.releaseDate?.let { formatTimestamp(it) } ?: stringResource(Res.string.unknown),
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = Color.White.copy(alpha = 0.8f)
+        )
+        Text(
+            stringResource(Res.string.dot_separator),
+            color = MaterialTheme.colorScheme.outline
+        )
+        Text(
+            text = state.studio ?: state.author ?: stringResource(Res.string.unknown),
+            style = MaterialTheme.typography.labelMedium,
+            color = Color.White.copy(alpha = 0.8f)
         )
     }
+
     if (isDesktop) {
-        Spacer(Modifier.height(16.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Spacer(Modifier.height(dimens.spacingMedium))
+        Row(horizontalArrangement = Arrangement.spacedBy(dimens.spacingMedium)) {
             Button(
                 onClick = {},
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
@@ -681,59 +630,234 @@ private fun MetadataAndActions(state: MediaDetailContract.State, isDesktop: Bool
     }
 }
 
-
-// ---------- Synopsis ----------
 @Composable
-private fun SynopsisSection(synopsis: String?) {
-    SectionHeader(title = stringResource(Res.string.synopsis))
-    Text(
-        synopsis ?: stringResource(Res.string.no_description),
-        style = MaterialTheme.typography.bodyLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = 16.dp)
-    )
+private fun SynopsisSection(
+    synopsis: String?
+) {
+    val dimens = MediaDetailDimens
+    val text = synopsis?.trim().takeUnless { it.isNullOrBlank() }
+        ?: stringResource(Res.string.no_description)
+
+    var expanded by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
+
+    val clipboard = LocalClipboardManager.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = dimens.horizontalPadding)
+            .animateContentSize(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+
+        // Header with actions
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SectionHeader(
+                title = stringResource(Res.string.synopsis),
+                modifier = Modifier.weight(1f)
+            )
+
+            Box {
+                IconButton(onClick = { showMenu = true }) {
+                    Icon(
+                        Icons.Default.MoreVert,
+                        contentDescription = "More options"
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+
+                    DropdownMenuItem(
+                        text = { Text("Copy") },
+                        onClick = {
+                            clipboard.setText(AnnotatedString(text))
+                            showMenu = false
+                        }
+                    )
+
+                    DropdownMenuItem(
+                        text = { Text(if (expanded) "Collapse" else "Expand") },
+                        onClick = {
+                            expanded = !expanded
+                            showMenu = false
+                        }
+                    )
+                }
+            }
+        }
+
+        // Content with fade edge
+        Box {
+
+            SelectionContainer {
+                Text(
+                    text = text,
+                    maxLines = if (expanded) Int.MAX_VALUE else 4,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        lineHeight = 22.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            // Gradient fade when collapsed
+            if (!expanded && text.length > 150) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    MaterialTheme.colorScheme.background
+                                ),
+                                startY = 100f
+                            )
+                        )
+                )
+            }
+        }
+
+        // Expand / Collapse CTA
+        if (text.length > 150) {
+            Text(
+                text = if (expanded) "Show less" else "Read more",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier
+                    .clickable { expanded = !expanded }
+            )
+        }
+    }
 }
 
-// ---------- Trailer ----------
 @Composable
-private fun TrailerSection(trailer: MediaTrailer?, onEvent: (MediaDetailContract.Event) -> Unit) {
-    SectionHeader(title = stringResource(Res.string.official_trailer))
-    Box(
+private fun TrailerSection(
+    trailer: MediaTrailer?,
+    onEvent: (MediaDetailContract.Event) -> Unit
+) {
+    val dimens = MediaDetailDimens
+    val hasTrailer = trailer?.id?.isNotBlank() == true
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val scale by animateFloatAsState(
+        targetValue = when {
+            isPressed -> 0.98f
+            isHovered -> 1.02f
+            else -> 1f
+        },
+        animationSpec = tween(200)
+    )
+
+    Column(
         modifier = Modifier
-            .padding(horizontal = 16.dp)
             .fillMaxWidth()
-            .aspectRatio(16f / 9f)
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { TODO() }
+            .padding(horizontal = dimens.horizontalPadding)
+            .animateContentSize(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        MediaAsyncImage(
-            url = trailer?.thumbnail ?: "",
-            contentDescription = stringResource(Res.string.official_trailer),
-            modifier = Modifier.fillMaxSize()
-        )
-        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)))
-        Icon(
-            Icons.Filled.PlayArrow,
-            contentDescription = stringResource(Res.string.play),
-            tint = MaterialTheme.colorScheme.onSecondary,
-            modifier = Modifier.align(Alignment.Center).size(64.dp)
-        )
-        Text(
-            "Trailer #1: Awakening", modifier = Modifier.align(Alignment.BottomStart).padding(12.dp),
-            style = MaterialTheme.typography.titleMedium, color = Color.White
-        )
+        SectionHeader(title = stringResource(Res.string.official_trailer))
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(dimens.trailerAspectRatio)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .clip(RoundedCornerShape(dimens.cardCornerRadius))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))
+                .clickable(
+                    enabled = hasTrailer,
+                    interactionSource = interactionSource,
+                    indication = null
+                ) {
+                    trailer?.id?.let {
+                        onEvent(MediaDetailContract.Event.PlayTrailer(it))
+                    }
+                }
+        ) {
+
+            // 🎞️ Thumbnail
+            MediaAsyncImage(
+                url = trailer?.thumbnail ?: "",
+                contentDescription = stringResource(Res.string.official_trailer),
+                modifier = Modifier.fillMaxSize(),
+            )
+
+            // 🌈 Gradient overlay (better than flat black)
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.7f)
+                            )
+                        )
+                    )
+            )
+
+            // ▶️ Play Button (center)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(dimens.trailerPlayIconSize * 1.6f)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Filled.PlayArrow,
+                    contentDescription = stringResource(Res.string.play),
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(dimens.trailerPlayIconSize)
+                )
+            }
+
+            // 📝 Bottom Info
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(dimens.spacingMedium)
+            ) {
+                Text(
+                    text = trailer?.title ?: stringResource(Res.string.official_trailer),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White,
+                    maxLines = 2
+                )
+
+                if (!hasTrailer) {
+                    Text(
+                        text = stringResource(Res.string.trailer_not_available),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
+                }
+            }
+        }
     }
 }
 
 
-// ---------- Section Header ----------
 @Composable
-private fun SectionHeader(title: String, action: String? = null) {
-    Row(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+private fun SectionHeader(title: String, action: String? = null, modifier: Modifier = Modifier) {
+    val dimens = MediaDetailDimens
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        Text(text = title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Spacer(Modifier.weight(1f))
         if (action != null) {
             TextButton(onClick = {}) {
@@ -743,6 +867,8 @@ private fun SectionHeader(title: String, action: String? = null) {
     }
 }
 
+
+// ---------- Character Section ----------
 @Composable
 fun CharacterSection(
     modifier: Modifier = Modifier,
@@ -769,7 +895,7 @@ fun CharacterSection(
     }
 }
 
-
+// ---------- Relation Section ----------
 @Composable
 fun RelationSection(
     modifier: Modifier = Modifier,
@@ -780,7 +906,7 @@ fun RelationSection(
 ) {
     MediaSection(
         title = stringResource(Res.string.relations),
-        items = relations,
+        items = relations.take(1), // Keep original logic, might need full list elsewhere
         onViewAllClick = { /* TODO */ },
         config = sectionConfig,
         key = null,
@@ -797,29 +923,7 @@ fun RelationSection(
 }
 
 
-@Composable
-fun EpisodeSection(
-    modifier: Modifier = Modifier,
-    episodes: LazyPagingItems<Episode>,
-    onEvent: (MediaAction) -> Unit
-) {
-    PagedMediaSection(
-        modifier = modifier,
-        title = stringResource(Res.string.episodes),
-        items = episodes,
-        config = MediaSectionConfig(
-            layout = SectionLayout.VerticalList()
-        ),
-    ) { episode, modifier ->
-        EpisodeCard(
-            episode = episode,
-            modifier = modifier,
-            onAction = onEvent
-        )
-    }
-}
-
-
+// ---------- Recommendation Section ----------
 @Composable
 fun RecommendationSection(
     modifier: Modifier = Modifier,
@@ -843,107 +947,59 @@ fun RecommendationSection(
     }
 }
 
-
-fun LazyListScope.reviewSection(
-    reviews: LazyPagingItems<Review>,
-    sectionConfig: MediaSectionConfig,
-    cardConfig: ReviewCardConfig,
-    isDesktop: Boolean,
-) {
-    // Inject the vertical paged items directly into the root layout
-    pagedMediaSection(
-        title = "Reviews",
-        items = reviews,
-        config = sectionConfig
-    ) { review, modifier ->
-        ReviewCard(
-            review = review,
-            config = cardConfig,
-            modifier = modifier
-        )
-    }
-}
-
-
-// ---------- External Links ----------
 @Composable
-private fun ExternalLinksPanel(links: List<ExternalLink>, isMobile: Boolean = false) {
-    SectionHeader(title = stringResource(Res.string.watch_follow))
-    val arranged = if (isMobile) { // mobile layout: horizontal scroll
-        LazyRow(modifier = Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(links) { link -> ExternalLinkItem(link) }
+private fun ExternalLinksPanel(
+    links: List<ExternalLink>,
+    isMobile: Boolean = false,
+    onClick: (ExternalLink) -> Unit = {}
+) {
+    val dimens = MediaDetailDimens
+
+    // ✅ 1. Empty state guard
+    val safeLinks = remember(links) {
+        links
+            .filter { it.url.isNotBlank() }
+            .distinctBy { it.url } // avoid duplicates
+    }
+
+    if (safeLinks.isEmpty()) return
+
+    val title = stringResource(Res.string.watch_follow)
+
+    if (isMobile) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = dimens.horizontalPadding),
+        ) {
+            SectionHeader(title = title)
+
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(dimens.spacingMedium)
+            ) {
+                items(
+                    items = safeLinks,
+                    key = { it.url } // ✅ stable key
+                ) { link ->
+                    ExternalLinkItem(link = link, onClick = onClick)
+                }
+            }
         }
     } else {
-        Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            links.forEach { link -> ExternalLinkItem(link) }
-        }
-    }
-}
+        GlassCard(
+            shape = RoundedCornerShape(MediaDetailDimens.glassCardCornerRadius)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth()
+                    .padding(horizontal = dimens.spacingMedium, vertical = dimens.verticalPadding)
+            ) {
+                SectionHeader(title = title)
 
-@Composable
-private fun ExternalLinkItem(link: ExternalLink) {
-    Surface(
-        modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { },
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Row(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            AsyncImage(
-                model = link.iconUrl,
-                contentDescription = link.site,
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(link.site, style = MaterialTheme.typography.labelSmall)
-        }
-    }
-}
-
-
-// ---------- Info Panel (Desktop) ----------
-@Composable
-private fun InfoPanel(state: MediaDetailContract.State) {
-    GlassCard {
-        Column(Modifier.padding(16.dp)) {
-            Text(
-                stringResource(Res.string.information),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onTertiaryContainer
-            )
-            Spacer(Modifier.height(12.dp))
-            InfoRow("Status", "Currently Airing")
-            InfoRow("Format", "TV Series")
-            InfoRow("Premiered", "Fall 2024")
-            InfoRow("Duration", "24 mins / ep")
-            InfoRow("Rating", "PG-13 (Teens)")
-            Spacer(Modifier.height(12.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Spacer(Modifier.height(12.dp))
-            Text(
-                "Producers",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onTertiaryContainer
-            )
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(dimens.spacingMedium),
+                    verticalArrangement = Arrangement.spacedBy(dimens.spacingSmall)
                 ) {
-                    Text(
-                        "Arkhos Media",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                ) {
-                    Text(
-                        "Global Anime Dist.",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    safeLinks.forEach { link ->
+                        ExternalLinkItem(link = link, onClick = onClick)
+                    }
                 }
             }
         }
@@ -951,52 +1007,273 @@ private fun InfoPanel(state: MediaDetailContract.State) {
 }
 
 @Composable
+private fun ExternalLinkItem(
+    link: ExternalLink,
+    onClick: (ExternalLink) -> Unit
+) {
+    val fallbackIcon = remember(link.site) {
+        // Simple fallback based on name
+        when {
+            link.site.contains("twitter", true) -> Icons.Default.Share
+            link.site.contains("youtube", true) -> Icons.Default.PlayArrow
+            link.site.contains("crunchyroll", true) -> Icons.Default.PlayArrow
+            else -> Icons.Default.Link
+        }
+    }
+
+
+    MyChips(
+        onClick = {
+            if (link.url.isNotBlank()) {
+                onClick(link)
+            }
+        },
+        shape = RoundedCornerShape(percent = 25),
+        leadingIcon = {
+
+            // ✅ 1. If no icon URL → fallback immediately
+            if (link.iconUrl.isNullOrBlank()) {
+                Icon(
+                    imageVector = fallbackIcon,
+                    contentDescription = link.site,
+                    modifier = Modifier.size(18.dp)
+                )
+                return@MyChips
+            }
+
+            // ✅ 2. Async image with loading + error fallback
+            AsyncImage(
+                model = link.iconUrl,
+                contentDescription = link.site,
+
+                modifier = Modifier.size(18.dp),
+
+                // ✅ Placeholder while loading
+                placeholder = rememberVectorPainter(Icons.Default.Web),
+
+                // ✅ If fails → fallback icon
+                error = rememberVectorPainter(Icons.Default.BrokenImage),
+                fallback = rememberVectorPainter(Icons.Default.Link),
+
+                contentScale = ContentScale.Fit
+            )
+        },
+        text = {
+            Text(
+                text = link.site.ifBlank { "Open" }, // ✅ fallback text
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textDecoration = TextDecoration.Underline,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    )
+}
+
+
+// ---------------------- Info Panel ----------------------
+
+@Composable
+private fun InfoPanel(state: MediaDetailContract.State) {
+    val dimens = MediaDetailDimens
+    val colors = MaterialTheme.colorScheme
+
+    GlassCard(
+        shape = RoundedCornerShape(MediaDetailDimens.glassCardCornerRadius)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(dimens.horizontalPadding),
+            verticalArrangement = Arrangement.spacedBy(dimens.spacingMedium)
+        ) {
+
+            // -------------------------
+            // HEADER
+            // -------------------------
+            Text(
+                text = stringResource(Res.string.information),
+                style = MaterialTheme.typography.titleMedium,
+                color = colors.onSurface
+            )
+
+            // -------------------------
+            // CORE INFO
+            // -------------------------
+            InfoGroup {
+                InfoRow(stringResource(Res.string.status), state.status.name)
+                InfoRow(stringResource(Res.string.format), state.format.name)
+
+                InfoRow(
+                    stringResource(Res.string.premiered),
+                    state.releaseDate?.let { formatTimestamp(it) }
+                        ?: stringResource(Res.string.unknown)
+                )
+            }
+
+            // -------------------------
+            // TYPE SPECIFIC
+            // -------------------------
+            InfoGroup {
+                when (state.type) {
+                    MediaType.ANIME -> {
+                        InfoRowIfValid(
+                            stringResource(Res.string.episodes),
+                            state.totalEpisodes
+                        )
+                        InfoRowIfValid(
+                            stringResource(Res.string.duration),
+                            state.episodeDuration?.let { "$it min" }
+                        )
+                    }
+
+                    MediaType.MANGA -> {
+                        InfoRowIfValid(
+                            stringResource(Res.string.volumes),
+                            state.totalVolumes
+                        )
+                        InfoRowIfValid(
+                            stringResource(Res.string.chapters),
+                            state.totalChapters
+                        )
+                    }
+
+                    else -> {}
+                }
+
+                InfoRowIfValid(
+                    stringResource(Res.string.score),
+                    state.rating.takeIf { it != null && it > 0 }?.toString()
+                )
+            }
+
+            HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.5f))
+
+            // -------------------------
+            // CREDITS
+            // -------------------------
+            val credits = listOfNotNull(
+                state.artist?.let { "artist" to it },
+                state.author?.let { "author" to it },
+                state.studio?.let { "studio" to it }
+            )
+
+            if (credits.isNotEmpty()) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(dimens.spacingSmall)
+                ) {
+
+                    Text(
+                        text = stringResource(Res.string.producers),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = colors.onSurfaceVariant
+                    )
+
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(dimens.chipSpacing),
+                        verticalArrangement = Arrangement.spacedBy(dimens.chipSpacing)
+                    ) {
+                        credits.forEach { (type, value) ->
+                            CreditChip(type, value)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun InfoGroup(
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        content = content
+    )
+}
+
+@Composable
 private fun InfoRow(label: String, value: String) {
     Row(
-        Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
         Text(
-            value,
+            text = label,
+            modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Text(
+            text = value,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.End
         )
     }
 }
 
-
-// ---------- Glass Card Component ----------
 @Composable
-private fun GlassCard(
-    modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null,
-    content: @Composable () -> Unit
-) {
-    Surface(
-        modifier = modifier,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
-        onClick = onClick ?: {}
-    ) {
-        content()
+private fun CreditChip(type: String, value: String) {
+
+    val icon = when (type) {
+        "artist" -> Icons.Default.Brush
+        "author" -> Icons.Default.Person
+        "studio" -> Icons.Default.Work
+        else -> Icons.Default.Info
+    }
+
+    MyChips(
+        onClick = { /* TODO */ },
+        text = value,
+        leadingIcon = {
+            Icon(icon, contentDescription = null)
+        }
+    )
+}
+
+@Composable
+private fun InfoRowIfValid(label: String, value: Any?) {
+    val text = when (value) {
+        null -> null
+        is String -> value.takeIf { it.isNotBlank() }
+        is Number -> value.toString()
+        else -> value.toString()
+    }
+
+    if (text != null) {
+        InfoRow(label, text)
     }
 }
 
+// ---------- Glass Card ----------
 
+
+// ---------- Previews ----------
 @Preview(showBackground = true, widthDp = 400)
 @Composable
 fun PreviewMediaDetailContent() {
-
-    // -------------------------
-    // FAKE STATE
-    // -------------------------
     val state = MediaDetailContract.State(
         id = 1,
+        type = MediaType.ANIME,
+        source = ProviderType.MYANIMELIST,
         title = "Jujutsu Kaisen",
-        description = "A boy swallows a cursed finger and becomes part of a dark world of sorcery.",
+        description = """
+            Although Yuji Itadori looks like your average teenager, his immense physical strength is something to behold! Every sports club wants him to join, but Itadori would rather hang out with the school outcasts in the Occult Research Club. One day, the club manages to get their hands on a sealed cursed object. Little do they know the terror they’ll unleash when they break the seal…
+
+            (Source: VIZ Media)
+
+            Notes:
+            - Ranked 1st in Japan's Bookstore Employees Top Manga of 2018.
+            - Nominated for the 25th Annual Tezuka Osamu Cultural Prize in 2021.
+            - Nominated for the 65th Shogakukan Manga Award in the Shounen Category in 2019.
+            - Includes one extra chapter.
+        """.trimIndent(),
         coverImage = "https://www.themoviedb.org/t/p/w1280/fHpKWq9ayzSk8nSwqRuaAUemRKh.jpg",
         bannerImage = "https://media.themoviedb.org/t/p/w1066_and_h600_face/gmECX1DvFgdUPjtio2zaL8BPYPu.jpg",
         genres = listOf("Action", "Supernatural", "Shounen"),
@@ -1023,30 +1300,32 @@ fun PreviewMediaDetailContent() {
         ),
         relations = listOf(
             MediaRelation(
-                id = 10,
-                relationType = RelationType.SEQUEL,
-                title = MediaTitle(romaji = "Jujutsu Kaisen 0", null, null),
-                coverImage = "https://myanimelist.net/images/manga/1/157897l.webp",
-                mediaType = MediaType.ANIME,
-                format = MediaFormat.MOVIE
+                10,
+                RelationType.SEQUEL,
+                MediaTitle(romaji = "Jujutsu Kaisen 0", null, null),
+                "https://myanimelist.net/images/manga/1/157897l.webp",
+                MediaType.ANIME,
+                MediaFormat.MOVIE
             ),
             MediaRelation(
-                id = 11,
-                relationType = RelationType.PREQUEL,
-                title = MediaTitle(romaji = "Jujutsu Kaisen: Final", null, null),
-                coverImage = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101922-WBsBl0ClmgYL.jpg",
-                mediaType = MediaType.ANIME,
-                format = MediaFormat.MOVIE
+                11,
+                RelationType.PREQUEL,
+                MediaTitle(romaji = "Jujutsu Kaisen: Final", null, null),
+                "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101922-WBsBl0ClmgYL.jpg",
+                MediaType.ANIME,
+                MediaFormat.MOVIE
             )
         ),
         trailer = MediaTrailer(
             id = "xdsss",
             site = "Crunchy Role",
             thumbnail = "https://img.youtube.com/vi/pkKu9hLT-t8/maxresdefault.jpg",
+            title = "Trailer #1: Awakening"
         ),
         releaseDate = 1525440713000,
         studio = "Madox",
         author = "Ghost",
+        artist = null,
         externalLinks = listOf(
             ExternalLink(site = "Crunchyroll", url = "https://logodix.com/logo/1679460.png"),
             ExternalLink(
@@ -1064,204 +1343,194 @@ fun PreviewMediaDetailContent() {
         error = null
     )
 
-
     val isDesktop = rememberPlatformConfiguration().isDesktop
-
-    // -------------------------
-    // FAKE PAGING
-    // -------------------------
 
     val fakeEpisodes = listOf(
         Episode("1", 1, "The Beginning", null, null),
         Episode("2", 2, "Cursed Spirit", null, null)
     )
-
     val tempAnimeList = listOf(
         Anime(
-            id = 1,
-            source = ProviderType.MYANIMELIST,
-            title = MediaTitle(romaji = "Shirobako", english = "Shirobako", native = "SHIROBAKO"),
-            format = MediaFormat.TV,
-            coverImage = "https://myanimelist.net/images/manga/3/258224l.webp",
-            bannerImage = "https://example.com/banners/shirobako.jpg",
-            description = "A group of young women working in the anime industry struggle to complete their first major production.",
-            genres = listOf("Comedy", "Drama", "Slice of Life"),
-            status = MediaReleaseStatus.FINISHED,
-            score = 8.0f,
-            startDate = MediaDate(year = 2014, month = 10, day = 9),
-            episodes = 24,
-            duration = 24,
-            studio = "P.A.Works",
+            1,
+            ProviderType.MYANIMELIST,
+            MediaTitle(romaji = "Shirobako"),
+            MediaFormat.TV,
+            "https://myanimelist.net/images/manga/3/258224l.webp",
+            "",
+            "desc",
+            listOf("Comedy"),
+            MediaReleaseStatus.FINISHED,
+            8.0f,
+            MediaDate(2014, 10, 9),
+            24,
+            24,
+            "P.A.Works"
         ),
         Anime(
-            id = 2,
-            source = ProviderType.ANILIST,
-            title = MediaTitle(romaji = "Kimi no Na wa.", english = "Your Name.", native = "君の名は。"),
-            format = MediaFormat.MOVIE,
-            coverImage = "https://myanimelist.net/images/manga/2/287344l.webp",
-            bannerImage = "https://example.com/banners/your_name.jpg",
-            description = "Two teenagers share a profound, magical connection when they begin to swap bodies.",
-            genres = listOf("Romance", "Supernatural", "Drama"),
-            status = MediaReleaseStatus.FINISHED,
-            score = 9.0f,
-            startDate = MediaDate(year = 2016, month = 8, day = 26),
-            episodes = 1,
-            duration = 106,
-            studio = "CoMix Wave Films",
+            2,
+            ProviderType.ANILIST,
+            MediaTitle(romaji = "Kimi no Na wa."),
+            MediaFormat.MOVIE,
+            "https://myanimelist.net/images/manga/2/287344l.webp",
+            "",
+            "desc",
+            listOf("Romance"),
+            MediaReleaseStatus.FINISHED,
+            9.0f,
+            MediaDate(2016, 8, 26),
+            1,
+            106,
+            "CoMix Wave Films"
         ),
         Anime(
-            id = 3,
-            source = ProviderType.MYANIMELIST,
-            title = MediaTitle(
-                romaji = "Mushoku Tensei: Isekai Ittara Honki Dasu",
-                english = "Mushoku Tensei",
-                native = "無職転生"
-            ),
-            format = MediaFormat.TV,
-            coverImage = "https://myanimelist.net/images/manga/2/253146l.jpg",
-            bannerImage = null,
-            description = "A jobless and hopeless man is reincarnated in a fantasy world as Rudeus Greyrat and resolves to live his new life to the fullest.",
-            genres = listOf("Isekai", "Fantasy", "Drama"),
-            status = MediaReleaseStatus.RELEASING,
-            score = 7.8f,
-            startDate = MediaDate(year = 2021, month = 10, day = 3),
-            episodes = 23,
-            duration = 24,
-            studio = "Studio Bind",
+            3,
+            ProviderType.MYANIMELIST,
+            MediaTitle(romaji = "Mushoku Tensei"),
+            MediaFormat.TV,
+            "https://myanimelist.net/images/manga/2/253146l.jpg",
+            null,
+            "desc",
+            listOf("Isekai"),
+            MediaReleaseStatus.RELEASING,
+            7.8f,
+            MediaDate(2021, 10, 3),
+            23,
+            24,
+            "Studio Bind"
         ),
         Anime(
-            id = 4,
-            source = ProviderType.MYANIMELIST,
-            title = MediaTitle(romaji = "Made-up Adventure", english = "Made-up Adventure", native = null),
-            format = MediaFormat.ONA,
-            coverImage = "https://myanimelist.net/images/manga/1/259070l.webp",
-            bannerImage = null,
-            description = "A short original net animation about an inventor and their robot companion.",
-            genres = listOf("Adventure", "Sci-Fi"),
-            status = MediaReleaseStatus.NOT_YET_RELEASED,
-            score = null,
-            startDate = MediaDate(year = 2026, month = 7, day = 1),
-            episodes = 3,
-            duration = 12,
-            studio = "Indie Studio",
-            trackEntry = null
+            4,
+            ProviderType.MYANIMELIST,
+            MediaTitle(romaji = "Made-up Adventure"),
+            MediaFormat.ONA,
+            "https://myanimelist.net/images/manga/1/259070l.webp",
+            null,
+            "desc",
+            listOf("Adventure"),
+            MediaReleaseStatus.NOT_YET_RELEASED,
+            null,
+            MediaDate(2026, 7, 1),
+            3,
+            12,
+            "Indie Studio"
         ),
         Anime(
-            id = 5,
-            source = ProviderType.ANILIST,
-            title = MediaTitle(
-                romaji = "Slice of Life Example",
-                english = "Slice of Life Example",
-                native = "日常の例"
-            ),
-            format = MediaFormat.TV_SHORT,
-            coverImage = "https://myanimelist.net/images/manga/3/179882l.webp",
-            bannerImage = "https://example.com/banners/slice_of_life.jpg",
-            description = "Everyday moments from a quirky group's daily life.",
-            genres = listOf("Slice of Life", "Comedy"),
-            status = MediaReleaseStatus.FINISHED,
-            score = 6.5f,
-            startDate = MediaDate(year = 2019, month = 4, day = 5),
-            episodes = 12,
-            duration = 8,
-            studio = "Shorts Studio",
+            5,
+            ProviderType.ANILIST,
+            MediaTitle(romaji = "Slice of Life Example"),
+            MediaFormat.TV_SHORT,
+            "https://myanimelist.net/images/manga/3/179882l.webp",
+            "banner",
+            "desc",
+            listOf("Slice of Life"),
+            MediaReleaseStatus.FINISHED,
+            6.5f,
+            MediaDate(2019, 4, 5),
+            12,
+            8,
+            "Shorts Studio"
         )
     )
-
-
-    val fakeReviews = listOf(
+    val mockReviews = listOf(
         Review(
             id = 1,
-            author = "User1",
-            authorAvatar = null,
+            author = "Mika Tanaka",
+            authorAvatar = "https://example.com/avatars/mika.jpg",
             score = 90,
-            summary = "Amazing anime!",
-            body = "Loved everything about it."
+            summary = "A beautiful, emotional ride",
+            body = "Stunning animation and a soundtrack that stays with you. Character development is top-notch and the pacing kept me hooked until the very end.",
+            upvotes = 124,
+            isSpoiler = false,
+            createdAt = 1682505600000L // 2023-04-26T00:00:00Z
         ),
         Review(
             id = 2,
-            author = "User2",
-            authorAvatar = null,
-            score = 90,
-            summary = "Amazing anime!",
-            body = "Loved everything about it."
+            author = "DevOnDuty",
+            authorAvatar = "https://example.com/avatars/devonduty.png",
+            score = 78,
+            summary = "Great mechanics, weak finale",
+            body = "I loved the worldbuilding and the battle choreography, but the last arc felt rushed and some plot threads were left unresolved.",
+            upvotes = 87,
+            isSpoiler = true,
+            createdAt = 1685097600000L // 2023-05-26T00:00:00Z
         ),
         Review(
             id = 3,
-            author = "User3",
+            author = "Aoi",
             authorAvatar = null,
-            score = 23,
-            summary = "Amazing anime!",
-            body = "Loved everything about it."
+            score = 100,
+            summary = "Masterpiece",
+            body = "Everything aligned perfectly — story, visuals, and music. One of my all-time favorites; rewatching is a must.",
+            upvotes = 340,
+            isSpoiler = false,
+            createdAt = 1677628800000L // 2023-03-01T00:00:00Z
         ),
         Review(
-            id = 11,
-            author = "User1",
-            authorAvatar = null,
-            score = 90,
-            summary = "Amazing anime!",
-            body = "Loved everything about it."
+            id = 4,
+            author = "Sam R.",
+            authorAvatar = "https://example.com/avatars/samr.jpg",
+            score = null,
+            summary = null,
+            body = "Mixed feelings. The first half is brilliant, but the tone shift later on lost me. Worth trying if you like experimental storytelling.",
+            upvotes = 22,
+            isSpoiler = false,
+            createdAt = 1690848000000L // 2023-07-31T00:00:00Z
         ),
         Review(
-            id = 22,
-            author = "User2",
-            authorAvatar = null,
-            score = 90,
-            summary = "Amazing anime!",
-            body = "Loved everything about it."
+            id = 5,
+            author = "OtakuLuna",
+            authorAvatar = "https://example.com/avatars/luna.jpg",
+            score = 85,
+            summary = "Solid and fun",
+            body = "Funny moments balance the darker themes well. I enjoyed the side characters almost as much as the leads.",
+            upvotes = 59,
+            isSpoiler = false,
+            createdAt = 1693526400000L // 2023-08-31T00:00:00Z
         ),
         Review(
-            id = 33,
-            author = "User3",
-            authorAvatar = null,
-            score = 23,
-            summary = "Amazing anime!",
-            body = "Loved everything about it."
+            id = 6,
+            author = "CodeSensei",
+            authorAvatar = "https://example.com/avatars/codesensei.png",
+            score = 70,
+            summary = "Good, not great",
+            body = "Technical merits are clear — consistent animation and smart direction — but the story repeats familiar beats.",
+            upvotes = 15,
+            isSpoiler = false,
+            createdAt = 1688169600000L // 2023-07-01T00:00:00Z
         ),
         Review(
-            id = 31,
-            author = "User1",
-            authorAvatar = null,
-            score = 90,
-            summary = "Amazing anime!",
-            body = "Loved everything about it."
+            id = 7,
+            author = "Yuki",
+            authorAvatar = "https://example.com/avatars/yuki.jpg",
+            score = 92,
+            summary = "Heartwarming and profound",
+            body = "A quiet show that grows on you. The emotional payoff in the final episodes is incredible without resorting to cheap tricks.",
+            upvotes = 201,
+            isSpoiler = false,
+            createdAt = 1700000000000L // example future timestamp
         ),
         Review(
-            id = 12,
-            author = "User2",
+            id = 8,
+            author = "NoSpoilerPlease",
             authorAvatar = null,
-            score = 90,
-            summary = "Amazing anime!",
-            body = "Loved everything about it."
-        ),
-        Review(
-            id = 43,
-            author = "User3",
-            authorAvatar = null,
-            score = 23,
-            summary = "Amazing anime!",
-            body = "Loved everything about it."
-        ),
-
+            score = 60,
+            summary = "Not for everyone",
+            body = "If you prefer straightforward plots, this might frustrate you. It experiments a lot, which is admirable, but it won't click with every viewer.",
+            upvotes = 8,
+            isSpoiler = false,
+            createdAt = 1675209600000L // 2023-02-01T00:00:00Z
         )
-
-    // Convert to LazyPagingItems using helper
-    val episodesPaging = fakeEpisodes.toPagingItems()
-    val animePaging = tempAnimeList.toPagingItems()
-    val reviewsPaging = fakeReviews.toPagingItems()
-    val related = tempAnimeList.toPagingItems()
+    )
 
     MaterialTheme {
         MediaDetailContent(
             state = state,
-            episodes = episodesPaging,
-            recommendations = animePaging,
-            reviews = reviewsPaging,
+            episodes = fakeEpisodes.toPagingItems(),
+            recommendations = tempAnimeList.toPagingItems(),
+            reviews = mockReviews.toPagingItems(),
             onEvent = {},
             config = MediaDetailUiConfig(),
             isDesktop = isDesktop
         )
     }
 }
-
-
