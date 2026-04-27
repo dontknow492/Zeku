@@ -75,6 +75,10 @@ class MediaDetailViewModel(
             is MediaDetailContract.Event.OnMediaAction -> {
                 handleAction(event.action)
             }
+
+            else -> {
+                TODO()
+            }
         }
     }
 

@@ -21,7 +21,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.ghost.zeku.domain.model.common.MediaTitle
 import com.ghost.zeku.domain.model.enum.MediaFormat
@@ -44,98 +46,180 @@ fun MediaRelationCard(
     val isPressed by interactionSource.collectIsPressedAsState()
     val isHovered by interactionSource.collectIsHoveredAsState()
 
-    val targetScale = when {
+    val scaleTarget = when {
         isPressed -> config.scaleOnPress
         isHovered -> config.scaleOnHover
         else -> 1f
     }
 
-    val targetElevation = when {
+    val elevationTarget = when {
         isPressed -> config.pressedElevation
         isHovered -> config.hoverElevation
         else -> config.elevation
     }
 
-    val imageScale = if (isHovered) config.imageHoverScale else 1f
-
-    val scale by animateFloatAsState(targetScale, config.animationSpec)
-    val elevation by animateDpAsState(targetElevation, config.elevationAnimationSpec)
-    val imgScale by animateFloatAsState(imageScale, config.animationSpec)
+    val scale by animateFloatAsState(scaleTarget, config.animationSpec)
+    val elevation by animateDpAsState(elevationTarget, config.elevationAnimationSpec)
 
     val title = relation.title.getPreferred(config.preferredTitleLanguage)
 
+    val baseModifier = modifier.graphicsLayer {
+        scaleX = scale
+        scaleY = scale
+    }
+
+    when (config.layout) {
+        RelationCardLayout.POSTER -> PosterRelationCard(
+            relation, title, config, interactionSource, elevation, baseModifier, onAction
+        )
+
+        RelationCardLayout.WIDE -> WideRelationCard(
+            relation, title, config, interactionSource, elevation, baseModifier, onAction
+        )
+    }
+}
+
+@Composable
+private fun PosterRelationCard(
+    relation: MediaRelation,
+    title: String,
+    config: MediaRelationCardConfig,
+    interactionSource: MutableInteractionSource,
+    elevation: Dp,
+    modifier: Modifier,
+    onAction: (MediaAction) -> Unit
+) {
     Card(
         onClick = { if (config.clickable) onAction(MediaAction.RelationClick(relation)) },
         interactionSource = interactionSource,
         shape = config.shape,
-        colors = CardDefaults.cardColors(containerColor = config.containerColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = elevation),
+        elevation = CardDefaults.cardElevation(elevation),
         modifier = modifier
             .width(config.width)
             .aspectRatio(config.aspectRatio)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
     ) {
         Box {
-
-            // 🎞️ Cover image
             MediaAsyncImage(
                 url = relation.coverImage.orEmpty(),
                 contentDescription = title,
                 contentScale = config.contentScale,
                 modifier = Modifier
-                    .graphicsLayer {
-                        scaleX = imgScale
-                        scaleY = imgScale
-                    }
             )
 
-            // 🌑 Gradient
             Box(
-                modifier = Modifier
+                Modifier
                     .matchParentSize()
                     .background(config.gradient)
             )
 
-            // 🔗 Relation badge (top-left)
             if (config.showRelationBadge) {
                 RelationBadge(
                     text = relation.relationType.name,
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(8.dp)
+                    modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
                 )
             }
 
-            // 🎬 Format badge (top-right)
             if (config.showFormatBadge) {
                 RelationBadge(
                     text = relation.format.name,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
+                    modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
                 )
             }
 
-            // 📝 Bottom info
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .padding(config.contentPadding)
             ) {
+                Text(title, style = config.titleTextStyle, color = config.titleColor, maxLines = 2)
+                Text(relation.mediaType.name, style = config.subtitleTextStyle, color = config.subtitleColor)
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun WideRelationCard(
+    relation: MediaRelation,
+    title: String,
+    config: MediaRelationCardConfig,
+    interactionSource: MutableInteractionSource,
+    elevation: Dp,
+    modifier: Modifier,
+    onAction: (MediaAction) -> Unit
+) {
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val imgScale by animateFloatAsState(
+        if (isHovered) config.imageHoverScale else 1f,
+        config.animationSpec
+    )
+
+    Card(
+        onClick = { if (config.clickable) onAction(MediaAction.RelationClick(relation)) },
+        interactionSource = interactionSource,
+        shape = config.shape,
+        elevation = CardDefaults.cardElevation(elevation),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(config.height)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            // 🎞️ Left image
+            Box(
+                modifier = Modifier
+                    .width(80.dp)
+                    .fillMaxHeight()
+            ) {
+                MediaAsyncImage(
+                    url = relation.coverImage.orEmpty(),
+                    contentDescription = title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .matchParentSize()
+                        .graphicsLayer {
+                            scaleX = imgScale
+                            scaleY = imgScale
+                        }
+                )
+            }
+
+            // 📄 Right content
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight()
+
+                    .padding(config.contentPadding),
+                verticalArrangement = Arrangement.Center
+            ) {
+
+                // badges row
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (config.showRelationBadge) {
+                        RelationBadge(relation.relationType.name)
+                    }
+                    if (config.showFormatBadge) {
+                        RelationBadge(relation.format.name)
+                    }
+                }
+
+                Spacer(Modifier.height(6.dp))
+
                 Text(
                     text = title,
                     style = config.titleTextStyle,
-                    color = config.titleColor,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2
                 )
+
+                Spacer(Modifier.height(4.dp))
 
                 Text(
                     text = relation.mediaType.name,
                     style = config.subtitleTextStyle,
-                    color = config.subtitleColor
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -171,6 +255,22 @@ private fun MediaRelationCardPreview() {
         "https://lh3.googleusercontent.com/aida-public/AB6AXuDdONirMFJN0clayQEa2Vx_ru6VZ5odnqWaDJuj5zlC5jwXZEqT65XD1JLXW9emHPwdZi3i30ptF8lEeO8hS5UVdB3JiomtyeL1FufZQR31T-P8GEAh3UpJ8kj8Pa1fQxlKZy9WFYOR9rmRSwb8VCUhFZzN70P6x5-6elg3TKhHMY2VY8aKEEg1B5FfHmmwicvXfItsQV9JHuL8j7QjxrPhKxOeFU5FmYE8shj2s6XPrV5_0FSpWoFqM23eOM-RQzi1K9-rJfwYqMQ"
     AppTheme {
         Column {
+            MediaRelationCard(
+                relation = MediaRelation(
+                    id = 123,
+                    relationType = RelationType.CHARACTER,
+                    title = MediaTitle(
+                        romaji = "Jujutsu Kaisen",
+                        english = "JUJUTSU KAISEN",
+                        native = "呪術廻戦"
+                    ),
+                    coverImage = url,
+                    mediaType = MediaType.ANIME,
+                    format = MediaFormat.TV
+                ),
+                config = MediaRelationCardConfig(layout = RelationCardLayout.WIDE)
+            )
+            Spacer(modifier = Modifier.size(8.dp))
             MediaRelationCard(
                 relation = MediaRelation(
                     id = 123,

@@ -154,6 +154,7 @@ fun <T : Any> PagedMediaSection(
 // Notice: It is NO LONGER a @Composable function.
 // It is an extension on LazyListScope.
 fun <T : Any> LazyListScope.pagedMediaSection(
+    modifier: Modifier = Modifier,
     title: String,
     items: LazyPagingItems<T>,
     config: MediaSectionConfig = MediaSectionConfig(),
@@ -167,7 +168,7 @@ fun <T : Any> LazyListScope.pagedMediaSection(
     // 1. Header (Wrapped in a single item block)
     if (config.showHeader) {
         item {
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = modifier.fillMaxWidth()) {
                 SectionHeader(
                     title = title,
                     onViewAllClick = if (config.showViewAll) onViewAllClick else null,
@@ -190,7 +191,7 @@ fun <T : Any> LazyListScope.pagedMediaSection(
         isListEmpty -> {
             item {
                 Box(
-                    modifier = Modifier
+                    modifier = modifier
                         .fillMaxWidth()
                         .height(config.emptyHeight),
                     contentAlignment = Alignment.Center
@@ -210,6 +211,7 @@ fun <T : Any> LazyListScope.pagedMediaSection(
                     // HORIZONTAL: We can wrap a LazyRow inside a single item{} safely!
                     item {
                         LazyRow(
+                            modifier = modifier,
                             contentPadding = layout.contentPadding,
                             horizontalArrangement = Arrangement.spacedBy(layout.itemSpacing)
                         ) {
@@ -234,7 +236,7 @@ fun <T : Any> LazyListScope.pagedMediaSection(
                     ) { index ->
                         items[index]?.let { item ->
                             // Padding has to be applied to the individual items here
-                            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = layout.itemSpacing / 2)) {
+                            Box(modifier = modifier.padding(horizontal = 16.dp, vertical = layout.itemSpacing / 2)) {
                                 itemContent(item, Modifier)
                             }
                         }
@@ -250,7 +252,7 @@ fun <T : Any> LazyListScope.pagedMediaSection(
                     /* Example Option A (requires Compose 1.5+): */
                     item {
                         FlowRow(
-                            modifier = Modifier.padding(layout.contentPadding),
+                            modifier = modifier.padding(layout.contentPadding),
                             horizontalArrangement = Arrangement.spacedBy(layout.horizontalSpacing),
                             verticalArrangement = Arrangement.spacedBy(layout.verticalSpacing),
                             maxItemsInEachRow = 3 // or calculate based on GridType

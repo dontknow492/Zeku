@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.sp
 // Score Chip – Modern circular indicator with star or number
 // ----------------------------------------------------------------------------
 @Composable
-fun ScoreChip(score: Float) {
+fun ScoreChip(score: Float, modifier: Modifier = Modifier) {
     val scoreInt = (score * 10).toInt() / 10f // 1 decimal
     val color = when {
         score >= 8.0 -> Color(0xFF4CAF50) // Green

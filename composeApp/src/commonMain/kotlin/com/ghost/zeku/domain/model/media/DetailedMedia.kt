@@ -62,6 +62,7 @@ data class MangaDetails(
 
 @Serializable
 data class MediaTrailer(
+    val title: String?,
     val id: String,     // e.g., YouTube video ID
     val site: String,   // "youtube", "dailymotion"
     val thumbnail: String?

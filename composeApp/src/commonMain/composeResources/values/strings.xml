@@ -36,4 +36,18 @@
     <string name="premiered">Premiered</string>
     <string name="duration">Duration</string>
     <string name="play">Play</string>
+    <string name="volumes">Volumes</string>
+    <string name="chapters">Chapters</string>
+    <string name="recommendations">Recommendations</string>
+    <string name="producers">Producers</string>
+    <string name="chat">chat</string>
+    <string name="trailer_not_available">Trailer not available</string>
+
+    <string name="artist">Artist</string>
+    <string name="studio">Studio</string>
+    <string name="author">Author</string>
+
+    <string name="unknown_artist">Unknown Artist</string>
+    <string name="unknown_studio">Unknown Studio</string>
+    <string name="unknown_author">Unknown Author</string>
 </resources>

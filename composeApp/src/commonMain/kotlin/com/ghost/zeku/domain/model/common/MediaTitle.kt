@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class MediaTitle(
-    val romaji: String?,
-    val english: String?,
-    val native: String?
+    val romaji: String? = null,
+    val english: String? = null,
+    val native: String? = null,
 ) {
     /**
      * Returns the best available title based on fallback logic.

@@ -114,7 +114,8 @@ fun AniListMedia.toMangaDetailsDomain(): MangaDetails {
 private fun AniListTrailer.toDomain() = MediaTrailer(
     id = this.id ?: "",
     site = this.site ?: "unknown",
-    thumbnail = this.thumbnail
+    thumbnail = this.thumbnail,
+    title = null
 )
 
 private fun AniListExternalLink.toDomain() = ExternalLink(

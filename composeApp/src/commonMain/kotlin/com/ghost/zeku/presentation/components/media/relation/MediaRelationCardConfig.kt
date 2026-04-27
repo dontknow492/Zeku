@@ -16,11 +16,19 @@ import androidx.compose.ui.unit.dp
 import com.ghost.zeku.domain.model.enum.TitleLanguage
 
 
+enum class RelationCardLayout {
+    POSTER, WIDE;
+}
+
 @Immutable
 data class MediaRelationCardConfig(
 
     // Layout
+    val layout: RelationCardLayout = RelationCardLayout.POSTER,
+
+    // Dimensions
     val width: Dp = 140.dp,
+    val height: Dp = 90.dp, // used for WIDE
     val aspectRatio: Float = 0.7f, // poster style
     val shape: Shape = RoundedCornerShape(18.dp),
     val contentPadding: PaddingValues = PaddingValues(10.dp),
