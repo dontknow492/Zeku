@@ -30,6 +30,7 @@ import com.ghost.zeku.domain.model.enum.RelationType
 import com.ghost.zeku.domain.model.enum.getPreferred
 import com.ghost.zeku.domain.model.media.MediaRelation
 import com.ghost.zeku.presentation.common.MediaAsyncImage
+import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.theme.AppTheme
 
 @Composable
@@ -37,7 +38,7 @@ fun MediaRelationCard(
     relation: MediaRelation,
     config: MediaRelationCardConfig = MediaRelationCardConfig(),
     modifier: Modifier = Modifier,
-    onClick: (MediaRelation) -> Unit = {}
+    onAction: (MediaAction) -> Unit = {}
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -64,7 +65,7 @@ fun MediaRelationCard(
     val title = relation.title.getPreferred(config.preferredTitleLanguage)
 
     Card(
-        onClick = { if (config.clickable) onClick(relation) },
+        onClick = { if (config.clickable) onAction(MediaAction.RelationClick(relation)) },
         interactionSource = interactionSource,
         shape = config.shape,
         colors = CardDefaults.cardColors(containerColor = config.containerColor),

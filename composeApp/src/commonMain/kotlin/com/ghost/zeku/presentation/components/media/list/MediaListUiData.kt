@@ -4,10 +4,12 @@ import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
 import com.ghost.zeku.domain.model.media.Anime
 import com.ghost.zeku.domain.model.media.Manga
 import com.ghost.zeku.domain.model.media.Media
+import com.ghost.zeku.domain.model.media.calculateProgress
 
 data class MediaListUiData(
     val id: Int,
     val title: String,
+    val description: String?,
     val coverImageUrl: String,
     val subTitle: String, // e.g., "TV • 2024"
     val genres: List<String> = emptyList(), // e.g., ["Action", "Fantasy"]
@@ -15,18 +17,16 @@ data class MediaListUiData(
     val score: Float?,         // e.g., 8.5f (Out of 10 scale)
     val progress: Float?,      // 0.0f to 1.0f (for the progress bar)
     val progressText: String?, // e.g., "12 / 24 EPs" or "Ch. 105"
-    val isAiring: Boolean = false
+    val isAiring: Boolean = false,
+    val isNsfw: Boolean = false,
+    val isNsfwRevealed: Boolean = false
 )
 
 
 fun Media.toMediaListUiData(): MediaListUiData {
 
-    // 1. Calculate Progress Bar Float
-    val calculatedProgress = if (trackEntry != null && trackEntry?.totalProgress != null) {
-        val current = trackEntry?.progress?.toFloat() ?: 0f
-        val total = trackEntry?.totalProgress?.toFloat() ?: 1f
-        if (total > 0f) (current / total).coerceIn(0f, 1f) else null
-    } else null
+    val calculatedProgress = this.calculateProgress()
+
 
     // 2. Format Type and Year (e.g., "ANIME • 2024")
     val yearStr = this.startDate?.year?.toString()
@@ -53,6 +53,7 @@ fun Media.toMediaListUiData(): MediaListUiData {
     // 4. Return the mapped UI Data
     return MediaListUiData(
         id = this.id,
+        description = this.description,
         title = this.title.getPreferred(),
         coverImageUrl = this.coverImage,
         subTitle = formatAndYearStr,

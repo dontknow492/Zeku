@@ -1,4 +1,4 @@
-package com.ghost.zeku.presentation.components.character
+package com.ghost.zeku.presentation.components.media.character
 
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.Spring

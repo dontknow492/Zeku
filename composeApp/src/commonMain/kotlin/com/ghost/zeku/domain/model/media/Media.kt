@@ -31,6 +31,15 @@ interface Media {
     val trackEntry: TrackEntry?
 }
 
+
+fun Media.calculateProgress(): Float? {
+    return if (trackEntry != null && trackEntry?.totalProgress != null) {
+        val current = trackEntry?.progress?.toFloat() ?: 0f
+        val total = trackEntry?.totalProgress?.toFloat() ?: 1f
+        if (total > 0f) (current / total).coerceIn(0f, 1f) else null
+    } else null
+}
+
 @Serializable
 data class Manga(
     override val id: Int,

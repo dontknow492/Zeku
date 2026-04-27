@@ -2,6 +2,7 @@ package com.ghost.zeku
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -28,6 +29,17 @@ import com.ghost.zeku.domain.repository.MediaRepository
 import com.ghost.zeku.domain.repository.UserSettings
 import com.ghost.zeku.presentation.components.hero.HeroCarousel
 import com.ghost.zeku.presentation.components.hero.toHeroUiData
+import com.ghost.zeku.presentation.components.media.list.MediaListCard
+import com.ghost.zeku.presentation.components.media.list.MediaListCardConfig
+import com.ghost.zeku.presentation.components.media.list.MediaListCardVariant
+import com.ghost.zeku.presentation.components.media.list.toMediaListUiData
+import com.ghost.zeku.presentation.components.media.poster.MediaPosterCard
+import com.ghost.zeku.presentation.components.media.poster.PosterConfig
+import com.ghost.zeku.presentation.components.media.poster.toPosterUiData
+import com.ghost.zeku.presentation.components.section.MediaSection
+import com.ghost.zeku.presentation.components.section.MediaSectionConfig
+import com.ghost.zeku.presentation.components.section.SectionLayout
+import com.ghost.zeku.presentation.screen.detail.PreviewMediaDetailContent
 import com.ghost.zeku.presentation.theme.AppTheme
 import io.github.aakira.napier.Napier
 import org.koin.compose.koinInject
@@ -45,6 +57,9 @@ fun App() = AppTheme {
     val userSettings: UserSettings = koinInject()
 
     val preferences by userSettings.preferences.collectAsStateWithLifecycle()
+
+    PreviewMediaDetailContent()
+//    TestApp()
 
 //    Text(preferences.toString())
 
@@ -612,6 +627,76 @@ private fun TestApp() {
                     onWatchClick = {},
                     onDetailsClick = {},
                 )
+
+
+                MediaSection(
+                    title = "Trending",
+                    items = mangaList,
+                    config = MediaSectionConfig(),
+                    modifier = Modifier,
+                    key = { item -> item.id },
+                    onViewAllClick = {},
+                    isLoading = false,
+                ) { item, modifier ->
+                    MediaPosterCard(
+                        data = item.toPosterUiData(),
+                        config = PosterConfig(),
+                        onAction = {}
+                    )
+                }
+
+                MediaSection(
+                    title = "Popular",
+                    items = mangaList,
+                    config = MediaSectionConfig(),
+                    modifier = Modifier,
+                    key = { item -> item.id },
+                    onViewAllClick = {},
+                    isLoading = false,
+                ) { item, modifier ->
+                    MediaPosterCard(
+                        data = item.toPosterUiData(),
+                        config = PosterConfig(),
+                        onAction = {}
+                    )
+                }
+
+
+                MediaSection(
+                    title = "Newest",
+                    items = mangaList,
+                    config = MediaSectionConfig(),
+                    modifier = Modifier,
+                    key = { item -> item.id },
+                    onViewAllClick = {},
+                    isLoading = false,
+                ) { item, modifier ->
+                    MediaPosterCard(
+                        data = item.toPosterUiData(),
+                        config = PosterConfig(),
+                        onAction = {}
+                    )
+                }
+
+                MediaSection(
+                    title = "Trending",
+                    items = mangaList,
+                    config = MediaSectionConfig(
+                        layout = SectionLayout.VerticalList()
+                    ),
+                    modifier = Modifier,
+                    key = { item -> item.id },
+                    onViewAllClick = {},
+                    isLoading = false,
+                ) { item, modifier ->
+                    MediaListCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        data = item.toMediaListUiData(),
+                        config = MediaListCardConfig(),
+                        variant = MediaListCardVariant.COMFORTABLE,
+                        onAction = {}
+                    )
+                }
 
 
             }

@@ -1,4 +1,4 @@
-package com.ghost.zeku.presentation.components.episode
+package com.ghost.zeku.presentation.components.media.episode
 
 enum class EpisodeCardVariant {
     MODERN,     // rich, cinematic (thumbnail + overlay)

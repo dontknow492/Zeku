@@ -1,4 +1,4 @@
-package com.ghost.zeku.presentation.components.character
+package com.ghost.zeku.presentation.components.media.character
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.ghost.zeku.domain.model.enum.CharacterRole
 import com.ghost.zeku.domain.model.media.MediaCharacter
 import com.ghost.zeku.presentation.common.MediaAsyncImage
+import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.theme.AppTheme
 
 @Composable
@@ -30,7 +31,7 @@ fun MediaCharacterCard(
     character: MediaCharacter,
     config: MediaCharacterCardConfig = MediaCharacterCardConfig(),
     modifier: Modifier = Modifier,
-    onClick: (MediaCharacter) -> Unit = {}
+    onAction: (MediaAction) -> Unit,
 ) {
     val isMain = character.role == CharacterRole.MAIN
 
@@ -73,7 +74,7 @@ fun MediaCharacterCard(
     )
 
     Card(
-        onClick = { if (config.clickable) onClick(character) },
+        onClick = { if (config.clickable) onAction(MediaAction.CharacterClick(character)) },
         interactionSource = interactionSource,
         shape = config.shape,
         colors = CardDefaults.cardColors(
@@ -186,8 +187,9 @@ private fun MediaCharacterCardPreview() {
                     name = "Ren Arisawa",
                     role = CharacterRole.MAIN,
                     imageUrl = url,
-                    id = 123
+                    id = 123,
                 ),
+                onAction = {}
             )
             MediaCharacterCard(
                 character = MediaCharacter(
@@ -195,7 +197,8 @@ private fun MediaCharacterCardPreview() {
                     role = CharacterRole.SUPPORTING,
                     imageUrl = url,
                     id = 123
-                )
+                ),
+                onAction = {}
             )
         }
     }

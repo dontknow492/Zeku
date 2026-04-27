@@ -1,27 +1,21 @@
 package com.ghost.zeku.presentation.screen.detail
 
-import com.ghost.zeku.domain.model.media.*
+import com.ghost.zeku.domain.model.media.MediaCharacter
+import com.ghost.zeku.domain.model.media.MediaRelation
 
-// ---------- Data Class for State ----------
 data class MediaDetailState(
+    val id: Int = 0,
     val title: String = "",
-    val rating: Float = 0f,
-    val year: Int = 2024,
-    val episodeCount: Int = 0,
-    val studio: String = "",
+    val description: String? = null,
+    val coverImage: String = "",
+    val bannerImage: String? = null,
     val genres: List<String> = emptyList(),
-    val synopsis: String = "",
-    val heroImageUrl: String = "",
-    val posterUrl: String = "",
-    val trailer: List<MediaTrailer> = emptyList(),
-    val characters: List<MediaCharacter> = emptyList(),
-    val episodes: List<Episode> = emptyList(),
+    val rating: Double? = null,
 
-    val relations: List<Media> = emptyList(),
-    val externalLinks: List<ExternalLink> = emptyList(),
-    val reviews: List<Review> = emptyList(),
-    val recommendations: List<Media> = emptyList(),
+    // ✅ small lists (keep)
+    val characters: List<MediaCharacter> = emptyList(),
+    val relations: List<MediaRelation> = emptyList(),
+
     val isLoading: Boolean = false,
-    val error: String? = null,
-    val isWatchlisted: Boolean = false
+    val error: String? = null
 )

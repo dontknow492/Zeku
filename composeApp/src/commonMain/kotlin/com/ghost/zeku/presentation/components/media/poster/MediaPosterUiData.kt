@@ -3,6 +3,7 @@ package com.ghost.zeku.presentation.components.media.poster
 import com.ghost.zeku.domain.model.media.Anime
 import com.ghost.zeku.domain.model.media.Manga
 import com.ghost.zeku.domain.model.media.Media
+import com.ghost.zeku.domain.model.media.calculateProgress
 
 /**
  * A perfectly decoupled UI model.
@@ -17,7 +18,8 @@ data class MediaPosterUiData(
     val badgeText: String? = null,
     val subTitle: String? = null,
     val progress: Float? = null,
-    val isNsfw: Boolean = false // 👈 new
+    val isNsfw: Boolean = false, // 👈 new
+    val isNsfwRevealed: Boolean = false // 👈 new
 )
 
 // ============================================================================
@@ -26,11 +28,8 @@ data class MediaPosterUiData(
 
 fun Media.toPosterUiData(): MediaPosterUiData {
     // Calculate progress if it exists
-    val calculatedProgress = if (trackEntry != null && trackEntry?.totalProgress != null) {
-        val current = trackEntry?.progress?.toFloat() ?: 0f
-        val total = trackEntry?.totalProgress?.toFloat() ?: 1f
-        if (total > 0f) (current / total).coerceIn(0f, 1f) else null
-    } else null
+    val calculatedProgress = this.calculateProgress()
+
 
     return MediaPosterUiData(
         id = this.id,

@@ -10,22 +10,25 @@ import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.ghost.zeku.presentation.common.MediaAsyncImage
+import com.ghost.zeku.presentation.common.MediaBadge
+import com.ghost.zeku.presentation.common.MediaImage
+import com.ghost.zeku.presentation.components.media.MediaAction
+import com.ghost.zeku.presentation.components.media.OnPosterAction
 import com.ghost.zeku.presentation.theme.AppTheme
 
 
@@ -37,7 +40,7 @@ import com.ghost.zeku.presentation.theme.AppTheme
 fun MediaPosterCard(
     data: MediaPosterUiData,
     config: PosterConfig,
-    onClick: (Int) -> Unit,
+    onAction: OnPosterAction,
     modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -63,13 +66,15 @@ fun MediaPosterCard(
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
-            ) { onClick(data.id) }
+            ) {
+                onAction(MediaAction.MediaClick(data.id))
+            }
     ) {
         when (config.layout) {
-            PosterLayout.Minimal -> MinimalPoster(data, config)
-            PosterLayout.Overlay -> OverlayPoster(data, config, isHovered)
-            PosterLayout.Modern -> ModernPoster(data, config)
-            PosterLayout.Compact -> CompactPoster(data, config)
+            PosterLayout.Minimal -> MinimalPoster(data, onAction, config)
+            PosterLayout.Overlay -> OverlayPoster(data, onAction, config, isHovered)
+            PosterLayout.Modern -> ModernPoster(data, onAction, config)
+            PosterLayout.Compact -> CompactPoster(data, onAction, config)
         }
     }
 }
@@ -85,10 +90,24 @@ fun MediaPosterCard(
 @Composable
 private fun MinimalPoster(
     data: MediaPosterUiData,
+    onAction: OnPosterAction,
     config: PosterConfig
 ) {
     Column {
-        PosterImage(data, config)
+        MediaImage(
+            imageUrl = data.imageUrl,
+            title = data.title,
+            isNsfw = data.isNsfw,
+            isRevealed = data.isNsfwRevealed,
+            onReveal = {
+                onAction(MediaAction.RevealNsfw(data.id))
+            },
+            nsfwConfig = config.nsfw,
+            mediaImageConfig = config.image,
+            badge = {
+                MediaBadge(data.score, data.badgeText, config.badges)
+            }
+        )
 
         Spacer(Modifier.height(6.dp))
 
@@ -109,6 +128,7 @@ private fun MinimalPoster(
 @Composable
 private fun OverlayPoster(
     data: MediaPosterUiData,
+    onAction: OnPosterAction,
     config: PosterConfig,
     isHovered: Boolean
 ) {
@@ -167,7 +187,20 @@ private fun OverlayPoster(
             )
         }
 
-        PosterBadges(data, config)
+        MediaImage(
+            imageUrl = data.imageUrl,
+            title = data.title,
+            isNsfw = data.isNsfw,
+            isRevealed = data.isNsfwRevealed,
+            onReveal = {
+                onAction(MediaAction.RevealNsfw(data.id))
+            },
+            nsfwConfig = config.nsfw,
+            mediaImageConfig = config.image,
+            badge = {
+                MediaBadge(data.score, data.badgeText, config.badges)
+            }
+        )
     }
 }
 
@@ -178,6 +211,7 @@ private fun OverlayPoster(
 @Composable
 private fun ModernPoster(
     data: MediaPosterUiData,
+    onAction: OnPosterAction,
     config: PosterConfig
 ) {
     Card(
@@ -185,7 +219,20 @@ private fun ModernPoster(
     ) {
         Column {
 
-            PosterImage(data, config)
+            MediaImage(
+                imageUrl = data.imageUrl,
+                title = data.title,
+                isNsfw = data.isNsfw,
+                isRevealed = data.isNsfwRevealed,
+                onReveal = {
+                    onAction(MediaAction.RevealNsfw(data.id))
+                },
+                nsfwConfig = config.nsfw,
+                mediaImageConfig = config.image,
+                badge = {
+                    MediaBadge(data.score, data.badgeText, config.badges)
+                }
+            )
 
             Column(Modifier.padding(10.dp)) {
                 Text(
@@ -214,6 +261,7 @@ private fun ModernPoster(
 @Composable
 private fun CompactPoster(
     data: MediaPosterUiData,
+    onAction: OnPosterAction,
     config: PosterConfig
 ) {
     Box(
@@ -221,7 +269,20 @@ private fun CompactPoster(
             .aspectRatio(config.image.aspectRatio)
             .clip(RoundedCornerShape(config.image.cornerRadius))
     ) {
-        PosterImage(data, config)
+        MediaImage(
+            imageUrl = data.imageUrl,
+            title = data.title,
+            isNsfw = data.isNsfw,
+            isRevealed = data.isNsfwRevealed,
+            onReveal = {
+                onAction(MediaAction.RevealNsfw(data.id))
+            },
+            nsfwConfig = config.nsfw,
+            mediaImageConfig = config.image,
+            badge = {
+                MediaBadge(data.score, data.badgeText, config.badges)
+            }
+        )
     }
 }
 
@@ -229,147 +290,11 @@ private fun CompactPoster(
 // INTERNAL COMPONENTS
 // ============================================================================
 
-@Composable
-private fun PosterImage(
-    data: MediaPosterUiData,
-    config: PosterConfig
-) {
-    var revealed by remember { mutableStateOf(false) }
-
-
-    val shouldBlur = data.isNsfw &&
-            config.nsfw.enabled &&
-            !revealed
-
-    val blurRadius by animateFloatAsState(
-        targetValue = if (shouldBlur) config.nsfw.blurRadius else 0f
-    )
-
-    Box(
-        modifier = Modifier
-            .aspectRatio(config.image.aspectRatio)
-    ) {
-
-        // 🎞️ Image
-        MediaAsyncImage(
-            url = data.imageUrl,
-            contentDescription = data.title,
-            modifier = Modifier
-                .fillMaxSize()
-                .then(
-                    if (shouldBlur)
-                        Modifier.blur(blurRadius.dp)
-                    else Modifier
-                )
-        )
-
-        // 🌑 Dark overlay
-        if (shouldBlur) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(Color.Black.copy(alpha = config.nsfw.dimAlpha))
-            )
-
-            // 🔞 Label + CTA
-            Column(
-                modifier = Modifier
-                    .align(Alignment.Center),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                if (config.nsfw.showLabel) {
-                    Text(
-                        text = "NSFW",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                if (config.nsfw.clickToReveal) {
-                    Spacer(Modifier.height(6.dp))
-
-                    Text(
-                        text = "Tap to reveal",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.8f)
-                    )
-                }
-            }
-        }
-
-        // 👇 Click to reveal (only when blurred)
-        if (shouldBlur && config.nsfw.clickToReveal) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .clickable {
-                        revealed = true
-                    }
-            )
-        }
-
-        // Normal badges (only when visible OR always if you want)
-        if (!shouldBlur) {
-            PosterBadges(data, config)
-        }
-    }
-}
 
 // ----------------------------------------------------------------------------
 // BADGES
 // ----------------------------------------------------------------------------
 
-@Composable
-private fun BoxScope.PosterBadges(
-    data: MediaPosterUiData,
-    config: PosterConfig
-) {
-
-
-    fun Modifier.alignBadge(position: BadgePosition) = when (position) {
-        BadgePosition.TOP_START -> align(Alignment.TopStart)
-        BadgePosition.TOP_END -> align(Alignment.TopEnd)
-        BadgePosition.BOTTOM_START -> align(Alignment.BottomStart)
-        BadgePosition.BOTTOM_END -> align(Alignment.BottomEnd)
-    }
-
-    if (config.badges.showScore && data.score != null) {
-        Surface(
-            modifier = Modifier
-                .alignBadge(config.badges.scorePosition)
-                .padding(6.dp),
-            shape = RoundedCornerShape(6.dp),
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
-        ) {
-            Row(Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Rounded.Star, null, Modifier.size(12.dp))
-                Spacer(Modifier.width(2.dp))
-                Text(
-                    "%.1f".format(data.score),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 11.sp
-                )
-            }
-        }
-    }
-
-    if (config.badges.showBadge && data.badgeText != null) {
-        Surface(
-            modifier = Modifier
-                .alignBadge(config.badges.badgePosition),
-            color = MaterialTheme.colorScheme.primary
-        ) {
-            Text(
-                text = data.badgeText.uppercase(),
-                fontSize = 10.sp,
-                modifier = Modifier.padding(4.dp),
-                color = MaterialTheme.colorScheme.onPrimary
-            )
-        }
-    }
-}
 
 // ----------------------------------------------------------------------------
 // PROGRESS

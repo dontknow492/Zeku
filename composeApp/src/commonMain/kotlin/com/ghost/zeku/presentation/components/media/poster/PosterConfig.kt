@@ -18,12 +18,12 @@ import androidx.compose.ui.unit.dp
 
 data class PosterConfig(
     val layout: PosterLayout = PosterLayout.Overlay,
-    val image: PosterImageConfig = PosterImageConfig(),
+    val image: MediaImageConfig = MediaImageConfig(),
     val content: PosterContentConfig = PosterContentConfig(),
-    val badges: PosterBadgeConfig = PosterBadgeConfig(),
+    val badges: BadgeConfig = BadgeConfig(),
     val interaction: PosterInteractionConfig = PosterInteractionConfig(),
 
-    val nsfw: PosterNsfwConfig = PosterNsfwConfig() // 👈 new
+    val nsfw: NsfwConfig = NsfwConfig() // 👈 new
 )
 
 // ----------------------------------------------------------------------------
@@ -42,7 +42,7 @@ sealed class PosterLayout {
 // ----------------------------------------------------------------------------
 
 @Immutable
-data class PosterImageConfig(
+data class MediaImageConfig(
     val aspectRatio: Float = 2f / 3f,
     val cornerRadius: Dp = 12.dp,
     val contentScale: ContentScale = ContentScale.Crop,
@@ -83,7 +83,7 @@ enum class BadgePosition {
 }
 
 @Immutable
-data class PosterBadgeConfig(
+data class BadgeConfig(
     val showScore: Boolean = true,
     val showBadge: Boolean = true,
     val showProgress: Boolean = true,
@@ -106,10 +106,12 @@ data class PosterInteractionConfig(
 )
 
 @Immutable
-data class PosterNsfwConfig(
+data class NsfwConfig(
     val enabled: Boolean = true,          // global toggle (user setting)
     val blurRadius: Float = 20f,          // blur strength
     val dimAlpha: Float = 0.6f,           // dark overlay
     val showLabel: Boolean = true,        // "NSFW" text
     val clickToReveal: Boolean = true     // tap to reveal
 )
+
+

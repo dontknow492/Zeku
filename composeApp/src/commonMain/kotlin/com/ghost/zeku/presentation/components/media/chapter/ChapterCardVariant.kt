@@ -1,4 +1,4 @@
-package com.ghost.zeku.presentation.components.chapter
+package com.ghost.zeku.presentation.components.media.chapter
 
 enum class ChapterCardVariant {
     MODERN,     // rich card

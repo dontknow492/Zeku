@@ -27,7 +27,7 @@ import zeku.composeapp.generated.resources.error_loading
 @Composable
 fun MediaAsyncImage(
     url: String,
-    contentDescription: String,
+    contentDescription: String?,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop
 ) {

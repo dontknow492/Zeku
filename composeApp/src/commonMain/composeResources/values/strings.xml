@@ -4,7 +4,7 @@
     <string name="score">Rating</string>
     <string name="wide_bullet_separator">•</string>
     <string name="wide_star_content_description">No description available</string>
-    <string name="wide_no_description">No description available"</string>
+    <string name="no_description">No description available"</string>
     <string name="hero_watch_now">Watch Now</string>
     <string name="hero_details">Details</string>
     <string name="hero_watch_content_desc">Play</string>
@@ -13,11 +13,15 @@
     <string name="hero_carousel_next">Next</string>
     <string name="no_media_found">No Media Found</string>
 
+    <string name="unknown">Unknown</string>
+    <string name="dot_separator">•</string>
+    <string name="poster">Poster</string>
+
 
     <string name="detail_title">Anime Details</string>
     <string name="synopsis">Synopsis</string>
     <string name="official_trailer">Official Trailer</string>
-    <string name="characters_cast">Characters &amp; Cast</string>
+    <string name="characters">Characters</string>
     <string name="episodes">Episodes</string>
     <string name="user_reviews">User Reviews</string>
     <string name="relations">Relations</string>
@@ -26,4 +30,10 @@
     <string name="watch_now">Watch Now</string>
     <string name="watchlist">Watchlist</string>
     <string name="information">Information</string>
+    <string name="reviews">Reviews</string>
+    <string name="status">Status</string>
+    <string name="format">Format</string>
+    <string name="premiered">Premiered</string>
+    <string name="duration">Duration</string>
+    <string name="play">Play</string>
 </resources>

@@ -1,16 +1,12 @@
 package com.ghost.zeku.presentation.components.media.list
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -18,182 +14,204 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.ghost.zeku.presentation.common.DeviceType
-import com.ghost.zeku.presentation.common.MediaAsyncImage
-import com.ghost.zeku.presentation.common.rememberPlatformConfiguration
+import com.ghost.zeku.presentation.common.MediaImage
+import com.ghost.zeku.presentation.common.chips.GenreChip
+import com.ghost.zeku.presentation.common.chips.ScoreChip
+import com.ghost.zeku.presentation.common.chips.StatusChip
+import com.ghost.zeku.presentation.components.media.MediaAction
+import com.ghost.zeku.presentation.components.media.OnListAction
+
 
 @Composable
 fun MediaListCard(
     data: MediaListUiData,
-    onClick: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    onAction: OnListAction,
+    modifier: Modifier = Modifier,
+    variant: MediaListCardVariant = MediaListCardVariant.COMFORTABLE,
+    config: MediaListCardConfig = MediaListDefaults.config(variant)
+) {
+    when (variant) {
+        MediaListCardVariant.COMPACT -> CompactMediaListCard(data, onAction, modifier, config)
+        MediaListCardVariant.COMFORTABLE -> ComfortableMediaListCard(data, onAction, modifier, config)
+        MediaListCardVariant.DETAILED -> DetailedMediaListCard(data, onAction, modifier, config)
+    }
+}
+
+
+@Composable
+private fun CompactMediaListCard(
+    data: MediaListUiData,
+    onAction: OnListAction,
+    modifier: Modifier,
+    config: MediaListCardConfig
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onAction(MediaAction.MediaClick(data.id)) }
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        MediaListImage(data, onAction, config)
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = data.title,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Text(
+                text = data.subTitle,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        data.score?.let {
+            Text(
+                text = "%.1f".format(it),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+
+@Composable
+private fun ComfortableMediaListCard(
+    data: MediaListUiData,
+    onAction: OnListAction,
+    modifier: Modifier,
+    config: MediaListCardConfig
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
 
-    val isDesktop = rememberPlatformConfiguration().type is DeviceType.Desktop
-
-    val elevation by animateFloatAsState(
-        targetValue = if (isHovered) 8f else 2f,
-        animationSpec = tween(200),
-        label = "cardElevation"
+    val elevation by animateDpAsState(
+        if (isHovered) config.interaction.hoveredElevation else config.interaction.normalElevation
     )
 
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .shadow(elevation.dp, shape = RoundedCornerShape(16.dp))
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) { onClick(data.id) },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
     ) {
-        Row(
+        Card(
             modifier = Modifier
+                .widthIn(max = config.ui.maxWidth)
                 .fillMaxWidth()
-                .padding(
-                    horizontal = if (isDesktop) 20.dp else 16.dp,
-                    vertical = if (isDesktop) 16.dp else 12.dp
-                ),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.Top
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null
+                ) { onAction(MediaAction.MediaClick(data.id)) },
+            shape = RoundedCornerShape(config.ui.cornerRadius),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = elevation
+            )
         ) {
-            // ---- Cover Image with Airing Badge ----
-            Box(
+            Row(
                 modifier = Modifier
-                    .width(if (isDesktop) 100.dp else 80.dp)
-                    .aspectRatio(2f / 3f)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .fillMaxWidth()
+                    .padding(config.ui.spacing),
+                horizontalArrangement = Arrangement.spacedBy(config.ui.spacing)
             ) {
-                MediaAsyncImage(
-                    url = data.coverImageUrl,
-                    contentDescription = data.title,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-
-                // Airing indicator (top‑right)
-                if (data.isAiring) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(6.dp)
-                            .size(10.dp)
-                            .clip(RoundedCornerShape(5.dp))
-                            .background(MaterialTheme.colorScheme.primary)
-                    )
-                }
+                MediaListImage(data, onAction, config)
+                MediaListContent(data, config)
             }
+        }
+    }
+}
 
-            // ---- Content Column ----
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+@Composable
+private fun DetailedMediaListCard(
+    data: MediaListUiData,
+    onAction: OnListAction,
+    modifier: Modifier,
+    config: MediaListCardConfig
+) {
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Card(
+            modifier = Modifier
+                .widthIn(max = config.ui.maxWidth)
+                .fillMaxWidth()
+                .clickable { onAction(MediaAction.MediaClick(data.id)) },
+            shape = RoundedCornerShape(config.ui.cornerRadius)
+        ) {
+            Row(
+                modifier = Modifier.padding(20.dp),
+                horizontalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // Title + Score Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+
+                // Bigger image
+                MediaListImage(data, onAction, config)
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text(
-                        text = data.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
 
-                    // Score (circular or chip style)
-                    data.score?.let { score ->
-                        ScoreChip(score = score)
+                    // Title + Score
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = data.title,
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        data.score?.let { ScoreChip(it) }
                     }
-                }
 
-                // Genres as Chips
-                if (data.genres.isNotEmpty()) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        data.genres.take(3).forEach { genre ->
-                            AssistChip(
-                                onClick = { /* optional filter */ },
-                                label = { Text(genre, fontSize = 10.sp) },
-                                modifier = Modifier.height(24.dp),
-                                colors = AssistChipDefaults.assistChipColors(
-                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                    labelColor = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                            )
-                        }
-                    }
-                }
-
-                // Metadata row (format, year, status)
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                    // Subtitle
                     Text(
                         text = data.subTitle,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
                     )
-                    if (data.status != null) {
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant
-                        ) {
-                            Text(
-                                text = data.status,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
+
+                    // Genres (more space)
+                    if (data.genres.isNotEmpty()) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            data.genres.take(5).forEach {
+                                GenreChip(it)
+                            }
                         }
                     }
-                }
 
-                // Progress section (bar + text)
-                if (data.progress != null || data.progressText != null) {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        if (data.progressText != null) {
-                            Text(
-                                text = data.progressText,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.align(Alignment.End)
-                            )
-                        }
-                        if (data.progress != null) {
-                            LinearProgressIndicator(
-                                progress = { data.progress },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(6.dp)
-                                    .clip(RoundedCornerShape(3.dp)),
-                                color = MaterialTheme.colorScheme.primary,
-                                trackColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        }
+                    // Status
+                    data.status?.let {
+                        StatusChip(it)
+                    }
+
+                    // Progress
+                    data.progress?.let {
+                        LinearProgressIndicator(
+                            progress = { it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(8.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                        )
+                    }
+
+                    data.progressText?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.align(Alignment.End)
+                        )
                     }
                 }
             }
@@ -201,43 +219,130 @@ fun MediaListCard(
     }
 }
 
-// ----------------------------------------------------------------------------
-// Score Chip – Modern circular indicator with star or number
-// ----------------------------------------------------------------------------
 @Composable
-private fun ScoreChip(score: Float) {
-    val scoreInt = (score * 10).toInt() / 10f // 1 decimal
-    val color = when {
-        score >= 8.0 -> Color(0xFF4CAF50) // Green
-        score >= 6.0 -> Color(0xFFFFA000) // Amber
-        else -> MaterialTheme.colorScheme.error
-    }
-
-    Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = color.copy(alpha = 0.12f),
-        border = BorderStroke(1.dp, color.copy(alpha = 0.3f))
+private fun MediaListImage(
+    data: MediaListUiData,
+    onAction: OnListAction,
+    config: MediaListCardConfig
+) {
+    Box(
+        modifier = Modifier
+            .width(config.ui.imageWidth)
+            .aspectRatio(2f / 3f)
+            .clip(RoundedCornerShape(12.dp))
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Star,
-                contentDescription = "Score",
-                tint = color,
-                modifier = Modifier.size(14.dp)
-            )
-            Text(
-                text = "%.1f".format(scoreInt),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = color
+        MediaImage(
+            imageUrl = data.coverImageUrl,
+            title = data.title,
+            isNsfw = data.isNsfw,
+            isRevealed = data.isNsfwRevealed,
+            onReveal = {
+                onAction(MediaAction.RevealNsfw(data.id))
+            },
+            nsfwConfig = config.nsfw,
+            mediaImageConfig = config.image,
+            badge = null
+        )
+
+        if (data.isAiring) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(6.dp)
+                    .size(10.dp)
+                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(50))
             )
         }
     }
 }
+
+
+@Composable
+private fun MediaListContent(
+    data: MediaListUiData,
+    config: MediaListCardConfig
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+
+        // TITLE + SCORE
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = data.title,
+                modifier = Modifier.weight(1f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            if (config.content.showScore && data.score != null) {
+                ScoreChip(data.score)
+            }
+        }
+
+        // GENRES
+        if (config.content.showGenres && data.genres.isNotEmpty()) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                data.genres.take(3).forEach {
+                    GenreChip(it)
+                }
+            }
+        }
+
+        // META
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = data.subTitle,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            data.status?.let {
+                StatusChip(it)
+            }
+        }
+
+        // Description
+        if (config.content.showDescription && data.description != null) {
+            Text(
+                text = data.description,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = config.content.descriptionMaxLines,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        // PROGRESS
+        if (config.content.showProgress && (data.progress != null || data.progressText != null)) {
+            Column {
+                data.progressText?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.align(Alignment.End)
+                    )
+                }
+
+                data.progress?.let {
+                    LinearProgressIndicator(
+                        progress = { it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                    )
+                }
+            }
+        }
+    }
+}
+
 
 // ----------------------------------------------------------------------------
 // Preview (shows both desktop & mobile)
@@ -248,6 +353,8 @@ private fun ScoreChip(score: Float) {
 private fun MediaListCardPreview() {
     val sampleData = MediaListUiData(
         id = 1,
+        description = "An elf mage begins a journey to understand humanity after the death of her long-time companions." +
+                " A slow, emotional, and beautifully written story about time, memory, and connection.",
         title = "Frieren: Beyond Journey's End",
         coverImageUrl = "",
         subTitle = "TV • 2023",
@@ -265,7 +372,7 @@ private fun MediaListCardPreview() {
                 modifier = Modifier.fillMaxSize().padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                MediaListCard(sampleData, onClick = {})
+                MediaListCard(sampleData, onAction = {})
                 MediaListCard(
                     sampleData.copy(
                         title = "Solo Leveling",
@@ -275,7 +382,7 @@ private fun MediaListCardPreview() {
                         progress = 0.66f,
                         progressText = "8 / 12 EPs"
                     ),
-                    onClick = {}
+                    onAction = {}
                 )
                 MediaListCard(
                     sampleData.copy(
@@ -285,7 +392,7 @@ private fun MediaListCardPreview() {
                         progress = null,
                         progressText = null
                     ),
-                    onClick = {}
+                    onAction = {}
                 )
             }
         }
