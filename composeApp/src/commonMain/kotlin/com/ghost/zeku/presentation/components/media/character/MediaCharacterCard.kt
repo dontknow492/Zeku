@@ -23,15 +23,14 @@ import androidx.compose.ui.unit.dp
 import com.ghost.zeku.domain.model.enum.CharacterRole
 import com.ghost.zeku.domain.model.media.MediaCharacter
 import com.ghost.zeku.presentation.common.MediaAsyncImage
-import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.theme.AppTheme
 
 @Composable
 fun MediaCharacterCard(
+    modifier: Modifier = Modifier,
     character: MediaCharacter,
     config: MediaCharacterCardConfig = MediaCharacterCardConfig(),
-    modifier: Modifier = Modifier,
-    onAction: (MediaAction) -> Unit,
+    onClick: (MediaCharacter) -> Unit,
 ) {
     val isMain = character.role == CharacterRole.MAIN
 
@@ -74,7 +73,7 @@ fun MediaCharacterCard(
     )
 
     Card(
-        onClick = { if (config.clickable) onAction(MediaAction.CharacterClick(character)) },
+        onClick = { if (config.clickable) onClick(character) },
         interactionSource = interactionSource,
         shape = config.shape,
         colors = CardDefaults.cardColors(
@@ -189,7 +188,7 @@ private fun MediaCharacterCardPreview() {
                     imageUrl = url,
                     id = 123,
                 ),
-                onAction = {}
+                onClick = {}
             )
             MediaCharacterCard(
                 character = MediaCharacter(
@@ -198,7 +197,7 @@ private fun MediaCharacterCardPreview() {
                     imageUrl = url,
                     id = 123
                 ),
-                onAction = {}
+                onClick = {}
             )
         }
     }

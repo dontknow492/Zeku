@@ -1,14 +1,18 @@
-package com.ghost.zeku.presentation.screen.detail
+package com.ghost.zeku.presentation.viewmodel.detail
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Brush
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Work
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.ghost.zeku.domain.model.MessageType
 import com.ghost.zeku.domain.model.enum.MediaFormat
 import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
 import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.domain.model.enum.ProviderType
-import com.ghost.zeku.domain.model.media.ExternalLink
-import com.ghost.zeku.domain.model.media.MediaCharacter
-import com.ghost.zeku.domain.model.media.MediaRelation
-import com.ghost.zeku.domain.model.media.MediaTrailer
+import com.ghost.zeku.domain.model.media.*
 import com.ghost.zeku.presentation.components.media.MediaAction
+import com.ghost.zeku.presentation.components.media.ReviewAction
 
 interface MediaDetailContract {
 
@@ -62,6 +66,7 @@ interface MediaDetailContract {
         object Retry : Event
 
         data class OnMediaAction(val action: MediaAction) : Event
+        data class OnReviewAction(val action: ReviewAction) : Event
 
         // Trailer events
         data class PlayTrailer(val trailerId: String) : Event
@@ -70,9 +75,9 @@ interface MediaDetailContract {
         data class OpenExternalLink(val link: ExternalLink) : Event
 
         // Navigation events
-        data class ViewCharacter(val characterId: Int) : Event
-        data class ViewRelation(val relationId: Int) : Event
-        data class ViewRecommendation(val mediaId: Int) : Event
+        data class ViewCharacter(val character: MediaCharacter) : Event
+        data class ViewRelation(val relation: MediaRelation) : Event
+        data class ViewRecommendation(val media: Media) : Event
         data class ViewAllCharacters(val mediaId: Int) : Event
         data class ViewAllRelations(val mediaId: Int) : Event
         data class ViewAllReviews(val mediaId: Int) : Event
@@ -87,6 +92,13 @@ interface MediaDetailContract {
 
         // External link click
         data class OnExternalLinkClick(val link: ExternalLink) : Event
+
+
+        // Extra
+        data class OnAuthorClick(val author: String) : Event
+        data class OnArtistClick(val artist: String) : Event
+        data class OnStudioClick(val studio: String) : Event
+        data class OnGenreClick(val genre: String) : Event
     }
 
     // -------------------------
@@ -94,10 +106,59 @@ interface MediaDetailContract {
     // -------------------------
     sealed interface Effect {
 
-        data class ShowError(val message: String) : Effect
+        data class Navigate(val destination: Destination) : Effect
 
-        data class NavigateToMedia(val id: Int) : Effect
-        data class NavigateToEpisode(val id: Int) : Effect
-        data class NavigateToCharacter(val id: Int) : Effect
+        data class ShowMessage(val message: String, val type: MessageType) : Effect
+
+        data class OpenExternalLink(val link: ExternalLink) : Effect
+        data class PlayTrailer(val trailerId: String) : Effect
+        data class OpenChat(val id: Int) : Effect
     }
+}
+
+
+sealed class CreditType(
+    val label: String,
+    val icon: ImageVector
+) {
+    data class Artist(val name: String) : CreditType(
+        label = "Artist",
+        icon = Icons.Filled.Brush
+    )
+
+    data class Author(val name: String) : CreditType(
+        label = "Author",
+        icon = Icons.Filled.Person
+    )
+
+    data class Studio(val name: String) : CreditType(
+        label = "Studio",
+        icon = Icons.Filled.Work
+    )
+}
+
+
+fun CreditType.toEvent(): MediaDetailContract.Event = when (this) {
+    is CreditType.Artist -> MediaDetailContract.Event.OnArtistClick(name)
+    is CreditType.Author -> MediaDetailContract.Event.OnAuthorClick(name)
+    is CreditType.Studio -> MediaDetailContract.Event.OnStudioClick(name)
+}
+
+sealed interface Destination {
+
+    data class MediaDetail(
+        val id: Int,
+        val type: MediaType
+    ) : Destination
+
+    data class EpisodeDetail(val id: Int) : Destination
+
+    data class CharacterDetail(val id: Int) : Destination
+
+    data class AllReviews(val mediaId: Int) : Destination
+    data class AllRecommendations(val mediaId: Int) : Destination
+    data class AllCharacters(val mediaId: Int) : Destination
+    data class AllRelations(val mediaId: Int) : Destination
+
+    data class Search(val query: String?) : Destination
 }

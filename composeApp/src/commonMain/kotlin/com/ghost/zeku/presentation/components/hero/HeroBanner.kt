@@ -3,7 +3,6 @@ package com.ghost.zeku.presentation.components.hero
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -28,7 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ghost.zeku.presentation.common.MediaAsyncImage
+import com.ghost.zeku.presentation.common.HeroImage
 import com.ghost.zeku.presentation.common.rememberPlatformConfiguration
 import com.ghost.zeku.presentation.theme.AppTheme
 import org.jetbrains.compose.resources.stringResource
@@ -57,10 +56,6 @@ fun MediaHeroBanner(
     val baseConfig = HeroDefaults.config(isDesktop)
     val resolvedConfig = config ?: baseConfig
 
-    val bannerAspect = if (isDesktop)
-        resolvedConfig.aspectRatioDesktop
-    else
-        resolvedConfig.aspectRatioMobile
 
     // Smooth, slow zoom effect on hover/press (cinematic)
     val imageScale by animateFloatAsState(
@@ -85,23 +80,26 @@ fun MediaHeroBanner(
     ) {
         Box(
             modifier = Modifier
-                .aspectRatio(bannerAspect)
+//                .aspectRatio(bannerAspect)
                 .fillMaxWidth()
         ) {
-            // 1. Background image with zoom
-            MediaAsyncImage(
-                url = if (isDesktop) data.bannerImageUrl else data.coverImageUrl,
-                contentDescription = data.title,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .scale(imageScale)
-            )
-
-            // 2. Dynamic scrim (layered gradients)
-            HeroScrim(
-                isDesktop = isDesktop,
-                intensity = resolvedConfig.scrimIntensity,
-            )
+            val imageUrl = if (isDesktop) {
+                data.bannerImageUrl.ifBlank {
+                    data.coverImageUrl
+                }
+            } else {
+                data.coverImageUrl
+            }
+            Box {
+                HeroImage(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .scale(imageScale),
+                    imageUrl = imageUrl,
+                    isDesktop = isDesktop,
+                    blurRadius = resolvedConfig.blurRadius,
+                )
+            }
 
             // 3. Content overlay
             HeroContent(
@@ -114,44 +112,6 @@ fun MediaHeroBanner(
             )
         }
     }
-}
-
-// ----------------------------------------------------------------------------
-// RESPONSIVE SCRIM – Uses theme colors, not hardcoded black/white
-// ----------------------------------------------------------------------------
-@Composable
-private fun HeroScrim(
-    isDesktop: Boolean,
-    intensity: Float
-) {
-    val scrim = MaterialTheme.colorScheme.scrim
-
-    // Left‑to‑right gradient (desktop only) – improves text readability on wide images
-    if (isDesktop) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(scrim.copy(alpha = intensity - 0.05f), Color.Transparent),
-                        startX = 0f,
-                        endX = 1200f
-                    )
-                )
-        )
-    }
-
-    // Bottom‑to‑top gradient (always present, stronger on mobile)
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(Color.Transparent, scrim.copy(alpha = intensity + 0.05f)),
-                    startY = if (isDesktop) 0.4f else 0.2f // earlier fade on mobile
-                )
-            )
-    )
 }
 
 // ----------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 package com.ghost.zeku.di
 
-import com.ghost.zeku.presentation.screen.detail.MediaDetailViewModel
+import com.ghost.zeku.presentation.viewmodel.detail.MediaDetailViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 

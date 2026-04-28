@@ -15,10 +15,7 @@ import com.ghost.zeku.domain.MediaSource
 import com.ghost.zeku.domain.model.api.ApiError
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.common.TrackEntry
-import com.ghost.zeku.domain.model.enum.AnimeCategory
-import com.ghost.zeku.domain.model.enum.MangaCategory
-import com.ghost.zeku.domain.model.enum.ProviderType
-import com.ghost.zeku.domain.model.enum.TrackStatus
+import com.ghost.zeku.domain.model.enum.*
 import com.ghost.zeku.domain.model.media.*
 import com.ghost.zeku.domain.model.search.AnimeSearchFilter
 import com.ghost.zeku.domain.model.search.MangaSearchFilter
@@ -203,6 +200,10 @@ class MediaRepositoryImpl(
     // ========================================================================
     // HOME SCREEN HELPERS
     // ========================================================================
+
+    override fun getHeroBanner(mediaType: MediaType, limit: Int): Flow<List<Media>> {
+        TODO("Not yet implemented")
+    }
 
     override fun getAvailableAnimeCategories(): Flow<List<AnimeCategory>> {
         return activeProviderFlow.map { currentType ->

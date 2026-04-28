@@ -8,116 +8,91 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.PagerSnapDistance
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
+import com.ghost.zeku.presentation.common.isDesktop
 import com.ghost.zeku.presentation.common.rememberPlatformConfiguration
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.time.Duration.Companion.milliseconds
 
-//@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
-@OptIn(ExperimentalComposeUiApi::class)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HeroCarousel(
+    modifier: Modifier = Modifier,
     items: List<MediaHeroUiData>,
     currentPage: Int,
     onPageChange: (Int) -> Unit,
     onWatchClick: (MediaHeroUiData) -> Unit,
     onDetailsClick: (MediaHeroUiData) -> Unit,
-    modifier: Modifier = Modifier,
     config: HeroCarouselConfig? = null
 ) {
-    if (items.isEmpty()) return
-
-    val platform = rememberPlatformConfiguration()
-    val isDesktop = platform.screenSizeDp.width > 600.dp
+    val isDesktop = rememberPlatformConfiguration().isDesktop
     val resolved = config ?: HeroCarouselDefaults.config(isDesktop)
 
-    val pagerState = rememberPagerState(pageCount = { items.size })
+    val state = rememberCarouselState(initialItem = 0) { items.count() }
+    val pagerState = rememberPagerState { items.count() }
+
     val coroutineScope = rememberCoroutineScope()
-
-    // Track user interaction to pause auto-scroll
     var isUserInteracting by remember { mutableStateOf(false) }
-    val isDragged by pagerState.interactionSource.collectIsDraggedAsState()
 
-    // Reset user interaction flag after dragging stops
-    LaunchedEffect(isDragged) {
-        if (isDragged) {
-            isUserInteracting = true
-        } else {
-            delay(3000) // Wait 3 seconds after user stops interacting
-            isUserInteracting = false
-        }
-    }
 
-    // 1. Synchronize external state with internal pager
-    LaunchedEffect(currentPage) {
-        if (pagerState.currentPage != currentPage && !isUserInteracting) {
-            pagerState.animateScrollToPage(
-                page = currentPage,
-                animationSpec = spring(stiffness = Spring.StiffnessLow)
-            )
-        }
-    }
-
-    // 2. Update external page when pager changes (only when not animating from external)
-    LaunchedEffect(pagerState.currentPage, isDragged) {
-        if (!isDragged && !isUserInteracting) {
+    // Notify parent of page changes
+    LaunchedEffect(pagerState.currentPage) {
+        if (currentPage != pagerState.currentPage) {
             onPageChange(pagerState.currentPage)
         }
     }
 
-    // 3. AUTO-SCROLL (pauses on user interaction)
-    LaunchedEffect(pagerState.currentPage, isUserInteracting, resolved.enableAutoScroll) {
-        if (!resolved.enableAutoScroll || isUserInteracting || items.size <= 1) return@LaunchedEffect
-
-        delay(resolved.autoScrollDuration.milliseconds)
-        val nextPage = (pagerState.currentPage + 1) % items.size
-
+    LaunchedEffect(currentPage) {
         pagerState.animateScrollToPage(
-            nextPage,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
-            )
+            currentPage,
+            animationSpec = spring(stiffness = Spring.StiffnessLow)
         )
     }
 
-    Box(
-        modifier = modifier.fillMaxWidth()
-    ) {
-        // 4. Animated Pager with visible prev/next cards
+//    // Auto-scroll logic
+    if (resolved.enableAutoScroll) {
+        LaunchedEffect(currentPage, pagerState.currentPage) {
+            delay(resolved.autoScrollDuration.milliseconds)
+            // Use animation to smoothly slide to the next page, loop back to 0 at the end
+            val nextPage = (pagerState.currentPage + 1) % items.size
+            onPageChange(nextPage)
+        }
+    }
+
+    Box(modifier = modifier) {
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = resolved.peek),
             pageSpacing = resolved.pageSpacing,
+            modifier = Modifier.fillMaxWidth(),
             beyondViewportPageCount = resolved.beyondViewportPageCount,
             flingBehavior = PagerDefaults.flingBehavior(
                 state = pagerState,
                 pagerSnapDistance = PagerSnapDistance.atMost(1)
             )
         ) { page ->
-            // Calculate page offset for animations (shows prev/next cards)
+            val item = items[page]
+
+
             val pageOffset = (
                     (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
                     ).absoluteValue
@@ -133,66 +108,22 @@ fun HeroCarousel(
                 pageOffset * resolved.parallaxOffset
             } else 0f
 
-            Box(
+
+            MediaHeroBanner(
                 modifier = Modifier
+                    .matchParentSize()
                     .graphicsLayer {
                         scaleX = scale
                         scaleY = scale
                         this.alpha = alpha
                         this.translationX = translationX
-                    }
-                    .clip(RoundedCornerShape(if (isDesktop) 20.dp else 12.dp))
-            ) {
-                MediaHeroBanner(
-                    data = items[page],
-                    onWatchClick = { onWatchClick(items[page]) },
-                    onDetailsClick = { onDetailsClick(items[page]) }
-                )
-            }
-        }
+                    },
+                data = item,
+                config = resolved.itemConfig,
+                onWatchClick = onWatchClick,
+                onDetailsClick = onDetailsClick,
+            )
 
-        // 5. Edge fade gradients for desktop (creates smooth transition effect)
-        if (isDesktop && resolved.showEdgeGradients) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .pointerInput(Unit) {} // Allows clicks to pass through
-            ) {
-                // Left gradient fade
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(100.dp)
-                        .background(
-                            Brush.horizontalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.background,
-                                    Color.Transparent
-                                ),
-                                startX = 0f,
-                                endX = 100f
-                            )
-                        )
-                )
-
-                // Right gradient fade
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(100.dp)
-                        .align(Alignment.CenterEnd)
-                        .background(
-                            Brush.horizontalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    MaterialTheme.colorScheme.background
-                                ),
-                                startX = 0f,
-                                endX = 100f
-                            )
-                        )
-                )
-            }
         }
 
         // 6. Page Indicators (desktop only, cleaner look)
@@ -214,6 +145,8 @@ fun HeroCarousel(
             )
         }
     }
+
+
 }
 
 
@@ -266,8 +199,9 @@ private fun CarouselIndicators(
 // PREVIEW
 // ============================================================================
 @Preview(showBackground = true, widthDp = 900, heightDp = 500)
+@Preview(showBackground = true)
 @Composable
-private fun HeroCarouselPreview() {
+fun HeroCarouselPreview() {
     val items = listOf(
         MediaHeroUiData(
             id = 1,
@@ -286,11 +220,20 @@ private fun HeroCarouselPreview() {
             description = "A boy swallows a cursed object and fights evil spirits.",
             genres = listOf("Action", "Supernatural"),
             badgeText = "Trending"
+        ),
+        MediaHeroUiData(
+            id = 3,
+            title = "Jujutsu Kaisen",
+            bannerImageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/banner/145139-F2ZUCz7m4n5F.jpg",
+            coverImageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx145139-2DqjM6XOwTb6.jpg",
+            description = "A boy swallows a cursed object and fights evil spirits.",
+            genres = listOf("Action", "Supernatural"),
+            badgeText = "Trending"
         )
     )
     var currentPage by remember { mutableIntStateOf(0) }
     MaterialTheme {
-        Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Box(modifier = Modifier.fillMaxSize()) {
             HeroCarousel(
                 items = items,
                 currentPage = currentPage,

@@ -5,11 +5,13 @@ import com.ghost.zeku.domain.model.common.MediaTitle
 import com.ghost.zeku.domain.model.common.TrackEntry
 import com.ghost.zeku.domain.model.enum.MediaFormat
 import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
+import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.domain.model.enum.ProviderType
 import kotlinx.serialization.Serializable
 
 interface Media {
     val id: Int
+    val mediaType: MediaType
     val source: ProviderType
 
     val format: MediaFormat
@@ -68,7 +70,8 @@ data class Manga(
     // optional extras
     val author: String? = null,
 
-    override val trackEntry: TrackEntry? = null
+    override val trackEntry: TrackEntry? = null,
+    override val mediaType: MediaType = MediaType.MANGA,
 ) : Media
 
 @Serializable
@@ -97,5 +100,6 @@ data class Anime(
     val duration: Int? = null, // per episode (minutes)
     val studio: String? = null,
 
-    override val trackEntry: TrackEntry? = null
+    override val trackEntry: TrackEntry? = null,
+    override val mediaType: MediaType = MediaType.ANIME,
 ) : Media

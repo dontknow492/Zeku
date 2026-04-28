@@ -61,7 +61,7 @@ data class MediaImageConfig(
 
 @Immutable
 data class PosterContentConfig(
-    val width: Dp = 140.dp,
+    val width: Dp = 190.dp,
     val padding: PaddingValues = PaddingValues(8.dp),
 
     val titleMaxLines: Int = 2,

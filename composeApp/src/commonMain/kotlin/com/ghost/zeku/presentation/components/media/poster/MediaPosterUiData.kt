@@ -1,5 +1,6 @@
 package com.ghost.zeku.presentation.components.media.poster
 
+import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.domain.model.media.Anime
 import com.ghost.zeku.domain.model.media.Manga
 import com.ghost.zeku.domain.model.media.Media
@@ -12,6 +13,7 @@ import com.ghost.zeku.domain.model.media.calculateProgress
  */
 data class MediaPosterUiData(
     val id: Int,
+    val mediaType: MediaType,
     val title: String,
     val imageUrl: String,
     val score: Float? = null,
@@ -39,7 +41,8 @@ fun Media.toPosterUiData(): MediaPosterUiData {
         score = this.score,
         badgeText = generateBadgeText(this),
         subTitle = this.status?.name?.lowercase()?.replaceFirstChar { it.uppercase() },
-        progress = calculatedProgress
+        progress = calculatedProgress,
+        mediaType = this.mediaType,
     )
 }
 

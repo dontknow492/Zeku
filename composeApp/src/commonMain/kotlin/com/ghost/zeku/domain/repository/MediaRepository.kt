@@ -4,10 +4,7 @@ import androidx.paging.PagingData
 import com.ghost.zeku.data.repository.DataResult
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.common.TrackEntry
-import com.ghost.zeku.domain.model.enum.AnimeCategory
-import com.ghost.zeku.domain.model.enum.MangaCategory
-import com.ghost.zeku.domain.model.enum.ProviderType
-import com.ghost.zeku.domain.model.enum.TrackStatus
+import com.ghost.zeku.domain.model.enum.*
 import com.ghost.zeku.domain.model.media.*
 import com.ghost.zeku.domain.model.search.AnimeSearchFilter
 import com.ghost.zeku.domain.model.search.MangaSearchFilter
@@ -109,6 +106,8 @@ interface MediaRepository {
     // ========================================================================
     // LAZY DETAILS (Paginated Online-Only Flow)
     // ========================================================================
+
+    fun getHeroBanner(mediaType: MediaType, limit: Int = 10): Flow<List<Media>>
 
     fun getAnimeEpisodes(id: Int): Flow<PagingData<Episode>>
 

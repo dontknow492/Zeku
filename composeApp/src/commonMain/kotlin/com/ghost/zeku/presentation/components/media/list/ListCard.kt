@@ -18,18 +18,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.presentation.common.MediaImage
 import com.ghost.zeku.presentation.common.chips.GenreChip
 import com.ghost.zeku.presentation.common.chips.ScoreChip
 import com.ghost.zeku.presentation.common.chips.StatusChip
 import com.ghost.zeku.presentation.components.media.MediaAction
-import com.ghost.zeku.presentation.components.media.OnListAction
+import com.ghost.zeku.presentation.components.media.OnMediaAction
 
 
 @Composable
 fun MediaListCard(
     data: MediaListUiData,
-    onAction: OnListAction,
+    onAction: OnMediaAction,
     modifier: Modifier = Modifier,
     variant: MediaListCardVariant = MediaListCardVariant.COMFORTABLE,
     config: MediaListCardConfig = MediaListDefaults.config(variant)
@@ -45,14 +46,14 @@ fun MediaListCard(
 @Composable
 private fun CompactMediaListCard(
     data: MediaListUiData,
-    onAction: OnListAction,
+    onAction: OnMediaAction,
     modifier: Modifier,
     config: MediaListCardConfig
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onAction(MediaAction.MediaClick(data.id)) }
+            .clickable { onAction(MediaAction.MediaClick(data.id, data.mediaType)) }
             .padding(8.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -89,7 +90,7 @@ private fun CompactMediaListCard(
 @Composable
 private fun ComfortableMediaListCard(
     data: MediaListUiData,
-    onAction: OnListAction,
+    onAction: OnMediaAction,
     modifier: Modifier,
     config: MediaListCardConfig
 ) {
@@ -112,7 +113,7 @@ private fun ComfortableMediaListCard(
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null
-                ) { onAction(MediaAction.MediaClick(data.id)) },
+                ) { onAction(MediaAction.MediaClick(data.id, data.mediaType)) },
             shape = RoundedCornerShape(config.ui.cornerRadius),
             elevation = CardDefaults.cardElevation(
                 defaultElevation = elevation
@@ -125,7 +126,7 @@ private fun ComfortableMediaListCard(
                 horizontalArrangement = Arrangement.spacedBy(config.ui.spacing)
             ) {
                 MediaListImage(data, onAction, config)
-                MediaListContent(data, config)
+                MediaListContent(data, config, onAction)
             }
         }
     }
@@ -134,7 +135,7 @@ private fun ComfortableMediaListCard(
 @Composable
 private fun DetailedMediaListCard(
     data: MediaListUiData,
-    onAction: OnListAction,
+    onAction: OnMediaAction,
     modifier: Modifier,
     config: MediaListCardConfig
 ) {
@@ -146,7 +147,7 @@ private fun DetailedMediaListCard(
             modifier = Modifier
                 .widthIn(max = config.ui.maxWidth)
                 .fillMaxWidth()
-                .clickable { onAction(MediaAction.MediaClick(data.id)) },
+                .clickable { onAction(MediaAction.MediaClick(data.id, data.mediaType)) },
             shape = RoundedCornerShape(config.ui.cornerRadius)
         ) {
             Row(
@@ -185,7 +186,7 @@ private fun DetailedMediaListCard(
                     if (data.genres.isNotEmpty()) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             data.genres.take(5).forEach {
-                                GenreChip(it)
+                                GenreChip(onClick = { onAction(MediaAction.GenreClick(it)) }, it)
                             }
                         }
                     }
@@ -222,7 +223,7 @@ private fun DetailedMediaListCard(
 @Composable
 private fun MediaListImage(
     data: MediaListUiData,
-    onAction: OnListAction,
+    onAction: OnMediaAction,
     config: MediaListCardConfig
 ) {
     Box(
@@ -260,7 +261,8 @@ private fun MediaListImage(
 @Composable
 private fun MediaListContent(
     data: MediaListUiData,
-    config: MediaListCardConfig
+    config: MediaListCardConfig,
+    onAction: OnMediaAction
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -289,7 +291,7 @@ private fun MediaListContent(
         if (config.content.showGenres && data.genres.isNotEmpty()) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 data.genres.take(3).forEach {
-                    GenreChip(it)
+                    GenreChip(onClick = { onAction(MediaAction.GenreClick(it)) }, it)
                 }
             }
         }
@@ -363,7 +365,8 @@ private fun MediaListCardPreview() {
         score = 9.4f,
         progress = 0.75f,
         progressText = "22 / 28 EPs",
-        isAiring = false
+        isAiring = false,
+        mediaType = MediaType.ANIME
     )
 
     MaterialTheme {

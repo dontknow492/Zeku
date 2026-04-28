@@ -14,5 +14,8 @@ data class HeroCarouselConfig(
     val parallaxOffset: Float = 60f,
     val showEdgeGradients: Boolean = true,
     val showIndicators: Boolean = true,
-    val beyondViewportPageCount: Int = 1
+    val beyondViewportPageCount: Int = 1,
+
+
+    val itemConfig: HeroConfig? = null
 )

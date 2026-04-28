@@ -20,7 +20,11 @@ object MediaListDefaults {
 
         )
 
-        MediaListCardVariant.COMFORTABLE -> MediaListCardConfig()
+        MediaListCardVariant.COMFORTABLE -> MediaListCardConfig(
+            content = MediaListContentConfig(
+                showDescription = false
+            )
+        )
 
         MediaListCardVariant.DETAILED -> MediaListCardConfig(
             ui = MediaListUiConfig(

@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.presentation.components.media.list.MediaListCard
 import com.ghost.zeku.presentation.components.media.list.MediaListUiData
 import com.ghost.zeku.presentation.components.media.poster.MediaPosterCard
@@ -58,17 +59,14 @@ fun <T> MediaSection(
     }
 
     AnimatedVisibility(
-        visible = isVisible,
-        enter = fadeIn(spring(stiffness = Spring.StiffnessVeryLow)) +
-                slideInVertically { 50 }
-    ) {
+        visible = isVisible, enter = fadeIn(spring(stiffness = Spring.StiffnessVeryLow)) + slideInVertically { 50 }) {
         Column(modifier = modifier.fillMaxWidth()) {
 
             // Header
             if (config.showHeader) {
                 SectionHeader(
                     title = title,
-                    onViewAllClick = if (config.showViewAll) onViewAllClick else null,
+                    onAction = if (config.showViewAll) onViewAllClick else null,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
                 Spacer(Modifier.height(16.dp))
@@ -81,14 +79,11 @@ fun <T> MediaSection(
 
                 items.isEmpty() -> {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(config.emptyHeight),
+                        modifier = Modifier.fillMaxWidth().height(config.emptyHeight),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No media found",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            text = "No media found", color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -120,11 +115,9 @@ fun <T> MediaSection(
 
                         is SectionLayout.Grid -> {
                             val columns = when (layout.columns) {
-                                is GridType.Fixed ->
-                                    GridCells.Fixed(layout.columns.count)
+                                is GridType.Fixed -> GridCells.Fixed(layout.columns.count)
 
-                                is GridType.Adaptive ->
-                                    GridCells.Adaptive(layout.columns.minSize)
+                                is GridType.Adaptive -> GridCells.Adaptive(layout.columns.minSize)
                             }
 
                             LazyVerticalGrid(
@@ -165,21 +158,17 @@ private fun MediaSectionPreview() {
             ) {
                 // 1. Horizontal Poster Row (Trending)
                 val trendingPosters = listOf(
-                    MediaPosterUiData(1, "Solo Leveling", "", 8.5f, "EP 12"),
-                    MediaPosterUiData(2, "Frieren", "", 9.4f, "Finished"),
-                    MediaPosterUiData(3, "Jujutsu Kaisen", "", 8.8f, "Finished")
+                    MediaPosterUiData(1, MediaType.ANIME, "Solo Leveling", "", 8.5f, "EP 12"),
+                    MediaPosterUiData(2, MediaType.ANIME, "Frieren", "", 9.4f, "Finished"),
+                    MediaPosterUiData(3, MediaType.ANIME, "Jujutsu Kaisen", "", 8.8f, "Finished")
                 )
 
                 MediaSection(
                     title = "Trending Now",
                     items = trendingPosters,
-                    onViewAllClick = { /* Navigate to grid */ }
-                ) { item, modifier ->
+                    onViewAllClick = { /* Navigate to grid */ }) { item, modifier ->
                     MediaPosterCard(
-                        data = item,
-                        config = PosterConfig(),
-                        onAction = {},
-                        modifier = modifier
+                        data = item, config = PosterConfig(), onAction = {}, modifier = modifier
                     )
                 }
 
@@ -187,6 +176,7 @@ private fun MediaSectionPreview() {
                 val topAiringList = listOf(
                     MediaListUiData(
                         1,
+                        MediaType.ANIME,
                         "One Piece",
                         null,
                         "",
@@ -197,9 +187,9 @@ private fun MediaSectionPreview() {
                         null,
                         null,
                         true
-                    ),
-                    MediaListUiData(
+                    ), MediaListUiData(
                         2,
+                        MediaType.ANIME,
                         "Ninja Kamui",
                         null,
                         "",
@@ -220,9 +210,7 @@ private fun MediaSectionPreview() {
                     onViewAllClick = null // No View All button
                 ) { item, modifier ->
                     MediaListCard(
-                        data = item,
-                        onAction = {},
-                        modifier = modifier
+                        data = item, onAction = {}, modifier = modifier
                     )
                 }
 
@@ -232,8 +220,7 @@ private fun MediaSectionPreview() {
                     config = MediaSectionConfig(layout = SectionLayout.HorizontalRow()),
                     items = emptyList<Any>(),
                     isLoading = true,
-                    onViewAllClick = {}
-                ) { _, _ -> }
+                    onViewAllClick = {}) { _, _ -> }
             }
         }
     }

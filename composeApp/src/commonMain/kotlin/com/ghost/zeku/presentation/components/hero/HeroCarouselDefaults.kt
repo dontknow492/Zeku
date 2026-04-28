@@ -8,7 +8,7 @@ object HeroCarouselDefaults {
             HeroCarouselConfig(
                 enableAutoScroll = true,
                 autoScrollDuration = 6000,
-                peek = 80.dp,      // Show more of next/prev on desktop
+                peek = 0.dp,      // Show more of next/prev on desktop
                 pageSpacing = 24.dp,
                 scaleMin = 0.85f,
                 alphaMin = 0.7f,

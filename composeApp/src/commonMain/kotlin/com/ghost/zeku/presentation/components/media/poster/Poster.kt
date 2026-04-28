@@ -24,11 +24,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.presentation.common.MediaAsyncImage
 import com.ghost.zeku.presentation.common.MediaBadge
 import com.ghost.zeku.presentation.common.MediaImage
 import com.ghost.zeku.presentation.components.media.MediaAction
-import com.ghost.zeku.presentation.components.media.OnPosterAction
+import com.ghost.zeku.presentation.components.media.OnMediaAction
 import com.ghost.zeku.presentation.theme.AppTheme
 
 
@@ -40,7 +41,7 @@ import com.ghost.zeku.presentation.theme.AppTheme
 fun MediaPosterCard(
     data: MediaPosterUiData,
     config: PosterConfig,
-    onAction: OnPosterAction,
+    onAction: OnMediaAction,
     modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -67,7 +68,7 @@ fun MediaPosterCard(
                 interactionSource = interactionSource,
                 indication = null
             ) {
-                onAction(MediaAction.MediaClick(data.id))
+                onAction(MediaAction.MediaClick(data.id, data.mediaType))
             }
     ) {
         when (config.layout) {
@@ -90,7 +91,7 @@ fun MediaPosterCard(
 @Composable
 private fun MinimalPoster(
     data: MediaPosterUiData,
-    onAction: OnPosterAction,
+    onAction: OnMediaAction,
     config: PosterConfig
 ) {
     Column {
@@ -128,7 +129,7 @@ private fun MinimalPoster(
 @Composable
 private fun OverlayPoster(
     data: MediaPosterUiData,
-    onAction: OnPosterAction,
+    onAction: OnMediaAction,
     config: PosterConfig,
     isHovered: Boolean
 ) {
@@ -211,7 +212,7 @@ private fun OverlayPoster(
 @Composable
 private fun ModernPoster(
     data: MediaPosterUiData,
-    onAction: OnPosterAction,
+    onAction: OnMediaAction,
     config: PosterConfig
 ) {
     Card(
@@ -261,7 +262,7 @@ private fun ModernPoster(
 @Composable
 private fun CompactPoster(
     data: MediaPosterUiData,
-    onAction: OnPosterAction,
+    onAction: OnMediaAction,
     config: PosterConfig
 ) {
     Box(
@@ -330,6 +331,7 @@ private fun MediaPosterPreviews() {
         badgeText = "Ch 12",
         subTitle = "Unknown",
         progress = 0.7f,
+        mediaType = MediaType.ANIME
 //        isNsfw = true
     )
 

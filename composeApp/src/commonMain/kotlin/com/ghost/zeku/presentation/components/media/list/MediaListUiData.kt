@@ -1,6 +1,7 @@
 package com.ghost.zeku.presentation.components.media.list
 
 import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
+import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.domain.model.media.Anime
 import com.ghost.zeku.domain.model.media.Manga
 import com.ghost.zeku.domain.model.media.Media
@@ -8,6 +9,7 @@ import com.ghost.zeku.domain.model.media.calculateProgress
 
 data class MediaListUiData(
     val id: Int,
+    val mediaType: MediaType,
     val title: String,
     val description: String?,
     val coverImageUrl: String,
@@ -53,6 +55,7 @@ fun Media.toMediaListUiData(): MediaListUiData {
     // 4. Return the mapped UI Data
     return MediaListUiData(
         id = this.id,
+        mediaType = this.mediaType,
         description = this.description,
         title = this.title.getPreferred(),
         coverImageUrl = this.coverImage,

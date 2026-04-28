@@ -24,7 +24,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ghost.zeku.domain.model.media.Episode
 import com.ghost.zeku.presentation.common.MediaAsyncImage
-import com.ghost.zeku.presentation.components.media.MediaAction
 
 
 @Composable
@@ -32,7 +31,7 @@ fun EpisodeCard(
     episode: Episode,
     config: EpisodeCardConfig = EpisodeCardConfig(),
     modifier: Modifier = Modifier,
-    onAction: (MediaAction) -> Unit
+    onClick: (Episode) -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -54,13 +53,13 @@ fun EpisodeCard(
     ) {
         when (config.variant) {
             EpisodeCardVariant.MODERN ->
-                ModernEpisodeCard(episode, config, interactionSource, onAction)
+                ModernEpisodeCard(episode, config, interactionSource, onClick)
 
             EpisodeCardVariant.MINIMAL ->
-                MinimalEpisodeCard(episode, config, interactionSource, onAction)
+                MinimalEpisodeCard(episode, config, interactionSource, onClick)
 
             EpisodeCardVariant.COMPACT ->
-                CompactEpisodeCard(episode, config, interactionSource, onAction)
+                CompactEpisodeCard(episode, config, interactionSource, onClick)
         }
     }
 }
@@ -71,10 +70,10 @@ private fun ModernEpisodeCard(
     episode: Episode,
     config: EpisodeCardConfig,
     interactionSource: MutableInteractionSource,
-    onAction: (MediaAction) -> Unit,
+    onClick: (Episode) -> Unit,
 ) {
     Card(
-        onClick = { if (config.clickable) onAction(MediaAction.EpisodeClick(episode)) },
+        onClick = { if (config.clickable) onClick(episode) },
         interactionSource = interactionSource,
         shape = config.shape,
         colors = CardDefaults.cardColors(containerColor = config.containerColor),
@@ -135,10 +134,10 @@ private fun MinimalEpisodeCard(
     episode: Episode,
     config: EpisodeCardConfig,
     interactionSource: MutableInteractionSource,
-    onAction: (MediaAction) -> Unit,
+    onClick: (Episode) -> Unit,
 ) {
     Card(
-        onClick = { if (config.clickable) onAction(MediaAction.EpisodeClick(episode)) },
+        onClick = { if (config.clickable) onClick(episode) },
         interactionSource = interactionSource,
         shape = config.shape,
         colors = CardDefaults.cardColors(containerColor = config.containerColor),
@@ -190,10 +189,10 @@ private fun CompactEpisodeCard(
     episode: Episode,
     config: EpisodeCardConfig,
     interactionSource: MutableInteractionSource,
-    onAction: (MediaAction) -> Unit,
+    onClick: (Episode) -> Unit,
 ) {
     Card(
-        onClick = { if (config.clickable) onAction(MediaAction.EpisodeClick(episode)) },
+        onClick = { if (config.clickable) onClick(episode) },
         interactionSource = interactionSource,
         shape = config.shape,
         colors = CardDefaults.cardColors(containerColor = config.containerColor)
@@ -280,7 +279,7 @@ fun PreviewEpisodeCardModern() {
                 config = EpisodeCardConfig(
                     variant = EpisodeCardVariant.MODERN
                 ),
-                onAction = {}
+                onClick = {}
             )
 
             EpisodeCard(
@@ -288,7 +287,7 @@ fun PreviewEpisodeCardModern() {
                 config = EpisodeCardConfig(
                     variant = EpisodeCardVariant.MODERN
                 ),
-                onAction = {}
+                onClick = {}
 
             )
 
@@ -297,7 +296,7 @@ fun PreviewEpisodeCardModern() {
                 config = EpisodeCardConfig(
                     variant = EpisodeCardVariant.MINIMAL
                 ),
-                onAction = {}
+                onClick = {}
             )
 
             EpisodeCard(
@@ -305,7 +304,7 @@ fun PreviewEpisodeCardModern() {
                 config = EpisodeCardConfig(
                     variant = EpisodeCardVariant.MINIMAL
                 ),
-                onAction = {}
+                onClick = {}
             )
 
             EpisodeCard(
@@ -313,7 +312,7 @@ fun PreviewEpisodeCardModern() {
                 config = EpisodeCardConfig(
                     variant = EpisodeCardVariant.COMPACT
                 ),
-                onAction = {}
+                onClick = {}
             )
 
             EpisodeCard(
@@ -321,7 +320,7 @@ fun PreviewEpisodeCardModern() {
                 config = EpisodeCardConfig(
                     variant = EpisodeCardVariant.COMPACT
                 ),
-                onAction = {}
+                onClick = {}
             )
         }
     }

@@ -50,4 +50,7 @@
     <string name="unknown_artist">Unknown Artist</string>
     <string name="unknown_studio">Unknown Studio</string>
     <string name="unknown_author">Unknown Author</string>
+
+    <string name="open_link">Open</string>
+    <string name="view_all">View all</string>
 </resources>

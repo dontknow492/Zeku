@@ -17,11 +17,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
+import zeku.composeapp.generated.resources.Res
+import zeku.composeapp.generated.resources.view_all
 
 @Composable
 fun SectionHeader(
     title: String,
-    onViewAllClick: (() -> Unit)?,
+    action: String? = null,
+    onAction: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -36,16 +40,16 @@ fun SectionHeader(
             color = MaterialTheme.colorScheme.onBackground
         )
 
-        if (onViewAllClick != null) {
+        if (onAction != null) {
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
-                    .clickable { onViewAllClick() }
+                    .clickable { onAction() }
                     .padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "View All",
+                    text = action ?: stringResource(Res.string.view_all),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold

@@ -25,10 +25,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.*
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
@@ -40,21 +41,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import com.ghost.zeku.domain.model.common.MediaDate
 import com.ghost.zeku.domain.model.common.MediaTitle
 import com.ghost.zeku.domain.model.enum.*
 import com.ghost.zeku.domain.model.media.*
-import com.ghost.zeku.presentation.common.GlassCard
-import com.ghost.zeku.presentation.common.MediaAsyncImage
+import com.ghost.zeku.presentation.common.*
 import com.ghost.zeku.presentation.common.chips.GenreChip
 import com.ghost.zeku.presentation.common.chips.MyChips
-import com.ghost.zeku.presentation.common.isDesktop
-import com.ghost.zeku.presentation.common.rememberPlatformConfiguration
 import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.components.media.character.MediaCharacterCard
 import com.ghost.zeku.presentation.components.media.character.MediaCharacterCardConfig
@@ -65,63 +63,68 @@ import com.ghost.zeku.presentation.components.media.relation.MediaRelationCard
 import com.ghost.zeku.presentation.components.media.relation.MediaRelationCardConfig
 import com.ghost.zeku.presentation.components.media.relation.RelationCardLayout
 import com.ghost.zeku.presentation.components.media.review.ReviewCard
-import com.ghost.zeku.presentation.components.media.review.ReviewCardConfig
 import com.ghost.zeku.presentation.components.section.MediaSection
 import com.ghost.zeku.presentation.components.section.MediaSectionConfig
 import com.ghost.zeku.presentation.components.section.PagedMediaSection
-import com.ghost.zeku.presentation.components.section.SectionLayout
+import com.ghost.zeku.presentation.viewmodel.detail.*
 import com.ghost.zeku.utils.formatTimestamp
 import com.ghost.zeku.utils.toPagingItems
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import zeku.composeapp.generated.resources.*
 
-// Centralized dimensions for consistency
-object MediaDetailDimens {
-    val horizontalPadding = 16.dp
-    val verticalPadding = 16.dp
-    val spacingSmall = 8.dp
-    val spacingMedium = 12.dp
-    val spacingLarge = 24.dp
-    val sectionHeaderVertical = 12.dp
-    val iconSize = 18.dp
-    val cardCornerRadius = 12.dp
-    val glassCardCornerRadius = 12.dp
-    val chipSpacing = 8.dp
-    val buttonHeight = 56.dp
-    val fabPadding = 16.dp
-    val posterWidth = 200.dp
-    val posterAspectRatio = 2f / 3f
-    val trailerAspectRatio = 16f / 9f
-    val trailerPlayIconSize = 64.dp
-    val blurRadius = 24.dp
+@Composable
+fun MediaDetailScreen(
+    viewModel: MediaDetailViewModel = koinViewModel(),
+    onNavigate: (Destination) -> Unit,
+    onBack: () -> Unit
+) {
+    val state by viewModel.state.collectAsState()
+    val isDesktop = rememberPlatformConfiguration().isDesktop
+    val reviews = viewModel.reviews.collectAsLazyPagingItems()
+    val recommendations = viewModel.recommendations.collectAsLazyPagingItems()
+    val episodes = viewModel.episodes.collectAsLazyPagingItems()
+
+    val effect = viewModel.effect.collectAsState(initial = null)
+
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+
+                is MediaDetailContract.Effect.Navigate -> {
+                    onNavigate(effect.destination)
+                }
+
+                is MediaDetailContract.Effect.OpenExternalLink -> {
+                    TODO("Not yet implemented")
+                }
+
+                is MediaDetailContract.Effect.PlayTrailer -> {
+                    TODO("Not yet implemented")
+                }
+
+                is MediaDetailContract.Effect.ShowMessage -> {
+                    TODO()
+                }
+
+                is MediaDetailContract.Effect.OpenChat -> {
+                    TODO("Not yet implemented")
+                }
+            }
+        }
+    }
+
+    MediaDetailContent(
+        state = state,
+        episodes = episodes,
+        recommendations = recommendations,
+        reviews = reviews,
+        onEvent = viewModel::onEvent,
+        config = MediaDetailUiConfig(),
+        isDesktop = isDesktop,
+    )
+
 }
-
-@Immutable
-data class MediaDetailUiConfig(
-    val characterSection: MediaSectionConfig = MediaSectionConfig(),
-    val relationSection: MediaSectionConfig = MediaSectionConfig(),
-    val reviewSection: MediaSectionConfig = MediaSectionConfig(
-        layout = SectionLayout.VerticalList()
-    ),
-    val recommendationSection: MediaSectionConfig = MediaSectionConfig(),
-
-    val characterCard: MediaCharacterCardConfig = MediaCharacterCardConfig(),
-    val relationCard: MediaRelationCardConfig = MediaRelationCardConfig(),
-    val reviewCard: ReviewCardConfig = ReviewCardConfig(),
-    val recommendationCard: PosterConfig = PosterConfig(),
-
-    val showTrailer: Boolean = true,
-    val showExternalLinks: Boolean = true,
-
-    val desktopSideBarWidth: Dp = 390.dp,
-    val desktopItemSpacing: Dp = 24.dp,
-    val desktopHeroBannerSize: Dp = 716.dp,
-    val desktopHeroMetaOffset: Dp = 140.dp,
-
-    val androidItemSpacing: Dp = 16.dp,
-    val androidHeroBannerHeight: Dp = 590.dp,
-    val androidHeroMetaOffset: Dp = 140.dp,
-)
 
 @Composable
 fun MediaDetailContent(
@@ -183,6 +186,7 @@ private fun DesktopLayout(
     onEvent: (MediaDetailContract.Event) -> Unit
 ) {
     val dimens = MediaDetailDimens
+    val mediaId = state.id
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 80.dp),
@@ -198,7 +202,7 @@ private fun DesktopLayout(
                     }
                 }
             ) {
-                HeroSection(state, isDesktop = true, config)
+                HeroSection(state, isDesktop = true, config, onEvent = onEvent)
             }
         }
 
@@ -221,23 +225,30 @@ private fun DesktopLayout(
                     CharacterSection(
                         modifier = Modifier,
                         characters = state.characters,
-                        onAction = { /* TODO */ },
                         sectionConfig = config.characterSection,
-                        cardConfig = config.characterCard
+                        cardConfig = config.characterCard,
+                        onViewAllClick = { onEvent(MediaDetailContract.Event.ViewAllCharacters(mediaId = mediaId)) },
+                        onCharacterClick = { onEvent(MediaDetailContract.Event.ViewCharacter(it)) }
                     )
 
                     val reviewsPreview = reviews.itemSnapshotList.take(6)
                     Column(
                         verticalArrangement = Arrangement.spacedBy(dimens.spacingMedium)
                     ) {
-                        SectionHeader(title = stringResource(Res.string.reviews))
+                        SectionHeader(
+                            title = stringResource(Res.string.reviews),
+                            action = stringResource(Res.string.view_all),
+                            onAction = {
+                                onEvent(MediaDetailContract.Event.ViewAllReviews(mediaId = mediaId))
+                            }
+                        )
                         reviewsPreview.forEach { review ->
                             if (review != null) {
                                 ReviewCard(
                                     modifier = Modifier.padding(start = dimens.horizontalPadding),
                                     review = review,
                                     config = config.reviewCard,
-                                    onAction = { /* TODO */ }
+                                    onAction = { onEvent(MediaDetailContract.Event.OnReviewAction(it)) }
                                 )
                             }
                         }
@@ -251,22 +262,30 @@ private fun DesktopLayout(
                         .padding(config.desktopItemSpacing),
                     verticalArrangement = Arrangement.spacedBy(config.desktopItemSpacing)
                 ) {
-                    InfoPanel(state)
+                    InfoPanel(Modifier, state, onEvent = onEvent)
                     AnimatedVisibility(config.showExternalLinks) {
-                        ExternalLinksPanel(state.externalLinks, isMobile = false)
+                        ExternalLinksPanel(
+                            state.externalLinks,
+                            isMobile = false,
+                            onClick = { onEvent(MediaDetailContract.Event.OnExternalLinkClick(it)) }
+                        )
                     }
                     Column(
                         verticalArrangement = Arrangement.spacedBy(dimens.spacingMedium),
                         modifier = Modifier.padding(start = dimens.horizontalPadding)
                     ) {
-                        SectionHeader(title = stringResource(Res.string.relations))
+                        SectionHeader(
+                            title = stringResource(Res.string.relations),
+                            action = stringResource(Res.string.view_all),
+                            onAction = { onEvent(MediaDetailContract.Event.ViewAllRelations(mediaId = mediaId)) },
+                        )
                         state.relations.forEach {
                             MediaRelationCard(
                                 relation = it,
                                 config = config.relationCard.copy(
                                     layout = RelationCardLayout.WIDE
                                 ),
-                                onAction = { /* TODO */ }
+                                onClick = { onEvent(MediaDetailContract.Event.ViewRelation(it)) }
                             )
                         }
                     }
@@ -276,7 +295,11 @@ private fun DesktopLayout(
                         verticalArrangement = Arrangement.spacedBy(dimens.spacingMedium),
                         modifier = Modifier.padding(start = dimens.horizontalPadding)
                     ) {
-                        SectionHeader(title = stringResource(Res.string.more_like_this))
+                        SectionHeader(
+                            title = stringResource(Res.string.more_like_this),
+                            action = stringResource(Res.string.view_all),
+                            onAction = { onEvent(MediaDetailContract.Event.ViewAllRecommendations(mediaId = mediaId)) },
+                        )
                         previewItems.chunked(2).forEach { row ->
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(dimens.spacingMedium),
@@ -285,7 +308,7 @@ private fun DesktopLayout(
                                     MediaPosterCard(
                                         data = item.toPosterUiData(),
                                         modifier = Modifier.weight(1f),
-                                        onAction = { /* TODO */ },
+                                        onAction = { onEvent(MediaDetailContract.Event.OnMediaAction(it)) },
                                         config = config.recommendationCard
                                     )
                                 }
@@ -312,6 +335,7 @@ private fun MobileLayout(
     onEvent: (MediaDetailContract.Event) -> Unit
 ) {
     val dimens = MediaDetailDimens
+    val mediaId = state.id
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 80.dp),
@@ -328,7 +352,7 @@ private fun MobileLayout(
                     }
                 }
             ) {
-                HeroSection(state, isDesktop = false, config)
+                HeroSection(state, isDesktop = false, config, onEvent = onEvent)
             }
         }
 
@@ -353,6 +377,10 @@ private fun MobileLayout(
         }
 
         item { SynopsisSection(state.description) }
+
+        item {
+            InfoPanel(Modifier.padding(horizontal = dimens.horizontalPadding), state, onEvent = onEvent)
+        }
         if (config.showTrailer) {
             item { TrailerSection(state.trailer, onEvent) }
         }
@@ -361,14 +389,21 @@ private fun MobileLayout(
             CharacterSection(
                 modifier = Modifier,
                 characters = state.characters,
-                onAction = { /* TODO */ },
                 sectionConfig = config.characterSection,
-                cardConfig = config.characterCard
+                cardConfig = config.characterCard,
+                onViewAllClick = { onEvent(MediaDetailContract.Event.ViewAllCharacters(mediaId = mediaId)) },
+                onCharacterClick = { onEvent(MediaDetailContract.Event.ViewCharacter(it)) }
             )
         }
 
         if (config.showExternalLinks) {
-            item { ExternalLinksPanel(state.externalLinks, isMobile = true) }
+            item {
+                ExternalLinksPanel(
+                    state.externalLinks,
+                    isMobile = true,
+                    onClick = { onEvent(MediaDetailContract.Event.OnExternalLinkClick(it)) }
+                )
+            }
         }
 
         item {
@@ -377,7 +412,8 @@ private fun MobileLayout(
                 relations = state.relations,
                 sectionConfig = config.relationSection,
                 cardConfig = config.relationCard,
-                onAction = { /* TODO */ }
+                onViewAllClick = { onEvent(MediaDetailContract.Event.ViewAllRelations(mediaId = mediaId)) },
+                onRelationClick = { onEvent(MediaDetailContract.Event.ViewRelation(it)) }
             )
         }
 
@@ -387,14 +423,20 @@ private fun MobileLayout(
                 recommendations = recommendations,
                 sectionConfig = config.recommendationSection,
                 cardConfig = config.recommendationCard,
-                onAction = { /* TODO */ }
+                onAction = { onEvent(MediaDetailContract.Event.OnMediaAction(it)) },
+                onViewAllClick = { onEvent(MediaDetailContract.Event.ViewAllRecommendations(mediaId = mediaId)) }
             )
         }
 
         item {
             SectionHeader(
-                stringResource(Res.string.reviews),
-                modifier = Modifier.padding(horizontal = dimens.horizontalPadding)
+                modifier = Modifier.padding(horizontal = dimens.horizontalPadding),
+                title = stringResource(Res.string.reviews),
+                action = stringResource(Res.string.view_all),
+                onAction = {
+                    onEvent(MediaDetailContract.Event.ViewAllReviews(mediaId = mediaId))
+                }
+
             )
         }
         items(reviews.itemCount) { index ->
@@ -404,7 +446,7 @@ private fun MobileLayout(
                     review = review,
                     config = config.reviewCard,
                     modifier = Modifier.animateItem().padding(horizontal = dimens.horizontalPadding),
-                    onAction = { /* TODO */ }
+                    onAction = { onEvent(MediaDetailContract.Event.OnReviewAction(it)) }
                 )
             }
         }
@@ -413,8 +455,14 @@ private fun MobileLayout(
 
 // ---------- Hero Section ----------
 @Composable
-private fun HeroSection(state: MediaDetailContract.State, isDesktop: Boolean, config: MediaDetailUiConfig) {
+private fun HeroSection(
+    state: MediaDetailContract.State,
+    isDesktop: Boolean,
+    config: MediaDetailUiConfig,
+    onEvent: (MediaDetailContract.Event) -> Unit
+) {
     val dimens = MediaDetailDimens
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -422,107 +470,12 @@ private fun HeroSection(state: MediaDetailContract.State, isDesktop: Boolean, co
     ) {
         val imageUrl = state.bannerImage ?: state.coverImage
 
-        // 1. Base Background Image
-        MediaAsyncImage(
-            url = imageUrl,
-            contentDescription = state.title,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
+        HeroImage(
+            modifier = Modifier.matchParentSize(),
+            imageUrl = imageUrl,
+            isDesktop = isDesktop,
+            blurRadius = dimens.blurRadius,
         )
-
-        // 2. Gradient Blur Mask
-        if (isDesktop) {
-            MediaAsyncImage(
-                url = imageUrl,
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .blur(dimens.blurRadius)
-                    .graphicsLayer {
-                        compositingStrategy = CompositingStrategy.Offscreen
-                    }
-                    .drawWithCache {
-                        val horizontalMask = Brush.horizontalGradient(
-                            colors = listOf(Color.Black, Color.Transparent),
-                            startX = 0f,
-                            endX = size.width * 0.9f
-                        )
-                        val verticalMask = Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black),
-                            startY = size.height * 0.4f,
-                            endY = size.height
-                        )
-                        onDrawWithContent {
-                            drawContent()
-                            drawIntoCanvas { canvas ->
-                                canvas.saveLayer(
-                                    bounds = Rect(0f, 0f, size.width, size.height),
-                                    paint = Paint().apply { blendMode = BlendMode.DstIn }
-                                )
-                                drawRect(horizontalMask)
-                                drawRect(verticalMask)
-                                canvas.restore()
-                            }
-                        }
-                    },
-                contentScale = ContentScale.Crop
-            )
-        } else {
-            MediaAsyncImage(
-                url = imageUrl,
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .blur(dimens.blurRadius)
-                    .graphicsLayer {
-                        compositingStrategy = CompositingStrategy.Offscreen
-                    }
-                    .drawWithContent {
-                        drawContent()
-                        drawRect(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color.Black),
-                                startY = size.height * 0.4f,
-                                endY = size.height
-                            ),
-                            blendMode = BlendMode.DstIn
-                        )
-                    },
-                contentScale = ContentScale.Crop
-            )
-        }
-
-        // 3. Color Scrim
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            MaterialTheme.colorScheme.background.copy(alpha = 0.6f),
-                            MaterialTheme.colorScheme.background
-                        ),
-                        startY = 0f
-                    )
-                )
-        )
-
-        if (isDesktop) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.background.copy(alpha = 0.6f),
-                                Color.Transparent,
-                            ),
-                            startX = 0f,
-                        )
-                    )
-            )
-        }
 
         // 4. Content
         Column(
@@ -544,11 +497,11 @@ private fun HeroSection(state: MediaDetailContract.State, isDesktop: Boolean, co
                     )
                     Spacer(Modifier.width(dimens.spacingLarge))
                     Column(modifier = Modifier.weight(1f)) {
-                        MetadataAndActions(state, isDesktop = true)
+                        MetadataAndActions(state, isDesktop = true, onEvent = onEvent)
                     }
                 }
             } else {
-                MetadataAndActions(state, isDesktop = false)
+                MetadataAndActions(state, isDesktop = false, onEvent = onEvent)
             }
         }
     }
@@ -556,12 +509,16 @@ private fun HeroSection(state: MediaDetailContract.State, isDesktop: Boolean, co
 
 // ---------- Metadata & Actions ----------
 @Composable
-private fun MetadataAndActions(state: MediaDetailContract.State, isDesktop: Boolean) {
+private fun MetadataAndActions(
+    state: MediaDetailContract.State,
+    isDesktop: Boolean,
+    onEvent: (MediaDetailContract.Event) -> Unit
+) {
     val dimens = MediaDetailDimens
     // Genres
     Row(horizontalArrangement = Arrangement.spacedBy(dimens.chipSpacing)) {
         state.genres.forEach { genre ->
-            GenreChip(genre)
+            GenreChip(onClick = { onEvent(MediaDetailContract.Event.OnGenreClick(genre)) }, genre)
         }
     }
     Spacer(Modifier.height(dimens.spacingSmall))
@@ -569,7 +526,7 @@ private fun MetadataAndActions(state: MediaDetailContract.State, isDesktop: Bool
     Text(
         text = state.title,
         style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold),
-        color = Color.White
+        color = MaterialTheme.colorScheme.primary
     )
 
     Spacer(Modifier.height(dimens.spacingSmall))
@@ -585,7 +542,7 @@ private fun MetadataAndActions(state: MediaDetailContract.State, isDesktop: Bool
         Text(
             text = " ${state.rating}",
             style = MaterialTheme.typography.titleSmall,
-            color = Color.White
+            color = MaterialTheme.colorScheme.secondary
         )
         Text(
             stringResource(Res.string.dot_separator),
@@ -594,7 +551,7 @@ private fun MetadataAndActions(state: MediaDetailContract.State, isDesktop: Bool
         Text(
             text = state.releaseDate?.let { formatTimestamp(it) } ?: stringResource(Res.string.unknown),
             style = MaterialTheme.typography.labelMedium,
-            color = Color.White.copy(alpha = 0.8f)
+            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f)
         )
         Text(
             stringResource(Res.string.dot_separator),
@@ -603,7 +560,7 @@ private fun MetadataAndActions(state: MediaDetailContract.State, isDesktop: Bool
         Text(
             text = state.studio ?: state.author ?: stringResource(Res.string.unknown),
             style = MaterialTheme.typography.labelMedium,
-            color = Color.White.copy(alpha = 0.8f)
+            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f)
         )
     }
 
@@ -854,13 +811,18 @@ private fun TrailerSection(
 
 
 @Composable
-private fun SectionHeader(title: String, action: String? = null, modifier: Modifier = Modifier) {
+private fun SectionHeader(
+    modifier: Modifier = Modifier,
+    title: String,
+    action: String? = null,
+    onAction: (() -> Unit)? = null,
+) {
     val dimens = MediaDetailDimens
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Text(text = title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Spacer(Modifier.weight(1f))
         if (action != null) {
-            TextButton(onClick = {}) {
+            TextButton(onClick = onAction ?: {}) {
                 Text(action, color = MaterialTheme.colorScheme.primary)
             }
         }
@@ -875,12 +837,13 @@ fun CharacterSection(
     characters: List<MediaCharacter>,
     sectionConfig: MediaSectionConfig,
     cardConfig: MediaCharacterCardConfig,
-    onAction: (MediaAction) -> Unit
+    onCharacterClick: (MediaCharacter) -> Unit,
+    onViewAllClick: () -> Unit,
 ) {
     MediaSection(
         title = stringResource(Res.string.characters),
         items = characters,
-        onViewAllClick = { /* TODO */ },
+        onViewAllClick = onViewAllClick,
         config = sectionConfig,
         modifier = modifier,
         key = null,
@@ -890,7 +853,7 @@ fun CharacterSection(
             character = character,
             config = cardConfig,
             modifier = modifier,
-            onAction = onAction
+            onClick = onCharacterClick
         )
     }
 }
@@ -902,12 +865,13 @@ fun RelationSection(
     relations: List<MediaRelation>,
     sectionConfig: MediaSectionConfig,
     cardConfig: MediaRelationCardConfig,
-    onAction: (MediaAction) -> Unit
+    onRelationClick: (MediaRelation) -> Unit,
+    onViewAllClick: () -> Unit
 ) {
     MediaSection(
         title = stringResource(Res.string.relations),
         items = relations.take(1), // Keep original logic, might need full list elsewhere
-        onViewAllClick = { /* TODO */ },
+        onViewAllClick = onViewAllClick,
         config = sectionConfig,
         key = null,
         isLoading = false,
@@ -917,7 +881,7 @@ fun RelationSection(
             relation = relation,
             config = cardConfig,
             modifier = modifier,
-            onAction = onAction
+            onClick = onRelationClick
         )
     }
 }
@@ -930,6 +894,7 @@ fun RecommendationSection(
     recommendations: LazyPagingItems<Anime>,
     sectionConfig: MediaSectionConfig,
     cardConfig: PosterConfig,
+    onViewAllClick: () -> Unit,
     onAction: (MediaAction) -> Unit
 ) {
     PagedMediaSection(
@@ -937,6 +902,7 @@ fun RecommendationSection(
         title = stringResource(Res.string.more_like_this),
         config = sectionConfig,
         items = recommendations,
+        onViewAllClick = onViewAllClick
     ) { media, modifier ->
         MediaPosterCard(
             data = media.toPosterUiData(),
@@ -951,7 +917,7 @@ fun RecommendationSection(
 private fun ExternalLinksPanel(
     links: List<ExternalLink>,
     isMobile: Boolean = false,
-    onClick: (ExternalLink) -> Unit = {}
+    onClick: (ExternalLink) -> Unit
 ) {
     val dimens = MediaDetailDimens
 
@@ -1060,7 +1026,7 @@ private fun ExternalLinkItem(
         },
         text = {
             Text(
-                text = link.site.ifBlank { "Open" }, // ✅ fallback text
+                text = link.site.ifBlank { stringResource(Res.string.open_link) }, // ✅ fallback text
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 textDecoration = TextDecoration.Underline,
@@ -1074,11 +1040,16 @@ private fun ExternalLinkItem(
 // ---------------------- Info Panel ----------------------
 
 @Composable
-private fun InfoPanel(state: MediaDetailContract.State) {
+private fun InfoPanel(
+    modifier: Modifier = Modifier,
+    state: MediaDetailContract.State,
+    onEvent: (MediaDetailContract.Event) -> Unit
+) {
     val dimens = MediaDetailDimens
     val colors = MaterialTheme.colorScheme
 
     GlassCard(
+        modifier = modifier,
         shape = RoundedCornerShape(MediaDetailDimens.glassCardCornerRadius)
     ) {
         Column(
@@ -1153,9 +1124,9 @@ private fun InfoPanel(state: MediaDetailContract.State) {
             // CREDITS
             // -------------------------
             val credits = listOfNotNull(
-                state.artist?.let { "artist" to it },
-                state.author?.let { "author" to it },
-                state.studio?.let { "studio" to it }
+                state.artist?.let { CreditType.Artist(it) },
+                state.author?.let { CreditType.Author(it) },
+                state.studio?.let { CreditType.Studio(it) }
             )
 
             if (credits.isNotEmpty()) {
@@ -1173,8 +1144,11 @@ private fun InfoPanel(state: MediaDetailContract.State) {
                         horizontalArrangement = Arrangement.spacedBy(dimens.chipSpacing),
                         verticalArrangement = Arrangement.spacedBy(dimens.chipSpacing)
                     ) {
-                        credits.forEach { (type, value) ->
-                            CreditChip(type, value)
+                        credits.forEach { credit ->
+                            CreditChip(
+                                credit = credit,
+                                onClick = { onEvent(credit.toEvent()) }
+                            )
                         }
                     }
                 }
@@ -1194,7 +1168,10 @@ private fun InfoGroup(
 }
 
 @Composable
-private fun InfoRow(label: String, value: String) {
+private fun InfoRow(
+    label: String,
+    value: String
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -1219,26 +1196,43 @@ private fun InfoRow(label: String, value: String) {
 }
 
 @Composable
-private fun CreditChip(type: String, value: String) {
-
-    val icon = when (type) {
-        "artist" -> Icons.Default.Brush
-        "author" -> Icons.Default.Person
-        "studio" -> Icons.Default.Work
-        else -> Icons.Default.Info
-    }
-
+fun CreditChip(
+    credit: CreditType,
+    onClick: () -> Unit
+) {
     MyChips(
-        onClick = { /* TODO */ },
-        text = value,
+        onClick = onClick,
+        text = {
+            Column {
+                Text(
+                    text = credit.label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = when (credit) {
+                        is CreditType.Artist -> credit.name
+                        is CreditType.Author -> credit.name
+                        is CreditType.Studio -> credit.name
+                    },
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        },
         leadingIcon = {
-            Icon(icon, contentDescription = null)
+            Icon(
+                credit.icon,
+                contentDescription = credit.label
+            )
         }
     )
 }
 
 @Composable
-private fun InfoRowIfValid(label: String, value: Any?) {
+private fun InfoRowIfValid(
+    label: String,
+    value: Any?
+) {
     val text = when (value) {
         null -> null
         is String -> value.takeIf { it.isNotBlank() }

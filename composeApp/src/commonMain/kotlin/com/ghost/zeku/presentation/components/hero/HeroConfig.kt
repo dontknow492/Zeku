@@ -6,8 +6,8 @@ import androidx.compose.ui.unit.dp
 
 data class HeroConfig(
     val cornerRadius: Dp = 24.dp,
-    val aspectRatioDesktop: Float = 21f / 9f,
-    val aspectRatioMobile: Float = 4f / 5f,
+    val blurRadius: Dp = 20.dp,
+
 
     val scrimIntensity: Float = 0.9f,
 

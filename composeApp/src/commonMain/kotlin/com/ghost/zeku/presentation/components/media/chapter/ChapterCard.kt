@@ -18,7 +18,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ghost.zeku.domain.model.media.Chapter
-import com.ghost.zeku.presentation.components.media.MediaAction
 
 
 @Composable
@@ -26,7 +25,7 @@ fun ChapterCard(
     chapter: Chapter,
     config: ChapterCardConfig = ChapterCardConfig(),
     modifier: Modifier = Modifier,
-    onAction: (MediaAction) -> Unit
+    onClick: (Chapter) -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -48,13 +47,13 @@ fun ChapterCard(
     ) {
         when (config.variant) {
             ChapterCardVariant.MODERN ->
-                ModernChapterCard(chapter, config, interactionSource, onAction)
+                ModernChapterCard(chapter, config, interactionSource, onClick)
 
             ChapterCardVariant.MINIMAL ->
-                MinimalChapterCard(chapter, config, interactionSource, onAction)
+                MinimalChapterCard(chapter, config, interactionSource, onClick)
 
             ChapterCardVariant.COMPACT ->
-                CompactChapterCard(chapter, config, interactionSource, onAction)
+                CompactChapterCard(chapter, config, interactionSource, onClick)
         }
     }
 }
@@ -65,10 +64,10 @@ private fun ModernChapterCard(
     chapter: Chapter,
     config: ChapterCardConfig,
     interactionSource: MutableInteractionSource,
-    onAction: (MediaAction) -> Unit
+    onClick: (Chapter) -> Unit
 ) {
     Card(
-        onClick = { if (config.clickable) onAction(MediaAction.ChapterClick(chapter)) },
+        onClick = { if (config.clickable) onClick(chapter) },
         interactionSource = interactionSource,
         shape = config.shape,
         colors = CardDefaults.cardColors(containerColor = config.containerColor)
@@ -107,10 +106,10 @@ private fun MinimalChapterCard(
     chapter: Chapter,
     config: ChapterCardConfig,
     interactionSource: MutableInteractionSource,
-    onAction: (MediaAction) -> Unit
+    onClick: (Chapter) -> Unit,
 ) {
     Card(
-        onClick = { if (config.clickable) onAction(MediaAction.ChapterClick(chapter)) },
+        onClick = { if (config.clickable) onClick(chapter) },
         interactionSource = interactionSource,
         shape = config.shape,
         colors = CardDefaults.cardColors(containerColor = config.containerColor),
@@ -158,10 +157,10 @@ private fun CompactChapterCard(
     chapter: Chapter,
     config: ChapterCardConfig,
     interactionSource: MutableInteractionSource,
-    onAction: (MediaAction) -> Unit
+    onClick: (Chapter) -> Unit,
 ) {
     Card(
-        onClick = { if (config.clickable) onAction(MediaAction.ChapterClick(chapter)) },
+        onClick = { if (config.clickable) onClick(chapter) },
         interactionSource = interactionSource,
         shape = config.shape,
         colors = CardDefaults.cardColors(containerColor = config.containerColor)
@@ -209,13 +208,13 @@ fun PreviewChapterVariants() {
         ) {
 
             Text("Modern")
-            ChapterCard(sample, ChapterCardConfig(variant = ChapterCardVariant.MODERN), onAction = {})
+            ChapterCard(sample, ChapterCardConfig(variant = ChapterCardVariant.MODERN), onClick = {})
 
             Text("Minimal")
-            ChapterCard(sample, ChapterCardConfig(variant = ChapterCardVariant.MINIMAL), onAction = {})
+            ChapterCard(sample, ChapterCardConfig(variant = ChapterCardVariant.MINIMAL), onClick = {})
 
             Text("Compact")
-            ChapterCard(sample, ChapterCardConfig(variant = ChapterCardVariant.COMPACT), onAction = {})
+            ChapterCard(sample, ChapterCardConfig(variant = ChapterCardVariant.COMPACT), onClick = {})
         }
     }
 }

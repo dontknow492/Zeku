@@ -54,7 +54,7 @@ fun <T : Any> PagedMediaSection(
             if (config.showHeader) {
                 SectionHeader(
                     title = title,
-                    onViewAllClick = if (config.showViewAll) onViewAllClick else null,
+                    onAction = if (config.showViewAll) onViewAllClick else null,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
                 Spacer(Modifier.height(16.dp))
@@ -171,7 +171,7 @@ fun <T : Any> LazyListScope.pagedMediaSection(
             Column(modifier = modifier.fillMaxWidth()) {
                 SectionHeader(
                     title = title,
-                    onViewAllClick = if (config.showViewAll) onViewAllClick else null,
+                    onAction = if (config.showViewAll) onViewAllClick else null,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
                 Spacer(Modifier.height(16.dp))

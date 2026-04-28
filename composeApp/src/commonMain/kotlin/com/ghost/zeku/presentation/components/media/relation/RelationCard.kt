@@ -32,7 +32,6 @@ import com.ghost.zeku.domain.model.enum.RelationType
 import com.ghost.zeku.domain.model.enum.getPreferred
 import com.ghost.zeku.domain.model.media.MediaRelation
 import com.ghost.zeku.presentation.common.MediaAsyncImage
-import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.theme.AppTheme
 
 @Composable
@@ -40,7 +39,7 @@ fun MediaRelationCard(
     relation: MediaRelation,
     config: MediaRelationCardConfig = MediaRelationCardConfig(),
     modifier: Modifier = Modifier,
-    onAction: (MediaAction) -> Unit = {}
+    onClick: (MediaRelation) -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -70,11 +69,11 @@ fun MediaRelationCard(
 
     when (config.layout) {
         RelationCardLayout.POSTER -> PosterRelationCard(
-            relation, title, config, interactionSource, elevation, baseModifier, onAction
+            relation, title, config, interactionSource, elevation, baseModifier, onClick
         )
 
         RelationCardLayout.WIDE -> WideRelationCard(
-            relation, title, config, interactionSource, elevation, baseModifier, onAction
+            relation, title, config, interactionSource, elevation, baseModifier, onClick
         )
     }
 }
@@ -87,10 +86,10 @@ private fun PosterRelationCard(
     interactionSource: MutableInteractionSource,
     elevation: Dp,
     modifier: Modifier,
-    onAction: (MediaAction) -> Unit
+    onClick: (MediaRelation) -> Unit
 ) {
     Card(
-        onClick = { if (config.clickable) onAction(MediaAction.RelationClick(relation)) },
+        onClick = { if (config.clickable) onClick(relation) },
         interactionSource = interactionSource,
         shape = config.shape,
         elevation = CardDefaults.cardElevation(elevation),
@@ -147,7 +146,7 @@ private fun WideRelationCard(
     interactionSource: MutableInteractionSource,
     elevation: Dp,
     modifier: Modifier,
-    onAction: (MediaAction) -> Unit
+    onClick: (MediaRelation) -> Unit
 ) {
     val isHovered by interactionSource.collectIsHoveredAsState()
     val imgScale by animateFloatAsState(
@@ -156,7 +155,7 @@ private fun WideRelationCard(
     )
 
     Card(
-        onClick = { if (config.clickable) onAction(MediaAction.RelationClick(relation)) },
+        onClick = { if (config.clickable) onClick(relation) },
         interactionSource = interactionSource,
         shape = config.shape,
         elevation = CardDefaults.cardElevation(elevation),
@@ -268,7 +267,8 @@ private fun MediaRelationCardPreview() {
                     mediaType = MediaType.ANIME,
                     format = MediaFormat.TV
                 ),
-                config = MediaRelationCardConfig(layout = RelationCardLayout.WIDE)
+                config = MediaRelationCardConfig(layout = RelationCardLayout.WIDE),
+                onClick = {}
             )
             Spacer(modifier = Modifier.size(8.dp))
             MediaRelationCard(
@@ -283,7 +283,8 @@ private fun MediaRelationCardPreview() {
                     coverImage = url,
                     mediaType = MediaType.ANIME,
                     format = MediaFormat.TV
-                )
+                ),
+                onClick = {}
             )
             Spacer(modifier = Modifier.size(8.dp))
             MediaRelationCard(
@@ -298,7 +299,8 @@ private fun MediaRelationCardPreview() {
                     coverImage = url,
                     mediaType = MediaType.MANGA,
                     format = MediaFormat.TV
-                )
+                ),
+                onClick = {}
             )
             Spacer(modifier = Modifier.size(8.dp))
             MediaRelationCard(
@@ -313,7 +315,8 @@ private fun MediaRelationCardPreview() {
                     coverImage = url,
                     mediaType = MediaType.UNKNOWN,
                     format = MediaFormat.TV
-                )
+                ),
+                onClick = {}
             )
         }
     }
