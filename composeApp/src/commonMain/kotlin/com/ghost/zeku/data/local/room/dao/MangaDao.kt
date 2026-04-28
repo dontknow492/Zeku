@@ -67,4 +67,17 @@ interface MangaDao {
     """
     )
     fun getMangaByCategory(category: MangaCategory, source: ProviderType): PagingSource<Int, MangaEntity>
+
+
+    @Query(
+        """
+        SELECT manga.* FROM manga 
+        INNER JOIN manga_remote_keys 
+            ON manga.id = manga_remote_keys.id AND manga.source = manga_remote_keys.source
+        WHERE manga_remote_keys.category = :category AND manga_remote_keys.source = :source
+        ORDER BY manga_remote_keys.sortOrder ASC
+        LIMIT :limit
+    """
+    )
+    fun observeMangaByCategory(category: String, source: ProviderType, limit: Int): Flow<List<MangaEntity>>
 }

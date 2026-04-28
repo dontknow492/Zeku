@@ -72,6 +72,33 @@ class MalApi(private val client: HttpClient) {
         }.body()
     }
 
+
+    suspend fun fetchMangaHeroList(
+        limit: Int,
+    ): MalPagedResponse<MalMangaDto> {
+        // For Manga, "publishing" ensures you get high-profile manga that are currently
+        // releasing new chapters, keeping the banner feeling fresh.
+        return client.get("$baseUrl/manga/ranking") {
+            parameter("ranking_type", "publishing")
+            parameter("limit", limit)
+            parameter("offset", calculateOffset(1, limit))
+            parameter("fields", MalApiConstants.MANGA_FIELDS)
+        }.body()
+    }
+
+    suspend fun fetchAnimeHeroList(
+        limit: Int
+    ): MalPagedResponse<MalAnimeDto> { // Note: Changed generic type from MalMangaDto to MalAnimeDto
+        // For Anime, "airing" grabs the hottest shows of the current season.
+        // This perfectly mimics the "Seasonal Spotlight" behavior discussed earlier.
+        return client.get("$baseUrl/anime/ranking") {
+            parameter("ranking_type", "airing")
+            parameter("limit", limit)
+            parameter("offset", calculateOffset(1, limit))
+            parameter("fields", MalApiConstants.ANIME_FIELDS)
+        }.body()
+    }
+
     suspend fun searchAnime(
         query: String,
         page: Int,

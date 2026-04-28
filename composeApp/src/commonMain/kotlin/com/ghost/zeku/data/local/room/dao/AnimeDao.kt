@@ -67,6 +67,20 @@ interface AnimeDao {
             """
     )
     fun getAnimeByCategory(category: AnimeCategory, source: ProviderType): PagingSource<Int, AnimeEntity>
+
+
+    @Query(
+        """
+        SELECT anime.* FROM anime 
+        INNER JOIN anime_remote_keys 
+            ON anime.id = anime_remote_keys.id AND anime.source = anime_remote_keys.source
+            WHERE anime_remote_keys.category = :category AND anime_remote_keys.source = :source
+            ORDER BY anime_remote_keys.sortOrder ASC
+            LIMIT :limit
+            """
+    )
+    fun observeAnimeByCategory(category: String, source: ProviderType, limit: Int): Flow<List<AnimeEntity>>
+
 }
 
 

@@ -40,6 +40,19 @@ class AniListAnimeProvider(
         // AniList is powerful enough to support all current categories
         return true
     }
+
+    override suspend fun getAnimeHeroList(limit: Int): ApiResult<List<Anime>> {
+        return parser.safeApiCall(
+            apiCall = {
+                api.fetchAnimeHeroList(limit)
+            },
+            transform = { data ->
+                data.page?.let { pageData ->
+                    pageData.media?.map { it.toAnimeDomain() } ?: emptyList()
+                }
+            }
+        )
+    }
 }
 
 

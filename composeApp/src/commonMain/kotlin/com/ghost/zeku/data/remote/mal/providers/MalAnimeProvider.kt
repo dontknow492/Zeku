@@ -57,6 +57,17 @@ class MalAnimeProvider(
         // MAL supports Seasonal via a custom endpoint, and others via Ranking
         return category == AnimeCategory.SEASONAL || category.toMalRankingType() != null
     }
+
+    override suspend fun getAnimeHeroList(limit: Int): ApiResult<List<Anime>> {
+        return parser.safeApiCall(
+            apiCall = {
+                api.fetchAnimeHeroList(limit)
+            },
+            transform = { response ->
+                response.data?.mapNotNull { it.toAnimeDomain() } ?: emptyList()
+            }
+        )
+    }
 }
 
 class MalAnimeSearchProvider(

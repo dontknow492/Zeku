@@ -20,9 +20,10 @@ class MangaRemoteMediator(
     private val category: MangaCategory,
     currentProviderType: ProviderType,
     private val provider: MangaListProvider,
+    cacheTimeoutMillis: Long,
     database: AppDatabase
 ) : BaseCategoryRemoteMediator<Manga, MangaEntity, MangaRemoteKeys>(
-    category.name, currentProviderType, database
+    category.name, currentProviderType, database, cacheTimeoutMillis
 ) {
     private val mangaDao = database.mangaDao()
     private val remoteKeysDao = database.remoteKeysDao()
@@ -32,6 +33,11 @@ class MangaRemoteMediator(
             "MangaRemoteMediator initialized: category=$category, " +
                     "provider=$currentProviderType"
         }
+    }
+
+    // NEW: Implement the timestamp check
+    override suspend fun getLastUpdatedTime(): Long? {
+        return remoteKeysDao.getMangaLastUpdated(currentProviderType, categoryName)
     }
 
     override suspend fun fetchFromNetwork(page: Int, pageSize: Int) =

@@ -46,6 +46,19 @@ class AniListMangaProvider(
     override fun supportsCategory(category: MangaCategory): Boolean {
         return true
     }
+
+    override suspend fun getMangaHeroList(limit: Int): ApiResult<List<Manga>> {
+        return parser.safeApiCall(
+            apiCall = {
+                api.fetchMangaHeroList(limit)
+            },
+            transform = { data ->
+                data.page?.let { pageData ->
+                    pageData.media?.map { it.toMangaDomain() } ?: emptyList()
+                }
+            }
+        )
+    }
 }
 
 

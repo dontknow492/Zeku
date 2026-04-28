@@ -20,9 +20,10 @@ class AnimeRemoteMediator(
     private val category: AnimeCategory,
     currentProviderType: ProviderType,
     private val provider: AnimeListProvider,
-    database: AppDatabase
+    database: AppDatabase,
+    cacheTimeoutMillis: Long,
 ) : BaseCategoryRemoteMediator<Anime, AnimeEntity, AnimeRemoteKeys>(
-    category.name, currentProviderType, database
+    category.name, currentProviderType, database, cacheTimeoutMillis
 ) {
     private val animeDao = database.animeDao()
     private val remoteKeysDao = database.remoteKeysDao()
@@ -32,6 +33,10 @@ class AnimeRemoteMediator(
             "AnimeRemoteMediator initialized: category=$category, " +
                     "provider=$currentProviderType"
         }
+    }
+
+    override suspend fun getLastUpdatedTime(): Long? {
+        return remoteKeysDao.getAnimeLastUpdated(currentProviderType, categoryName)
     }
 
     override suspend fun fetchFromNetwork(page: Int, pageSize: Int) =

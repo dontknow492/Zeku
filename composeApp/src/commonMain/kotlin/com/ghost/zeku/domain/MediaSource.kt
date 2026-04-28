@@ -1,5 +1,6 @@
 package com.ghost.zeku.domain
 
+import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.provider.*
 
 interface MediaSource :
@@ -9,4 +10,6 @@ interface MediaSource :
     MangaSearchProvider,
     AnimeDetailsProvider,
     MangaDetailsProvider,
-    MediaTrackerProvider
+    MediaTrackerProvider {
+    suspend fun getProviderType(): ProviderType
+}

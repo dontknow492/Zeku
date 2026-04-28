@@ -15,4 +15,9 @@ interface MangaListProvider {
         page: Int,
         perPage: Int = 20
     ): ApiResult<PageResult<Manga>>
+
+
+    suspend fun getMangaHeroList(
+        limit: Int = 5
+    ): ApiResult<List<Manga>>
 }

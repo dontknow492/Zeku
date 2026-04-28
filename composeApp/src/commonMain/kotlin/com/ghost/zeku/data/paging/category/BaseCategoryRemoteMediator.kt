@@ -12,6 +12,7 @@ import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.api.getErrorMessage
 import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.model.media.PageResult
+import com.ghost.zeku.utils.formatTimestamp
 import io.github.aakira.napier.Napier
 
 /**
@@ -25,14 +26,38 @@ import io.github.aakira.napier.Napier
 abstract class BaseCategoryRemoteMediator<T : Any, E : Any, K : Any>(
     protected val categoryName: String,
     protected val currentProviderType: ProviderType,
-    protected val database: AppDatabase
+    protected val database: AppDatabase,
+    protected val cacheTimeoutMillis: Long,
 ) : RemoteMediator<Int, E>() {
+
+    // NEW: The Paging 3 Initialize block
+    override suspend fun initialize(): InitializeAction {
+        val lastUpdated = getLastUpdatedTime() ?: 0L
+        val isCacheValid = (System.currentTimeMillis() - lastUpdated) < cacheTimeoutMillis
+
+        return if (isCacheValid) {
+            Napier.d {
+                "Cache for $categoryName is fresh (under ${formatTimestamp(cacheTimeoutMillis)}. " +
+                        "Skipping network REFRESH and loading from DB."
+            }
+            InitializeAction.SKIP_INITIAL_REFRESH
+        } else {
+            Napier.d {
+                "Cache for $categoryName is expired or empty. " +
+                        "Triggering network REFRESH."
+            }
+            InitializeAction.LAUNCH_INITIAL_REFRESH
+        }
+    }
 
     abstract suspend fun fetchFromNetwork(page: Int, pageSize: Int): ApiResult<PageResult<T>>
     abstract suspend fun clearRemoteKeys()
     abstract suspend fun getRemoteKey(id: Int): K?
     abstract fun getRemoteKeyNextPage(key: K): Int?
     abstract fun getEntityId(entity: E): Int
+
+    // NEW: Abstract function to get the latest timestamp for this specific category
+    abstract suspend fun getLastUpdatedTime(): Long?
 
     // Delegates the actual mapping and saving to the child class
     abstract suspend fun saveToDb(items: List<T>, startingIndex: Int, prevKey: Int?, nextKey: Int?)

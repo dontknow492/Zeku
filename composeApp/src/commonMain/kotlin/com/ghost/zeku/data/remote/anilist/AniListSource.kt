@@ -2,6 +2,7 @@ package com.ghost.zeku.data.remote.anilist
 
 import com.ghost.zeku.data.remote.anilist.providers.*
 import com.ghost.zeku.domain.MediaSource
+import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.provider.*
 
 
@@ -24,6 +25,8 @@ class AniListSource(
     MangaSearchProvider by mangaSearch,
     AnimeDetailsProvider by animeDetails,
     MangaDetailsProvider by mangaDetails,
-    MediaTrackerProvider by mediaTracker
+    MediaTrackerProvider by mediaTracker {
+    override suspend fun getProviderType(): ProviderType = ProviderType.ANILIST
+}
 
 

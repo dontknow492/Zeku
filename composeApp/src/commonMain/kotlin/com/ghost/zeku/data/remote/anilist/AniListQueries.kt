@@ -56,6 +56,9 @@ object AniListQueries {
     val FETCH_ANIME_LIST = buildMediaQuery("ANIME", isSearch = false)
     val FETCH_MANGA_LIST = buildMediaQuery("MANGA", isSearch = false)
 
+    val FETCH_ANIME_HERO_LIST = buildMediaQuery("ANIME", isSearch = true)
+    val FETCH_MANGA_HERO_LIST = buildMediaQuery("MANGA", isSearch = true)
+
     // 2. Global Search (Requires the 'search' variable)
     val SEARCH_ANIME = buildMediaQuery("ANIME", isSearch = true)
     val SEARCH_MANGA = buildMediaQuery("MANGA", isSearch = true)

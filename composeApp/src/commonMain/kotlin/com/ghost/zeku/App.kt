@@ -1,77 +1,33 @@
 package com.ghost.zeku
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ghost.zeku.domain.repository.MediaRepository
+import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.repository.UserSettings
-import com.ghost.zeku.presentation.components.hero.HeroCarouselPreview
-import com.ghost.zeku.presentation.screen.home.PreviewHomeContent
+import com.ghost.zeku.presentation.screen.home.MediaHomeScreen
 import com.ghost.zeku.presentation.theme.AppTheme
+import com.ghost.zeku.presentation.viewmodel.home.HomeContract
+import com.ghost.zeku.presentation.viewmodel.home.HomeViewModel
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 
 @Composable
 fun App() = AppTheme {
-
-//    val redirectListener: AuthRedirectListener = koinInject()
-//    TestAuthScreen(
-//        viewModel = AuthViewModel(koinInject(), koinInject())
-//    )
-
-    val mediaRepository: MediaRepository = koinInject()
-    val userSettings: UserSettings = koinInject()
-
-    val preferences by userSettings.preferences.collectAsStateWithLifecycle()
-
-    HeroCarouselPreview()
+//    HeroCarouselPreview()
 //    PreviewMediaDetailContent()
-    PreviewHomeContent()
+//    PreviewHomeContent()
+
+    val userSettings: UserSettings = koinInject()
+    userSettings.updatePreferences {
+        it.copy(activeProvider = ProviderType.MYANIMELIST)
+    }
+
+    val viewModel: HomeViewModel = koinViewModel()
+    viewModel.onEvent(HomeContract.Event.LoadHomeData(MediaType.ANIME))
 
 
-//    Text(preferences.toString())
-
-//    LaunchedEffect(Unit) {
-//        delay(3.seconds)
-//        userSettings.updatePreferences {
-//            it.copy(activeProvider = ProviderType.ANILIST)
-//        }
-//    }
-
-
-//    userSettings.setActiveProvider(ProviderType.MYANIMELIST)
-
-//    var animeList by remember { mutableStateOf<Flow<PagingData<Anime>>?>(null) }
-
-
-//    val mediaId = when (preferences.activeProvider) {
-//        ProviderType.MYANIMELIST -> 40748
-//        ProviderType.ANILIST -> 113415
-//    }
-
-//    val animeData: PagingData<Anime> by remember { mutableStateOf(PagingData.empty()) }
-
-
-//    LaunchedEffect(Unit) {
-//        val animeDetails = mediaRepository.getAnimeRecommendations(199221).first()
-//        Napier.i("Details: $animeDetails")
-//    }
-
-
-//    animeList?.collectAsLazyPagingItems().let { pagingItems ->
-//        Text(
-//            text = "Total Anime: ${pagingItems?.itemCount}",
-//            style = MaterialTheme.typography.displayLarge
-//        )
-//    }
-
-//    TestReview(mediaRepository)
-
-//    TestApp()
-
-
-//    TestAnimeDetail(mediaRepository, mediaId)
-
+    MediaHomeScreen(koinViewModel(), {})
 
 }
 

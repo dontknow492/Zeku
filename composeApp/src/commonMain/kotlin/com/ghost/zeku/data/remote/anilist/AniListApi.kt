@@ -47,6 +47,49 @@ class AniListApi(private val client: HttpClient) {
         }.body()
     }
 
+
+    suspend fun fetchAnimeHeroList(limit: Int): AniListResponse<AniListPageData> {
+        val requestBody = GraphQLRequest(
+            query = AniListQueries.FETCH_ANIME_HERO_LIST,
+            variables = GraphQLRequest.Variables(
+                perPage = limit,
+                page = 1,
+                // 1. Sort by what's hot right now
+                sort = listOf("TRENDING_DESC"),
+                // 2. Only show things currently airing (The "Seasonal Spotlight")
+                status = "RELEASING",
+                // 3. CRITICAL: Prevent NSFW content from appearing on the huge banner
+                isAdult = false
+            )
+        )
+        return client.post(baseUrl) {
+            contentType(ContentType.Application.Json)
+            setBody(requestBody)
+        }.body()
+    }
+
+    suspend fun fetchMangaHeroList(limit: Int): AniListResponse<AniListPageData> {
+        val requestBody = GraphQLRequest(
+            query = AniListQueries.FETCH_MANGA_HERO_LIST,
+            variables = GraphQLRequest.Variables(
+                perPage = limit,
+                page = 1,
+                // 1. Sort by trending
+                sort = listOf("TRENDING_DESC"),
+                // 2. Only show manga that are actively publishing new chapters
+                status = "RELEASING",
+                // 3. CRITICAL: Prevent NSFW content
+                isAdult = false
+            )
+        )
+
+        return client.post(baseUrl) {
+            contentType(ContentType.Application.Json)
+            setBody(requestBody)
+        }.body()
+    }
+
+
     suspend fun searchAnime(
         variables: GraphQLRequest.Variables,
     ): AniListResponse<AniListPageData> {
@@ -122,7 +165,7 @@ class AniListApi(private val client: HttpClient) {
         }.body()
     }
 
-    // ========== USER LIST FUNCTIONS ==========
+// ========== USER LIST FUNCTIONS ==========
 
     /**
      * Get user's anime list by status
@@ -218,7 +261,7 @@ class AniListApi(private val client: HttpClient) {
     }
 
 
-    // ========== MEDIA LIST MUTATIONS ==========
+// ========== MEDIA LIST MUTATIONS ==========
 
     /**
      * Update or create a media list entry

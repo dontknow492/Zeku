@@ -21,6 +21,7 @@ data class UserPreferences(
 
     // --- Network & Cache ---
     val mediaDetailTimeout: Long = TimeUnit.HOURS.toMillis(1),
+    val homeTimeout: Long = TimeUnit.HOURS.toMillis(4),
     val chapterTimeout: Long = TimeUnit.HOURS.toMillis(12),
     val episodeTimeout: Long = TimeUnit.HOURS.toMillis(12),
     val perPage: Int = 20,

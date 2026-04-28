@@ -16,6 +16,11 @@ interface AnimeListProvider {
         page: Int,
         perPage: Int = 20
     ): ApiResult<PageResult<Anime>>
+
+
+    suspend fun getAnimeHeroList(
+        limit: Int = 5
+    ): ApiResult<List<Anime>>
 }
 
 

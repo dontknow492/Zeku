@@ -3,6 +3,8 @@ package com.ghost.zeku.data.repository
 import androidx.paging.*
 import androidx.room.useWriterConnection
 import com.ghost.zeku.data.local.room.AppDatabase
+import com.ghost.zeku.data.local.room.entities.AnimeRemoteKeys
+import com.ghost.zeku.data.local.room.entities.MangaRemoteKeys
 import com.ghost.zeku.data.local.room.toBaseEntity
 import com.ghost.zeku.data.local.room.toDomain
 import com.ghost.zeku.data.local.room.toEntity
@@ -29,6 +31,7 @@ import io.github.aakira.napier.Napier
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -47,9 +50,13 @@ class MediaRepositoryImpl(
     private val sources: Map<ProviderType, MediaSource>
 ) : MediaRepository {
 
+
     // Dynamically reads the timeout from UserPreferences whenever needed!
     private val detailTtl: Long
         get() = settings.preferences.value.mediaDetailTimeout
+
+    private val homeTtl: Long
+        get() = settings.preferences.value.homeTimeout
 
     private val searchDebounce: Long
         get() = settings.preferences.value.searchDebounceMillis
@@ -201,10 +208,6 @@ class MediaRepositoryImpl(
     // HOME SCREEN HELPERS
     // ========================================================================
 
-    override fun getHeroBanner(mediaType: MediaType, limit: Int): Flow<List<Media>> {
-        TODO("Not yet implemented")
-    }
-
     override fun getAvailableAnimeCategories(): Flow<List<AnimeCategory>> {
         return activeProviderFlow.map { currentType ->
             val actualType = if (sources.containsKey(currentType)) currentType else sources.keys.first()
@@ -240,18 +243,25 @@ class MediaRepositoryImpl(
             }
 
             Pager(
-                config = PagingConfig(pageSize = perPage, enablePlaceholders = false),
+                config = PagingConfig(
+                    pageSize = perPage,
+                    enablePlaceholders = false,
+                    initialLoadSize = 20, // Override the 60-item default! Only load 1 page.
+                    prefetchDistance = 5, // Fetch the next page when they are 5 items away from the end
+                ),
                 remoteMediator = AnimeRemoteMediator(
                     category = category,
                     currentProviderType = providerType,
                     provider = source as AnimeListProvider,
                     database = database,
+                    cacheTimeoutMillis = homeTtl
 
-                    ),
+                ),
                 pagingSourceFactory = { database.animeDao().getAnimeByCategory(category, providerType) }
             ).flow.map { it.map { entity -> entity.toDomain() } }
         }
     }
+
 
     @OptIn(ExperimentalCoroutinesApi::class, ExperimentalPagingApi::class)
     override fun getMangaList(category: MangaCategory, perPage: Int): Flow<PagingData<Manga>> {
@@ -262,15 +272,112 @@ class MediaRepositoryImpl(
             }
 
             Pager(
-                config = PagingConfig(pageSize = perPage, enablePlaceholders = false),
+                config = PagingConfig(
+                    pageSize = perPage,
+                    enablePlaceholders = false,
+                    initialLoadSize = 20, // Override the 60-item default! Only load 1 page.
+                    prefetchDistance = 5, // Fetch the next page when they are 5 items away from the end
+                ),
                 remoteMediator = MangaRemoteMediator(
                     category = category,
                     currentProviderType = providerType,
                     provider = source as MangaListProvider,
-                    database = database
+                    database = database,
+                    cacheTimeoutMillis = homeTtl
+
                 ),
                 pagingSourceFactory = { database.mangaDao().getMangaByCategory(category, providerType) }
             ).flow.map { it.map { entity -> entity.toDomain() } }
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getHeroBanner(mediaType: MediaType, limit: Int): Flow<List<Media>> {
+        return activeProviderFlow.distinctUntilChanged().flatMapLatest { activeProvider ->
+            val source = sources[activeProvider] ?: return@flatMapLatest flowOf(emptyList())
+            val providerType = source.getProviderType()
+
+            channelFlow {
+                // 1. Launch network request in the background
+                launch {
+                    try {
+                        // --- TTL CHECK START ---
+                        val lastUpdated = if (mediaType == MediaType.ANIME) {
+                            database.remoteKeysDao().getAnimeLastUpdated(providerType, "HERO")
+                        } else {
+                            database.remoteKeysDao().getMangaLastUpdated(providerType, "HERO")
+                        } ?: 0L // If null, it means we've never fetched it, so default to 0
+
+                        if (System.currentTimeMillis() - lastUpdated < homeTtl) {
+                            Napier.d { "Hero banner for $providerType is still fresh. Skipping network fetch." }
+                            return@launch // Kills this launch block early; network is bypassed!
+                        }
+                        // --- TTL CHECK END ---
+
+                        // Proceed with fetching fresh data...
+                        if (mediaType == MediaType.ANIME) {
+                            val response = source.getAnimeHeroList(limit)
+
+                            if (response is ApiResult.Success && response.data.isNotEmpty()) {
+                                val baseEntities = response.data.map { it.toEntity() }
+                                val keys = response.data.mapIndexed { index, item ->
+                                    AnimeRemoteKeys(
+                                        id = item.id,
+                                        source = providerType,
+                                        category = "HERO",
+                                        sortOrder = index,
+                                        prevPage = null,
+                                        nextPage = null,
+                                        lastUpdated = System.currentTimeMillis() // Make sure this is captured!
+                                    )
+                                }
+
+                                database.useWriterConnection {
+                                    database.remoteKeysDao().clearAnimeKeys(providerType, "HERO")
+                                    database.animeDao().upsertAll(baseEntities)
+                                    database.remoteKeysDao().upsertAnimeKeys(keys)
+                                }
+                            }
+                        } else {
+                            val response = source.getMangaHeroList(limit)
+
+                            if (response is ApiResult.Success && response.data.isNotEmpty()) {
+                                val baseEntities = response.data.map { it.toEntity() }
+                                val keys = response.data.mapIndexed { index, item ->
+                                    MangaRemoteKeys(
+                                        id = item.id,
+                                        source = providerType,
+                                        category = "HERO",
+                                        sortOrder = index,
+                                        prevPage = null,
+                                        nextPage = null,
+                                        lastUpdated = System.currentTimeMillis() // Make sure this is captured!
+                                    )
+                                }
+
+                                database.useWriterConnection {
+                                    database.remoteKeysDao().clearMangaKeys(providerType, "HERO")
+                                    database.mangaDao().upsertAll(baseEntities)
+                                    database.remoteKeysDao().upsertMangaKeys(keys)
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Napier.e(e) { "Failed to fetch remote hero banner, falling back to local DB only." }
+                    }
+                }
+
+                // 2. Concurrently collect from Room and send to the UI
+                if (mediaType == MediaType.ANIME) {
+                    database.animeDao().observeAnimeByCategory("HERO", providerType, limit).collect { entities ->
+                        send(entities.map { it.toDomain() })
+                    }
+                } else {
+                    database.mangaDao().observeMangaByCategory("HERO", providerType, limit).collect { entities ->
+                        send(entities.map { it.toDomain() })
+                    }
+                }
+            }
         }
     }
 
@@ -288,7 +395,12 @@ class MediaRepositoryImpl(
                 val source = sources[providerType] ?: return@flatMapLatest flowOf(PagingData.empty())
 
                 Pager(
-                    config = PagingConfig(pageSize = perPage, enablePlaceholders = false),
+                    config = PagingConfig(
+                        pageSize = perPage,
+                        enablePlaceholders = false,
+                        initialLoadSize = 20, // Override the 60-item default! Only load 1 page.
+                        prefetchDistance = 5, // Fetch the next page when they are 5 items away from the end
+                    ),
                     pagingSourceFactory = {
                         GenericPagingSource { page ->
                             source.searchAnime(
@@ -313,7 +425,12 @@ class MediaRepositoryImpl(
                 val source = sources[providerType] ?: return@flatMapLatest flowOf(PagingData.empty())
 
                 Pager(
-                    config = PagingConfig(pageSize = perPage, enablePlaceholders = false),
+                    config = PagingConfig(
+                        pageSize = perPage,
+                        enablePlaceholders = false,
+                        initialLoadSize = 20, // Override the 60-item default! Only load 1 page.
+                        prefetchDistance = 5, // Fetch the next page when they are 5 items away from the end
+                    ),
                     pagingSourceFactory = {
                         GenericPagingSource { page ->
                             source.searchManga(
@@ -354,14 +471,28 @@ class MediaRepositoryImpl(
 
     override fun getAnimeRecommendations(id: Int): Flow<PagingData<Anime>> {
         val pageSize = settings.preferences.value.perPage
-        return Pager(config = PagingConfig(pageSize = pageSize)) {
+        return Pager(
+            config = PagingConfig(
+                pageSize = pageSize,
+                enablePlaceholders = false,
+                initialLoadSize = 20, // Override the 60-item default! Only load 1 page.
+                prefetchDistance = 5, // Fetch the next page when they are 5 items away from the end
+            )
+        ) {
             GenericPagingSource { page -> getActiveProviderInfo().second.getAnimeRecommendations(id, page) }
         }.flow
     }
 
     override fun getAnimeReviews(id: Int): Flow<PagingData<Review>> {
         val pageSize = settings.preferences.value.perPage
-        return Pager(config = PagingConfig(pageSize = pageSize)) {
+        return Pager(
+            config = PagingConfig(
+                pageSize = pageSize,
+                enablePlaceholders = false,
+                initialLoadSize = 20, // Override the 60-item default! Only load 1 page.
+                prefetchDistance = 5, // Fetch the next page when they are 5 items away from the end
+            )
+        ) {
             GenericPagingSource { page -> getActiveProviderInfo().second.getAnimeReviews(id, page, pageSize) }
         }.flow
     }
@@ -388,14 +519,28 @@ class MediaRepositoryImpl(
 
     override fun getMangaRecommendations(id: Int): Flow<PagingData<Manga>> {
         val pageSize = settings.preferences.value.perPage
-        return Pager(config = PagingConfig(pageSize = pageSize)) {
+        return Pager(
+            config = PagingConfig(
+                pageSize = pageSize,
+                enablePlaceholders = false,
+                initialLoadSize = 20, // Override the 60-item default! Only load 1 page.
+                prefetchDistance = 5, // Fetch the next page when they are 5 items away from the end
+            )
+        ) {
             GenericPagingSource { page -> getActiveProviderInfo().second.getMangaRecommendations(id, page) }
         }.flow
     }
 
     override fun getMangaReviews(id: Int): Flow<PagingData<Review>> {
         val pageSize = settings.preferences.value.perPage
-        return Pager(config = PagingConfig(pageSize = pageSize)) {
+        return Pager(
+            config = PagingConfig(
+                pageSize = pageSize,
+                enablePlaceholders = false,
+                initialLoadSize = 20, // Override the 60-item default! Only load 1 page.
+                prefetchDistance = 5, // Fetch the next page when they are 5 items away from the end
+            )
+        ) {
             GenericPagingSource { page -> getActiveProviderInfo().second.getMangaReviews(id, page, pageSize) }
         }.flow
     }

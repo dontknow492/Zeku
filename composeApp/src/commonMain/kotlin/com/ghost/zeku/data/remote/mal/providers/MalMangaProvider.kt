@@ -55,6 +55,17 @@ class MalMangaProvider(
         // Returns true only if a valid MAL ranking type exists for this category
         return category.toMalRankingType() != null
     }
+
+    override suspend fun getMangaHeroList(limit: Int): ApiResult<List<Manga>> {
+        return parser.safeApiCall(
+            apiCall = {
+                api.fetchMangaHeroList(limit)
+            },
+            transform = { response ->
+                response.data?.mapNotNull { it.toMangaDomain() } ?: emptyList()
+            }
+        )
+    }
 }
 
 class MalMangaSearchProvider(

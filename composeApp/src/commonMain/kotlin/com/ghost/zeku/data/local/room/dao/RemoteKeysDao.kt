@@ -57,4 +57,12 @@ interface RemoteKeysDao {
 
     @Query("DELETE FROM chapter_remote_keys WHERE mediaId = :mediaId AND source = :source")
     suspend fun clearChapterKeysByMedia(mediaId: Int, source: ProviderType)
+
+
+    @Query("SELECT lastUpdated FROM anime_remote_keys WHERE source = :source AND category = :category LIMIT 1")
+    suspend fun getAnimeLastUpdated(source: ProviderType, category: String): Long?
+
+    @Query("SELECT lastUpdated FROM manga_remote_keys WHERE source = :source AND category = :category LIMIT 1")
+    suspend fun getMangaLastUpdated(source: ProviderType, category: String): Long?
+
 }
