@@ -20,12 +20,11 @@ fun App() = AppTheme {
 
     val userSettings: UserSettings = koinInject()
     userSettings.updatePreferences {
-        it.copy(activeProvider = ProviderType.MYANIMELIST)
+        it.copy(activeProvider = ProviderType.ANILIST)
     }
 
     val viewModel: HomeViewModel = koinViewModel()
     viewModel.onEvent(HomeContract.Event.LoadHomeData(MediaType.ANIME))
-
 
     MediaHomeScreen(koinViewModel(), {})
 

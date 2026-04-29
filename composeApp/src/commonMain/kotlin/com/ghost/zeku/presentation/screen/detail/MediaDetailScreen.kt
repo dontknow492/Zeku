@@ -80,7 +80,7 @@ fun MediaDetailScreen(
     onBack: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
-    val isDesktop = rememberPlatformConfiguration().isDesktop
+    val isWideScreen = rememberPlatformConfiguration().isWideScreen
     val reviews = viewModel.reviews.collectAsLazyPagingItems()
     val recommendations = viewModel.recommendations.collectAsLazyPagingItems()
     val episodes = viewModel.episodes.collectAsLazyPagingItems()
@@ -121,7 +121,7 @@ fun MediaDetailScreen(
         reviews = reviews,
         onEvent = viewModel::onEvent,
         config = MediaDetailUiConfig(),
-        isDesktop = isDesktop,
+        isWideScreen = isWideScreen,
     )
 
 }
@@ -134,7 +134,7 @@ fun MediaDetailContent(
     reviews: LazyPagingItems<Review>,
     onEvent: (MediaDetailContract.Event) -> Unit,
     config: MediaDetailUiConfig,
-    isDesktop: Boolean = false
+    isWideScreen: Boolean = false
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val dimens = MediaDetailDimens
@@ -151,7 +151,7 @@ fun MediaDetailContent(
             if (state.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
-                if (isDesktop) {
+                if (isWideScreen) {
                     DesktopLayout(state, episodes, recommendations, reviews, config, onEvent)
                 } else {
                     MobileLayout(state, episodes, recommendations, reviews, config, onEvent)
@@ -1249,7 +1249,7 @@ private fun InfoRowIfValid(
 
 
 // ---------- Previews ----------
-@Preview(showBackground = true, widthDp = 400)
+@Preview(showBackground = true, widthDp = 450)
 @Composable
 fun PreviewMediaDetailContent() {
     val state = MediaDetailContract.State(
@@ -1337,7 +1337,7 @@ fun PreviewMediaDetailContent() {
         error = null
     )
 
-    val isDesktop = rememberPlatformConfiguration().isDesktop
+    val isWideScreen = rememberPlatformConfiguration().isWideScreen
 
     val fakeEpisodes = listOf(
         Episode("1", 1, "The Beginning", null, null),
@@ -1524,7 +1524,7 @@ fun PreviewMediaDetailContent() {
             reviews = mockReviews.toPagingItems(),
             onEvent = {},
             config = MediaDetailUiConfig(),
-            isDesktop = isDesktop
+            isWideScreen = isWideScreen
         )
     }
 }

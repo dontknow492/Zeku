@@ -63,7 +63,7 @@ fun <T : Any> PagedMediaSection(
             when {
                 // Initial load
                 isRefreshing && items.itemCount == 0 -> {
-                    SectionLoadingShimmer(config)
+                    SectionLoadingShimmer(config.layout, config.shimmerItemCount)
                 }
 
                 // Empty state
@@ -183,7 +183,7 @@ fun <T : Any> LazyListScope.pagedMediaSection(
         // 2. Loading State
         isRefreshing && items.itemCount == 0 -> {
             item {
-                SectionLoadingShimmer(config)
+                SectionLoadingShimmer(config.layout, config.shimmerItemCount)
             }
         }
 

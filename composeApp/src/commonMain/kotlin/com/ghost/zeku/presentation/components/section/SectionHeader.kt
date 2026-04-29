@@ -1,6 +1,5 @@
 package com.ghost.zeku.presentation.components.section
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -17,6 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ghost.zeku.presentation.components.media.list.ListCardShimmer
+import com.ghost.zeku.presentation.components.media.list.MediaListCardConfig
+import com.ghost.zeku.presentation.components.media.poster.PosterCardShimmer
+import com.ghost.zeku.presentation.components.media.poster.PosterConfig
 import org.jetbrains.compose.resources.stringResource
 import zeku.composeapp.generated.resources.Res
 import zeku.composeapp.generated.resources.view_all
@@ -71,17 +74,17 @@ fun SectionHeader(
  * A beautiful, generic loading shimmer that adapts to the section layout.
  */
 @Composable
-fun SectionLoadingShimmer(config: MediaSectionConfig) {
+fun SectionLoadingShimmer(layout: SectionLayout, count: Int) {
 
-    when (val layout = config.layout) {
+    when (layout) {
 
         is SectionLayout.HorizontalRow -> {
             Row(
                 modifier = Modifier.padding(layout.contentPadding),
                 horizontalArrangement = Arrangement.spacedBy(layout.itemSpacing)
             ) {
-                repeat(config.shimmerItemCount) {
-                    ShimmerPoster()
+                repeat(count) {
+                    PosterCardShimmer(config = PosterConfig())
                 }
             }
         }
@@ -96,8 +99,8 @@ fun SectionLoadingShimmer(config: MediaSectionConfig) {
                 horizontalArrangement = Arrangement.spacedBy(layout.horizontalSpacing),
                 verticalArrangement = Arrangement.spacedBy(layout.verticalSpacing)
             ) {
-                items(config.shimmerItemCount) {
-                    ShimmerPoster()
+                items(count) {
+                    PosterCardShimmer(config = PosterConfig())
                 }
             }
         }
@@ -107,8 +110,8 @@ fun SectionLoadingShimmer(config: MediaSectionConfig) {
                 modifier = Modifier.padding(layout.contentPadding),
                 verticalArrangement = Arrangement.spacedBy(layout.itemSpacing)
             ) {
-                repeat(config.shimmerItemCount) {
-                    ShimmerListItem()
+                repeat(count) {
+                    ListCardShimmer(config = MediaListCardConfig())
                 }
             }
         }
@@ -116,42 +119,4 @@ fun SectionLoadingShimmer(config: MediaSectionConfig) {
 }
 
 
-@Composable
-fun ShimmerPoster() {
-    Box(
-        modifier = Modifier
-            .width(140.dp)
-            .aspectRatio(2f / 3f)
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-    )
-}
 
-@Composable
-fun ShimmerListItem() {
-    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        Box(
-            modifier = Modifier
-                .size(80.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-        )
-        Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.weight(1f)
-        ) {
-            Box(
-                Modifier
-                    .fillMaxWidth(0.7f)
-                    .height(14.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            )
-            Box(
-                Modifier
-                    .fillMaxWidth(0.4f)
-                    .height(12.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            )
-        }
-    }
-}

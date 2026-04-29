@@ -16,7 +16,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,9 +25,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.ghost.zeku.presentation.common.isDesktop
+import com.ghost.zeku.presentation.common.isWideScreen
 import com.ghost.zeku.presentation.common.rememberPlatformConfiguration
+import com.ghost.zeku.utils.desktopCarouselBehaviors
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -44,37 +44,32 @@ fun HeroCarousel(
     onDetailsClick: (MediaHeroUiData) -> Unit,
     config: HeroCarouselConfig? = null
 ) {
+    val isWideScreen = rememberPlatformConfiguration().isWideScreen
     val isDesktop = rememberPlatformConfiguration().isDesktop
-    val resolved = config ?: HeroCarouselDefaults.config(isDesktop)
+    val resolved = config ?: HeroCarouselDefaults.config(isWideScreen)
 
-    val state = rememberCarouselState(initialItem = 0) { items.count() }
-    val pagerState = rememberPagerState { items.count() }
+    val pagerState = rememberPagerState(initialPage = currentPage) { items.count() }
 
-    val coroutineScope = rememberCoroutineScope()
-    var isUserInteracting by remember { mutableStateOf(false) }
-
-
-    // Notify parent of page changes
+    // Sync state with parent
     LaunchedEffect(pagerState.currentPage) {
         if (currentPage != pagerState.currentPage) {
             onPageChange(pagerState.currentPage)
         }
     }
 
-    LaunchedEffect(currentPage) {
-        pagerState.animateScrollToPage(
-            currentPage,
-            animationSpec = spring(stiffness = Spring.StiffnessLow)
-        )
-    }
+    // FIX: Bulletproof Auto-scroll
+    if (resolved.enableAutoScroll && items.size > 1) {
+        // Triggers whenever the page changes or the user touches/releases the carousel
+        LaunchedEffect(pagerState.currentPage, pagerState.isScrollInProgress) {
+            if (!pagerState.isScrollInProgress) {
+                delay(resolved.autoScrollDuration.milliseconds)
+                val nextPage = (pagerState.currentPage + 1) % items.size
 
-//    // Auto-scroll logic
-    if (resolved.enableAutoScroll) {
-        LaunchedEffect(currentPage, pagerState.currentPage) {
-            delay(resolved.autoScrollDuration.milliseconds)
-            // Use animation to smoothly slide to the next page, loop back to 0 at the end
-            val nextPage = (pagerState.currentPage + 1) % items.size
-            onPageChange(nextPage)
+                pagerState.animateScrollToPage(
+                    page = nextPage,
+                    animationSpec = tween(durationMillis = 800) // Smooth, cinematic slide
+                )
+            }
         }
     }
 
@@ -83,7 +78,10 @@ fun HeroCarousel(
             state = pagerState,
             contentPadding = PaddingValues(horizontal = resolved.peek),
             pageSpacing = resolved.pageSpacing,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                // Apply our fixed desktop modifier here!
+                .desktopCarouselBehaviors(isDesktop, pagerState),
             beyondViewportPageCount = resolved.beyondViewportPageCount,
             flingBehavior = PagerDefaults.flingBehavior(
                 state = pagerState,
@@ -132,16 +130,16 @@ fun HeroCarousel(
                 totalDots = items.size,
                 selectedIndex = pagerState.currentPage,
                 onIndicatorClick = { index ->
-                    coroutineScope.launch {
-                        isUserInteracting = true
-                        pagerState.animateScrollToPage(index)
-                        delay(3000.milliseconds)
-                        isUserInteracting = false
-                    }
+//                    coroutineScope.launch {
+//                        isUserInteracting = true
+//                        pagerState.animateScrollToPage(index)
+//                        delay(3000.milliseconds)
+//                        isUserInteracting = false
+//                    }
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = if (isDesktop) 24.dp else 16.dp)
+                    .padding(bottom = if (isWideScreen) 24.dp else 16.dp)
             )
         }
     }

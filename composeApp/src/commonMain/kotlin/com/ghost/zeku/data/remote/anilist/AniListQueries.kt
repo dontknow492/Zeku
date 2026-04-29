@@ -53,8 +53,8 @@ object AniListQueries {
 
     // Discovery / Global Search
     // 1. Discovery (Trending/Top Rated)
-    val FETCH_ANIME_LIST = buildMediaQuery("ANIME", isSearch = false)
-    val FETCH_MANGA_LIST = buildMediaQuery("MANGA", isSearch = false)
+    val FETCH_ANIME_LIST = buildMediaQuery("ANIME", isSearch = true)
+    val FETCH_MANGA_LIST = buildMediaQuery("MANGA", isSearch = true)
 
     val FETCH_ANIME_HERO_LIST = buildMediaQuery("ANIME", isSearch = true)
     val FETCH_MANGA_HERO_LIST = buildMediaQuery("MANGA", isSearch = true)

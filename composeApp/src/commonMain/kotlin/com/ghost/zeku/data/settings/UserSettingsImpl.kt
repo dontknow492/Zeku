@@ -42,9 +42,11 @@ class UserSettingsImpl(
     }
 
     override fun updatePreferences(transform: (UserPreferences) -> UserPreferences) {
+        Napier.d { "Updating preferences..." }
         _preferences.update { currentPrefs ->
             val newPrefs = transform(currentPrefs)
             saveToDisk(newPrefs)
+            Napier.d { "Preferences updated." }
             newPrefs
         }
     }

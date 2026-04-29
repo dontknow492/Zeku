@@ -74,7 +74,7 @@ fun <T> MediaSection(
 
             when {
                 isLoading -> {
-                    SectionLoadingShimmer(config)
+                    SectionLoadingShimmer(config.layout, config.shimmerItemCount)
                 }
 
                 items.isEmpty() -> {

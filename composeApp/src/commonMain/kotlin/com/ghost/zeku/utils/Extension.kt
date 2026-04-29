@@ -1,5 +1,8 @@
 package com.ghost.zeku.utils
 
+import java.text.SimpleDateFormat
+import java.util.*
+
 fun formatTimestamp(timestamp: Long): String {
     val now = System.currentTimeMillis()
     val diff = now - timestamp
@@ -19,4 +22,15 @@ fun formatTimestamp(timestamp: Long): String {
             sdf.format(java.util.Date(timestamp))
         }
     }
+}
+
+
+fun formatTimestampAbsoluteLegacy(
+    timestamp: Long,
+    timeZone: TimeZone = TimeZone.getDefault(),
+    locale: Locale = Locale.getDefault()
+): String {
+    val sdf = SimpleDateFormat("MMM dd, yyyy HH:mm", locale)
+    sdf.timeZone = timeZone
+    return sdf.format(Date(timestamp))
 }

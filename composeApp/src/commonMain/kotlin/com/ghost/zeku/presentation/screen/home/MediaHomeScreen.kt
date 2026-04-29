@@ -1,21 +1,20 @@
 package com.ghost.zeku.presentation.screen.home
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.*
 import androidx.compose.material3.carousel.HorizontalUncontainedCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -27,21 +26,28 @@ import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.model.media.Manga
 import com.ghost.zeku.domain.model.media.Media
 import com.ghost.zeku.presentation.common.isDesktop
+import com.ghost.zeku.presentation.common.isWideScreen
 import com.ghost.zeku.presentation.common.rememberPlatformConfiguration
 import com.ghost.zeku.presentation.components.hero.HeroCarousel
 import com.ghost.zeku.presentation.components.hero.toHeroUiData
+import com.ghost.zeku.presentation.components.media.list.ListCardShimmer
 import com.ghost.zeku.presentation.components.media.list.MediaListCard
+import com.ghost.zeku.presentation.components.media.list.PaginationErrorItem
 import com.ghost.zeku.presentation.components.media.list.toMediaListUiData
 import com.ghost.zeku.presentation.components.media.poster.MediaPosterCard
+import com.ghost.zeku.presentation.components.media.poster.PosterCardShimmer
 import com.ghost.zeku.presentation.components.media.poster.toPosterUiData
-import com.ghost.zeku.presentation.components.section.SectionHeader
+import com.ghost.zeku.presentation.components.section.*
 import com.ghost.zeku.presentation.viewmodel.detail.Destination
 import com.ghost.zeku.presentation.viewmodel.home.HomeContract
 import com.ghost.zeku.presentation.viewmodel.home.HomeViewModel
+import com.ghost.zeku.utils.desktopDragScroll
 import kotlinx.coroutines.flow.flowOf
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import zeku.composeapp.generated.resources.Res
+import zeku.composeapp.generated.resources.no_media_found
+import zeku.composeapp.generated.resources.retry
 import zeku.composeapp.generated.resources.view_all
 
 
@@ -50,8 +56,11 @@ fun MediaHomeScreen(
     viewModel: HomeViewModel = koinViewModel(),
     onNavigate: (Destination) -> Unit,
 ) {
+
+    rememberPlatformConfiguration()
     val state by viewModel.state.collectAsState()
     val effect by viewModel.effects.collectAsState(null)
+    val isWideScreen = rememberPlatformConfiguration().isWideScreen
     val isDesktop = rememberPlatformConfiguration().isDesktop
     LaunchedEffect(Unit) {
 
@@ -59,6 +68,7 @@ fun MediaHomeScreen(
     HomeContent(
         state = state,
         onEvent = viewModel::onEvent,
+        isWideScreen = isWideScreen,
         isDesktop = isDesktop,
         config = HomeUiConfig()
     )
@@ -69,10 +79,15 @@ fun MediaHomeScreen(
 fun HomeContent(
     state: HomeContract.State,
     onEvent: (HomeContract.Event) -> Unit,
+    isWideScreen: Boolean = false,
     isDesktop: Boolean = false,
     config: HomeUiConfig = HomeUiConfig()
 ) {
     val layoutDirection = LocalLayoutDirection.current
+
+    val listState = rememberLazyListState()
+
+//    val visibleItems = listState.layoutInfo.visibleItemsInfo.map { it.key }
 
     // Hoist the vertical paging items collection OUTSIDE the LazyColumn into a valid @Composable scope
     val verticalPagingItems = remember(state.verticalSection?.data) {
@@ -98,11 +113,12 @@ fun HomeContent(
                 // A single LazyColumn handles the entire page scroll natively
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
+                    state = listState,
                     contentPadding = PaddingValues(
                         bottom = padding.calculateBottomPadding() + Dimens.bottomContentPadding
                     ),
                     verticalArrangement = Arrangement.spacedBy(
-                        if (isDesktop) Dimens.itemSpacingDesktop else Dimens.itemSpacingMobile
+                        if (isWideScreen) Dimens.itemSpacingDesktop else Dimens.itemSpacingMobile
                     )
                 ) {
 
@@ -126,7 +142,7 @@ fun HomeContent(
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(if (isDesktop) Dimens.heroHeightDesktop else Dimens.heroHeightMobile),
+                                    .height(if (isWideScreen) Dimens.heroHeightDesktop else Dimens.heroHeightMobile),
                                 config = config.heroCarouselConfig,
                             )
                         }
@@ -137,13 +153,22 @@ fun HomeContent(
                         item(key = "horizontal_${section.categoryId}") {
                             // Collect the paging data bound to this specific section.
                             // This is safe here because `item { ... }` provides a @Composable scope!
+
                             val pagingItems = section.data.collectAsLazyPagingItems()
+
+//                            val isVisible = visibleItems.contains("horizontal_${section.categoryId}")
+//                            val pagingItems = if (isVisible) {
+//                                section.data.collectAsLazyPagingItems()
+//                            } else {
+//                                null
+//                            }
 
                             HorizontalMediaSection(
                                 title = section.title,
                                 categoryId = section.categoryId,
                                 items = pagingItems,
                                 config = config,
+                                isDesktop = isDesktop,
                                 onEvent = onEvent
                             )
                         }
@@ -163,21 +188,100 @@ fun HomeContent(
                         }
 
                         // Let LazyColumn naturally handle the heavy vertical list using the hoisted items
-                        items(count = verticalPagingItems.itemCount, key = { "vertical_item_$it" }) { index ->
+                        // ==============================
+                        // VERTICAL LIST
+                        // ==============================
+                        items(
+                            count = verticalPagingItems.itemCount,
+                            key = { index ->
+                                verticalPagingItems[index]?.id ?: "placeholder_$index"
+                            }
+                        ) { index ->
+
                             val media = verticalPagingItems[index]
+
                             if (media != null) {
                                 MediaListCard(
                                     data = media.toMediaListUiData(),
                                     variant = config.listCardVariant,
                                     config = config.listCardConfig,
-                                    onAction = { action ->
-                                        // Map the generic OnMediaAction back to our MVI Event
+                                    onAction = {
                                         onEvent(HomeContract.Event.OnMediaClick(media.id))
                                     },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(horizontal = Dimens.paddingMedium)
                                 )
+                            } else {
+                                // ✨ Placeholder (while paging loads)
+                                ListCardShimmer(config.listCardConfig)
+                            }
+                        }
+
+
+                        if (
+                            verticalPagingItems.loadState.refresh is LoadState.NotLoading &&
+                            verticalPagingItems.itemCount == 0
+                        ) {
+                            item {
+                                SectionEmptyState(
+                                    text = stringResource(Res.string.no_media_found)
+                                )
+                            }
+                        }
+
+                        // ==============================
+                        // LOAD STATES
+                        // ==============================
+                        verticalPagingItems.apply {
+
+                            when {
+
+                                // 🔄 FIRST LOAD
+                                loadState.refresh is LoadState.Loading -> {
+                                    item {
+                                        Column {
+                                            repeat(5) {
+                                                ListCardShimmer(config.listCardConfig)
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // ❌ FIRST LOAD ERROR
+                                loadState.refresh is LoadState.Error -> {
+                                    val error = loadState.refresh as LoadState.Error
+
+                                    item {
+                                        FullScreenError(
+                                            message = error.error.message ?: "Something went wrong",
+                                            onRetry = { retry() }
+                                        )
+                                    }
+                                }
+
+                                // ⬇️ PAGINATION LOADING
+                                loadState.append is LoadState.Loading -> {
+                                    item {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(24.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator()
+                                        }
+                                    }
+                                }
+
+                                // ❌ PAGINATION ERROR
+                                loadState.append is LoadState.Error -> {
+                                    item {
+                                        PaginationErrorItem(
+                                            onRetry = { retry() }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -194,19 +298,26 @@ private fun HorizontalMediaSection(
     categoryId: String,
     items: LazyPagingItems<Media>,
     config: HomeUiConfig,
+    isDesktop: Boolean,
     onEvent: (HomeContract.Event) -> Unit
 ) {
-    if (items.itemCount == 0 && items.loadState.refresh !is androidx.paging.LoadState.Loading) {
-        return // Don't render empty sections
-    }
-
-    val state = rememberCarouselState { items.itemCount }
     val dimens = Dimens
+
+    val refreshState = items.loadState.refresh
+    val appendState = items.loadState.append
+
+    val isInitialLoading = refreshState is LoadState.Loading
+    val isError = refreshState is LoadState.Error
+    val isEmpty = items.itemCount == 0 && refreshState is LoadState.NotLoading
+
+    val scope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier.padding(horizontal = dimens.paddingLarge),
         verticalArrangement = Arrangement.spacedBy(dimens.paddingMedium)
     ) {
+
+        // 🔹 Header
         SectionHeader(
             title = title,
             action = stringResource(Res.string.view_all),
@@ -214,43 +325,108 @@ private fun HorizontalMediaSection(
                 onEvent(HomeContract.Event.OnViewAllClick(categoryId, title))
             },
         )
+
+        // =========================
+        // 1. INITIAL LOADING
+        // =========================
+        if (isInitialLoading) {
+            SectionLoadingShimmer(
+                layout = SectionLayout.HorizontalRow(),
+                count = 10
+            )
+            return@Column
+        }
+
+        // =========================
+        // 2. ERROR (FULL)
+        // =========================
+        if (isError && items.itemCount == 0) {
+            val error = (refreshState as LoadState.Error).error
+
+            SectionErrorState(
+                message = error.localizedMessage ?: "Something went wrong",
+                onRetry = { items.retry() }
+            )
+            return@Column
+        }
+
+        // =========================
+        // 3. EMPTY STATE
+        // =========================
+        if (isEmpty) {
+            SectionEmptyState(
+                text = stringResource(Res.string.no_media_found)
+            )
+            return@Column
+        }
+
+        // =========================
+        // 4. CONTENT
+        // =========================
+        val carouselState = rememberCarouselState { items.itemCount }
+
         HorizontalUncontainedCarousel(
-            state = state,
-            itemWidth = config.posterConfig.content.width + 6.dp,
-            itemSpacing = 4.dp,
+            state = carouselState,
+            itemWidth = config.posterConfig.content.width,
+            itemSpacing = 6.dp,
+            modifier = Modifier
+                .then(if (isDesktop) Modifier.desktopDragScroll(carouselState) else Modifier)
+                .pointerHoverIcon(
+                    if (isDesktop) PointerIcon.Hand else PointerIcon.Default
+                )
         ) { index ->
-            val item = items[index] ?: return@HorizontalUncontainedCarousel
-            Box(
-                modifier = Modifier.aspectRatio(config.posterConfig.image.aspectRatio).background(Color.Transparent)
-            ) {
+
+            val item = items[index]
+
+
+
+
+            if (item != null) {
                 MediaPosterCard(
                     data = item.toPosterUiData(),
                     config = config.posterConfig,
-                    onAction = { action ->
+                    onAction = {
                         onEvent(HomeContract.Event.OnMediaClick(item.id))
                     },
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier.padding(10.dp)
                 )
+            } else {
+                // 🔹 Placeholder while paging loads
+                PosterCardShimmer(config = config.posterConfig)
             }
         }
 
-    }
+        // =========================
+        // 5. APPEND STATES (IMPORTANT)
+        // =========================
 
-//    PagedMediaSection(
-//        title = title,
-//        items = items,
-//        config = config.horizontalSectionConfig,
-//        onViewAllClick = { onEvent(HomeContract.Event.OnViewAllClick(categoryId, title)) }
-//    ) { item, modifier ->
-//        MediaPosterCard(
-//            data = item.toPosterUiData(),
-//            config = config.posterConfig,
-//            onAction = { action ->
-//                onEvent(HomeContract.Event.OnMediaClick(item.id))
-//            },
-//            modifier = Modifier
-//        )
-//    }
+        when (appendState) {
+            is LoadState.Loading -> {
+                // small inline loader
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    repeat(4) {
+                        PosterCardShimmer(config = config.posterConfig)
+                    }
+                }
+            }
+
+            is LoadState.Error -> {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    TextButton(onClick = { items.retry() }) {
+                        Text(stringResource(Res.string.retry))
+                    }
+                }
+            }
+
+            else -> Unit
+        }
+    }
 }
 
 
@@ -261,7 +437,7 @@ private fun HorizontalMediaSection(
 @Preview(showBackground = true, widthDp = 400, heightDp = 850)
 @Composable
 fun PreviewHomeContent() {
-    val isDesktop = rememberPlatformConfiguration().isDesktop
+    val isDesktop = rememberPlatformConfiguration().isWideScreen
     val fakeMangaList = listOf(
         Manga(
             id = 2,
@@ -704,7 +880,7 @@ fun PreviewHomeContent() {
         HomeContent(
             state = fakeState,
             onEvent = {},
-            isDesktop = isDesktop,
+            isWideScreen = isDesktop,
             config = HomeUiConfig()
         )
     }

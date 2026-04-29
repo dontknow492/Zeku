@@ -37,7 +37,7 @@ abstract class BaseCategoryRemoteMediator<T : Any, E : Any, K : Any>(
 
         return if (isCacheValid) {
             Napier.d {
-                "Cache for $categoryName is fresh (under ${formatTimestamp(cacheTimeoutMillis)}. " +
+                "Cache for $categoryName is fresh (under ${formatTimestamp(lastUpdated)}. " +
                         "Skipping network REFRESH and loading from DB."
             }
             InitializeAction.SKIP_INITIAL_REFRESH

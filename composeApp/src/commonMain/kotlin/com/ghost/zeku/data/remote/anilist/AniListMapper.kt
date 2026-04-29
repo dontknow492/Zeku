@@ -1,6 +1,7 @@
 package com.ghost.zeku.data.remote.anilist
 
 import com.ghost.zeku.data.remote.anilist.model.*
+import com.ghost.zeku.data.remote.anilist.model.GraphQLRequest.Variables
 import com.ghost.zeku.domain.model.common.MediaDate
 import com.ghost.zeku.domain.model.common.MediaTitle
 import com.ghost.zeku.domain.model.common.TrackEntry
@@ -291,35 +292,36 @@ fun MangaCategory.toAniListSort(): List<String> {
 
 fun AnimeCategory.toAniListVariables(page: Int, perPage: Int): GraphQLRequest.Variables {
     return when (this) {
-        AnimeCategory.TRENDING -> GraphQLRequest.Variables(
+        AnimeCategory.TRENDING -> Variables(
             page = page,
             perPage = perPage,
             sort = listOf("TRENDING_DESC", "POPULARITY_DESC")
         )
 
-        AnimeCategory.TOP_RATED -> GraphQLRequest.Variables(
+        AnimeCategory.TOP_RATED -> Variables(
             page = page,
             perPage = perPage,
             sort = listOf("SCORE_DESC")
         )
 
-        AnimeCategory.UPCOMING -> GraphQLRequest.Variables(
+        AnimeCategory.UPCOMING -> Variables(
             page = page,
             perPage = perPage,
             status = "NOT_YET_RELEASED",
             sort = listOf("POPULARITY_DESC")
         )
 
-        AnimeCategory.MOVIE -> GraphQLRequest.Variables(
+        AnimeCategory.MOVIE -> Variables(
             page = page,
             perPage = perPage,
-            type = "MOVIE", // You'd add 'format: MOVIE' to query if needed
+            format = "MOVIE",
+            type = "ANIME", // You'd add 'format: MOVIE' to query if needed
             sort = listOf("POPULARITY_DESC")
         )
 
         AnimeCategory.SEASONAL -> {
             val (season, year) = getCurrentSeasonAndYear()
-            GraphQLRequest.Variables(
+            Variables(
                 page = page,
                 perPage = perPage,
                 season = season,
@@ -328,7 +330,9 @@ fun AnimeCategory.toAniListVariables(page: Int, perPage: Int): GraphQLRequest.Va
             )
         }
 
-        else -> GraphQLRequest.Variables(page = page, perPage = perPage, sort = listOf("POPULARITY_DESC"))
+        AnimeCategory.POPULAR -> {
+            Variables(page = page, perPage = perPage, sort = listOf("POPULARITY_DESC"))
+        }
     }
 }
 
