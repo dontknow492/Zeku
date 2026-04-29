@@ -53,6 +53,7 @@ import zeku.composeapp.generated.resources.view_all
 
 @Composable
 fun MediaHomeScreen(
+    mediaType: MediaType,
     viewModel: HomeViewModel = koinViewModel(),
     onNavigate: (Destination) -> Unit,
 ) {
@@ -72,6 +73,11 @@ fun MediaHomeScreen(
         isDesktop = isDesktop,
         config = HomeUiConfig()
     )
+
+    LaunchedEffect(mediaType) {
+        // Since you already built this event, use it!
+        viewModel.onEvent(HomeContract.Event.LoadHomeData(mediaType))
+    }
 }
 
 

@@ -1,15 +1,10 @@
 package com.ghost.zeku
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.enum.ProviderType
-import com.ghost.zeku.domain.repository.UserSettings
-import com.ghost.zeku.presentation.screen.home.MediaHomeScreen
+import androidx.compose.ui.Modifier
+import com.ghost.zeku.presentation.navigation.AppNavigation
 import com.ghost.zeku.presentation.theme.AppTheme
-import com.ghost.zeku.presentation.viewmodel.home.HomeContract
-import com.ghost.zeku.presentation.viewmodel.home.HomeViewModel
-import org.koin.compose.koinInject
-import org.koin.compose.viewmodel.koinViewModel
 
 
 @Composable
@@ -18,15 +13,17 @@ fun App() = AppTheme {
 //    PreviewMediaDetailContent()
 //    PreviewHomeContent()
 
-    val userSettings: UserSettings = koinInject()
-    userSettings.updatePreferences {
-        it.copy(activeProvider = ProviderType.ANILIST)
-    }
+    AppNavigation(modifier = Modifier.fillMaxSize())
 
-    val viewModel: HomeViewModel = koinViewModel()
-    viewModel.onEvent(HomeContract.Event.LoadHomeData(MediaType.ANIME))
-
-    MediaHomeScreen(koinViewModel(), {})
+//    val userSettings: UserSettings = koinInject()
+//    userSettings.updatePreferences {
+//        it.copy(activeProvider = ProviderType.ANILIST)
+//    }
+//
+//    val viewModel: HomeViewModel = koinViewModel()
+//    viewModel.onEvent(HomeContract.Event.LoadHomeData(MediaType.ANIME))
+//
+//    MediaHomeScreen(koinViewModel(), {})
 
 }
 

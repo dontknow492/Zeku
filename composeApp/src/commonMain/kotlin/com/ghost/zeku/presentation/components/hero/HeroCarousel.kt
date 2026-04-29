@@ -8,6 +8,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
@@ -29,6 +30,7 @@ import com.ghost.zeku.presentation.common.isWideScreen
 import com.ghost.zeku.presentation.common.rememberPlatformConfiguration
 import com.ghost.zeku.utils.desktopCarouselBehaviors
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlin.math.absoluteValue
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -50,6 +52,9 @@ fun HeroCarousel(
 
     val pagerState = rememberPagerState(initialPage = currentPage) { items.count() }
 
+    // Observe if the user is actively holding their finger/mouse on the screen
+    val isDragged by pagerState.interactionSource.collectIsDraggedAsState()
+
     // Sync state with parent
     LaunchedEffect(pagerState.currentPage) {
         if (currentPage != pagerState.currentPage) {
@@ -58,16 +63,29 @@ fun HeroCarousel(
     }
 
     // FIX: Bulletproof Auto-scroll
+    // THE FIX: Bulletproof Auto-scroll loop
     if (resolved.enableAutoScroll && items.size > 1) {
-        // Triggers whenever the page changes or the user touches/releases the carousel
-        LaunchedEffect(pagerState.currentPage, pagerState.isScrollInProgress) {
-            if (!pagerState.isScrollInProgress) {
+        // Keying on items.size ensures this effect only restarts if the actual data changes
+        LaunchedEffect(items.size) {
+            while (true) {
+                // 1. Wait for the auto-scroll duration
                 delay(resolved.autoScrollDuration.milliseconds)
-                val nextPage = (pagerState.currentPage + 1) % items.size
 
+                // 2. If the user is currently holding the carousel, suspend the timer until they let go
+                if (isDragged) {
+                    snapshotFlow { isDragged }.first { isDraggedNow -> !isDraggedNow }
+                }
+
+                // 3. If the pager is currently snapping/flinging from a manual swipe, wait for it to stop moving
+                if (pagerState.isScrollInProgress) {
+                    snapshotFlow { pagerState.isScrollInProgress }.first { isScrollingNow -> !isScrollingNow }
+                }
+
+                // 4. Everything is calm. Animate to the next page!
+                val nextPage = (pagerState.currentPage + 1) % items.size
                 pagerState.animateScrollToPage(
                     page = nextPage,
-                    animationSpec = tween(durationMillis = 800) // Smooth, cinematic slide
+                    animationSpec = tween(durationMillis = 800) // Cinematic slide
                 )
             }
         }

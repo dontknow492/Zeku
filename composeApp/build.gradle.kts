@@ -133,6 +133,10 @@ kotlin {
             implementation(libs.androidx.room.paging)
 //            implementation(libs.androidx.room.ktx)
 
+            // navigation3
+            implementation(libs.jetbrains.navigation3.ui)
+            implementation(libs.jetbrains.lifecycle.viewmodelNavigation3)
+
 
         }
         commonTest.dependencies {
