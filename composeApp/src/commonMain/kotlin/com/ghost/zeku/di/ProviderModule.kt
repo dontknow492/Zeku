@@ -7,6 +7,7 @@ import com.ghost.zeku.data.remote.anilist.providers.*
 import com.ghost.zeku.data.remote.mal.MalResponseParser
 import com.ghost.zeku.data.remote.mal.MalSource
 import com.ghost.zeku.data.remote.mal.providers.*
+import com.ghost.zeku.domain.model.UserProfile
 import org.koin.dsl.module
 
 
@@ -30,7 +31,8 @@ val providerModule = module {
             mangaSearch = AniListMangaSearchProvider(api = get(), parser = get()),
             animeDetails = AniListAnimeDetailsProvider(api = get(), parser = get()),
             mangaDetails = AniListMangaDetailsProvider(api = get(), parser = get()),
-            mediaTracker = AniListMediaTracker(aniListApi = get(), parser = get())
+            mediaTracker = AniListMediaTracker(aniListApi = get(), parser = get()),
+            userProfile = AniListUserProvider(aniListApi = get(), parser = get())
         )
     }
 
@@ -50,7 +52,8 @@ val providerModule = module {
                 malApi = get(),
                 jikanApi = get()
             ),
-            mediaTracker = MalMediaTracker(api = get(), parser = get())
+            mediaTracker = MalMediaTracker(api = get(), parser = get()),
+            userProvider = MalUserProvider(api = get(), parser = get()),
         )
     }
 

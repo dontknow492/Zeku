@@ -1,9 +1,11 @@
 package com.ghost.zeku.presentation.components.hero
 
+import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.domain.model.media.Media
 
 data class MediaHeroUiData(
     val id: Int,
+    val mediaType: MediaType,
     val title: String,
     val bannerImageUrl: String, // High-res wide image
     val coverImageUrl: String,  // Fallback if banner is missing
@@ -19,6 +21,7 @@ data class MediaHeroUiData(
 fun Media.toHeroUiData(): MediaHeroUiData {
     return MediaHeroUiData(
         id = this.id,
+        mediaType = this.mediaType,
         title = this.title.getPreferred(),
         bannerImageUrl = this.bannerImage ?: this.coverImage,
         coverImageUrl = this.coverImage,

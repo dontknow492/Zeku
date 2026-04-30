@@ -27,5 +27,6 @@ val databaseModule = module {
     single { get<AppDatabase>().remoteKeysDao() }
     single { get<AppDatabase>().chapterDao() }
     single { get<AppDatabase>().episodeDao() }
+    single { get<AppDatabase>().userDao() }
 
 }

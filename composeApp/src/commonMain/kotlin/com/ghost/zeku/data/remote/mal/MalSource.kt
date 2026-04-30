@@ -13,6 +13,7 @@ class MalSource(
     animeDetails: MalAnimeDetailsProvider,
     mangaDetails: MalMangaDetailsProvider,
     mediaTracker: MalMediaTracker,
+    userProvider: MalUserProvider,
 ) : MediaSource,
     AnimeListProvider by animeList,
     MangaListProvider by mangaList,
@@ -20,6 +21,7 @@ class MalSource(
     MangaSearchProvider by mangaSearch,
     AnimeDetailsProvider by animeDetails,
     MangaDetailsProvider by mangaDetails,
-    MediaTrackerProvider by mediaTracker {
+    MediaTrackerProvider by mediaTracker,
+    UserProvider by userProvider {
     override suspend fun getProviderType(): ProviderType = ProviderType.MYANIMELIST
 }

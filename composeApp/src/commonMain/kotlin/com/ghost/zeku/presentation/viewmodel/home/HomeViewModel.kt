@@ -5,11 +5,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import androidx.paging.map
+import com.ghost.zeku.domain.model.MessageType
 import com.ghost.zeku.domain.model.enum.AnimeCategory
 import com.ghost.zeku.domain.model.enum.MangaCategory
 import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.domain.model.media.Media
 import com.ghost.zeku.domain.repository.MediaRepository
+import com.ghost.zeku.presentation.components.media.MediaAction
+import com.ghost.zeku.presentation.viewmodel.detail.Destination
+import com.ghost.zeku.presentation.viewmodel.detail.MediaDetailContract
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -29,12 +34,19 @@ class HomeViewModel(
     fun onEvent(event: HomeContract.Event) {
         when (event) {
             is HomeContract.Event.LoadHomeData -> loadData(event.mediaType)
-            is HomeContract.Event.OnMediaClick -> {
-                sendEffect(HomeContract.Effect.NavigateToDetail(event.mediaId, _state.value.mediaType))
-            }
+            is HomeContract.Event.OnMediaAction -> handleMediaAction(event.action)
 
             is HomeContract.Event.OnViewAllClick -> {
-                sendEffect(HomeContract.Effect.NavigateToViewAll(event.categoryId, event.title, _state.value.mediaType))
+                Napier.d("View all click: ${event.categoryId}, title: ${event.title}, mediaType: ${state.value.mediaType}")
+                sendEffect(
+                    HomeContract.Effect.Navigate(
+                        Destination.ViewAllCategories(
+                            categoryId = event.categoryId,
+                            title = event.title,
+                            type = _state.value.mediaType
+                        )
+                    )
+                )
             }
 
             is HomeContract.Event.OnRefresh -> {
@@ -165,5 +177,64 @@ class HomeViewModel(
         viewModelScope.launch {
             _effects.emit(effect)
         }
+    }
+
+    private fun handleMediaAction(action: MediaAction) {
+        Napier.d { "MediaAction: $action" }
+
+        viewModelScope.launch {
+            when (action) {
+
+                is MediaAction.MediaClick -> {
+                    emitEffect(
+                        HomeContract.Effect.Navigate(
+                            Destination.MediaDetail(action.id, action.type)
+                        )
+                    )
+                }
+
+                is MediaAction.ToggleFavorite -> {
+                    Napier.d { "Toggle favorite: ${action.id}" }
+                    TODO("Implement adding to fav logic")
+                }
+
+                is MediaAction.AddToList -> {
+                    Napier.d { "Add to list: ${action.id}" }
+                    TODO("Implement saving to library logic")
+                }
+
+                is MediaAction.Share -> {
+                    emitEffectMessage("Share not implemented yet")
+                }
+
+                is MediaAction.RevealNsfw -> {
+                    Napier.d { "Reveal NSFW: ${action.id}" }
+                }
+
+                is MediaAction.LongClick -> {
+                    Napier.d { "Long click: ${action.id}" }
+                }
+
+                is MediaAction.Custom -> {
+                    Napier.w { "Unhandled custom action: ${action.key}" }
+                }
+
+                is MediaAction.GenreClick ->
+                    Napier.d { "Genre clicked: ${action.genre}" }
+            }
+        }
+    }
+
+    private suspend fun emitEffectMessage(
+        message: String,
+        type: MessageType = MessageType.Info
+    ) {
+        emitEffect(HomeContract.Effect.ShowMessage(message, type))
+    }
+
+
+    private suspend fun emitEffect(effect: HomeContract.Effect) {
+        Napier.v { "Effect emitted: $effect" }
+        _effects.emit(effect)
     }
 }

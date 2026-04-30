@@ -2,12 +2,14 @@ package com.ghost.zeku.data.remote.anilist
 
 import com.ghost.zeku.data.remote.anilist.model.*
 import com.ghost.zeku.data.remote.anilist.model.GraphQLRequest.Variables
+import com.ghost.zeku.domain.model.UserProfile
 import com.ghost.zeku.domain.model.common.MediaDate
 import com.ghost.zeku.domain.model.common.MediaTitle
 import com.ghost.zeku.domain.model.common.TrackEntry
 import com.ghost.zeku.domain.model.enum.*
 import com.ghost.zeku.domain.model.media.*
 import com.ghost.zeku.domain.model.search.SearchSort
+import java.util.Calendar
 
 // =========================================================================================
 // MAIN MAPPERS
@@ -204,6 +206,14 @@ fun AniListMediaListEntry.toTrackEntry(
     )
 }
 
+fun Viewer.toDomain(): UserProfile = UserProfile(
+    id = this.id.toString(),
+    source = ProviderType.ANILIST,
+    username = this.name,
+    avatarUrl = this.avatar.large,
+    bannerUrl = this.bannerImage
+)
+
 
 // =========================================================================================
 // USER LIST MAPPERS (The Bridge)
@@ -290,7 +300,7 @@ fun MangaCategory.toAniListSort(): List<String> {
 }
 
 
-fun AnimeCategory.toAniListVariables(page: Int, perPage: Int): GraphQLRequest.Variables {
+fun AnimeCategory.toAniListVariables(page: Int, perPage: Int): Variables {
     return when (this) {
         AnimeCategory.TRENDING -> Variables(
             page = page,
@@ -364,9 +374,9 @@ fun String?.toMediaFormat(): MediaFormat {
 
 
 fun getCurrentSeasonAndYear(): Pair<String, Int> {
-    val calendar = java.util.Calendar.getInstance()
-    val month = calendar.get(java.util.Calendar.MONTH) // 0-11
-    val year = calendar.get(java.util.Calendar.YEAR)
+    val calendar = Calendar.getInstance()
+    val month = calendar.get(Calendar.MONTH) // 0-11
+    val year = calendar.get(Calendar.YEAR)
 
     val season = when (month) {
         in 0..2 -> "WINTER"

@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.presentation.common.HeroImage
 import com.ghost.zeku.presentation.common.rememberPlatformConfiguration
 import com.ghost.zeku.presentation.theme.AppTheme
@@ -268,38 +269,16 @@ private fun HeroContent(
 // PREVIEWS (Desktop & Mobile)
 // ----------------------------------------------------------------------------
 @Preview(showBackground = true, widthDp = 900, heightDp = 500)
+@Preview(showBackground = true, widthDp = 400, heightDp = 700)
 @Composable
 private fun HeroBannerDesktopPreview() {
     val mockData = MediaHeroUiData(
         id = 1,
+        mediaType = MediaType.ANIME,
         title = "Solo Leveling",
         bannerImageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/banner/151807-ngjsN8vJ8p83.jpg",
         coverImageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx151807-m1gX3iqITmI6.png",
         description = "In a world where hunters must battle deadly monsters, a notoriously weak hunter named Sung Jinwoo finds himself in a struggle for survival.",
-        genres = listOf("Action", "Adventure", "Fantasy"),
-        badgeText = "Releasing"
-    )
-
-    AppTheme {
-        Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-            MediaHeroBanner(
-                data = mockData,
-                onWatchClick = {},
-                onDetailsClick = {}
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true, widthDp = 400, heightDp = 700)
-@Composable
-private fun HeroBannerMobilePreview() {
-    val mockData = MediaHeroUiData(
-        id = 1,
-        title = "Solo Leveling",
-        bannerImageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/banner/151807-ngjsN8vJ8p83.jpg",
-        coverImageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx151807-m1gX3iqITmI6.png",
-        description = "Hidden on mobile",
         genres = listOf("Action", "Adventure", "Fantasy"),
         badgeText = "Releasing"
     )

@@ -17,7 +17,8 @@ class AniListSource(
     mangaSearch: AniListMangaSearchProvider,
     animeDetails: AniListAnimeDetailsProvider,
     mangaDetails: AniListMangaDetailsProvider,
-    mediaTracker: AniListMediaTracker
+    mediaTracker: AniListMediaTracker,
+    userProfile: AniListUserProvider,
 ) : MediaSource,
     AnimeListProvider by animeList,
     MangaListProvider by mangaList,
@@ -25,7 +26,8 @@ class AniListSource(
     MangaSearchProvider by mangaSearch,
     AnimeDetailsProvider by animeDetails,
     MangaDetailsProvider by mangaDetails,
-    MediaTrackerProvider by mediaTracker {
+    MediaTrackerProvider by mediaTracker,
+    UserProvider by userProfile {
     override suspend fun getProviderType(): ProviderType = ProviderType.ANILIST
 }
 

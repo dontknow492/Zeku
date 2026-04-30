@@ -99,8 +99,8 @@ data class MalGenre(
 
 @Serializable
 data class MalUserDto(
-    val id: Int? = null,
-    val name: String? = null,
+    val id: Int,
+    val name: String,
     @SerialName("picture") val pictureUrl: String? = null,
     val gender: String? = null,
     val birthday: String? = null,

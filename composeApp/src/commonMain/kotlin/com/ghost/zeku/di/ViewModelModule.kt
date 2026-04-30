@@ -1,5 +1,6 @@
 package com.ghost.zeku.di
 
+import com.ghost.zeku.presentation.viewmodel.category.CategoryViewModel
 import com.ghost.zeku.presentation.viewmodel.detail.MediaDetailViewModel
 import com.ghost.zeku.presentation.viewmodel.home.HomeViewModel
 import org.koin.core.module.dsl.viewModel
@@ -11,6 +12,9 @@ val viewmodelModule = module {
     }
     viewModel {
         HomeViewModel(repository = get())
+    }
+    viewModel {
+        CategoryViewModel(repository = get())
     }
 
 }

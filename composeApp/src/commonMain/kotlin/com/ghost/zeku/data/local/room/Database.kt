@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 
 @Database(
     entities = [
+        UserEntity::class,
         AnimeEntity::class,
         MangaEntity::class,
         EpisodeEntity::class,
@@ -18,7 +19,6 @@ import kotlinx.coroutines.Dispatchers
         AnimeRemoteKeys::class,
         EpisodeRemoteKeys::class,
         ChapterRemoteKeys::class,
-
     ],
     version = 1
 )
@@ -30,6 +30,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun remoteKeysDao(): RemoteKeysDao
     abstract fun chapterDao(): ChapterDao
     abstract fun episodeDao(): EpisodeDao
+    abstract fun userDao(): UserDao
 }
 
 

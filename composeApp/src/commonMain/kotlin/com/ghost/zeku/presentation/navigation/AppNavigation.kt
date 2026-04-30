@@ -14,15 +14,23 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.NavDisplay
+import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.presentation.components.sidebar.ZekuAdaptiveSidebar
+import com.ghost.zeku.presentation.screen.category.CategoryScreen
+import com.ghost.zeku.presentation.screen.detail.MediaDetailScreen
+import com.ghost.zeku.presentation.screen.home.MediaHomeScreen
+import io.github.aakira.napier.Napier
+import org.koin.compose.viewmodel.koinViewModel
 
 
 @Composable
 fun ZekuAppWrapper() {
+    val layoutDirection = LocalLayoutDirection.current
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val appState = rememberZekuAppState(
             screenWidthDp = maxWidth.value.toInt()
@@ -49,7 +57,11 @@ fun ZekuAppWrapper() {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
+                    .padding(
+                        start = paddingValues.calculateStartPadding(layoutDirection),
+                        end = paddingValues.calculateEndPadding(layoutDirection),
+                        bottom = paddingValues.calculateBottomPadding()
+                    )
             ) {
                 // Adaptive Animated Sidebar
                 AnimatedVisibility(
@@ -136,28 +148,48 @@ fun ZekuNavDisplay(
         },
         entryProvider = { key ->
             when (key) {
-                is AnimeHome -> NavEntry(key) {
-                    MockScreen("${navBackStack.size}: Anime Home") { id ->
-                        appState.navigateTo(MediaDetails(id = id))
-                    }
+                is AnimeHomeRoute -> NavEntry(key) {
+                    MediaHomeScreen(
+                        viewModel = koinViewModel(),
+                        mediaType = MediaType.ANIME,
+                        onNavigate = appState::navigateToDestination
+                    )
                 }
 
-                is MangaHome -> NavEntry(key) {
-                    MockScreen("${navBackStack.size}: Manga Home") { id ->
-                        appState.navigateTo(MediaDetails(id = id))
-                    }
+                is MangaHomeRoute -> NavEntry(key) {
+                    MediaHomeScreen(
+                        viewModel = koinViewModel(),
+                        mediaType = MediaType.MANGA,
+                        onNavigate = appState::navigateToDestination
+                    )
                 }
 
-                is Search -> NavEntry(key) {
+                is SearchRoute -> NavEntry(key) {
                     MockScreen("${navBackStack.size}: Search") {}
                 }
 
-                is Library -> NavEntry(key) {
+                is LibraryRoute -> NavEntry(key) {
                     MockScreen("${navBackStack.size}: Library") {}
                 }
 
-                is MediaDetails -> NavEntry(key) {
-                    MockScreen("${navBackStack.size}: MediaDetails") {}
+                is MediaDetailsRoute -> NavEntry(key) {
+                    MediaDetailScreen(
+                        mediaId = key.id,
+                        mediaType = key.type,
+                        onNavigate = appState::navigateToDestination,
+                        onBack = appState::popBackStack
+                    )
+                }
+
+                is AllCategoriesRoute -> NavEntry(key) {
+                    CategoryScreen(
+                        viewModel = koinViewModel(),
+                        categoryId = key.categoryId,
+                        title = key.title,
+                        mediaType = key.type,
+                        onNavigate = appState::navigateToDestination,
+                        onBack = appState::popBackStack,
+                    )
                 }
 
                 else -> throw IllegalStateException("Unexpected key $key")

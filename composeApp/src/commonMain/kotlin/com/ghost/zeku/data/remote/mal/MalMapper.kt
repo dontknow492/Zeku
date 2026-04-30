@@ -3,6 +3,7 @@ package com.ghost.zeku.data.remote.mal
 import com.ghost.zeku.data.remote.jikan.JikanCharacterEdge
 import com.ghost.zeku.data.remote.jikan.toDomain
 import com.ghost.zeku.data.remote.mal.model.*
+import com.ghost.zeku.domain.model.UserProfile
 import com.ghost.zeku.domain.model.common.MediaDate
 import com.ghost.zeku.domain.model.common.MediaTitle
 import com.ghost.zeku.domain.model.common.TrackEntry
@@ -180,6 +181,17 @@ fun MalListStatus.toTrackEntryDomain(mediaId: Int, totalProgress: Int? = null): 
         progress = this.numEpisodesWatched ?: this.numChaptersRead ?: 0,
         score = this.score?.toDouble(),
         totalProgress = totalProgress
+    )
+}
+
+
+fun MalUserDto.toDomain(): UserProfile {
+    return UserProfile(
+        id = this.id.toString(),
+        source = ProviderType.MYANIMELIST,
+        username = this.name,
+        avatarUrl = this.pictureUrl,
+        bannerUrl = null
     )
 }
 

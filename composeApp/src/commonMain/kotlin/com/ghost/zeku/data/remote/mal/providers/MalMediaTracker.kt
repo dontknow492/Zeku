@@ -1,6 +1,7 @@
 package com.ghost.zeku.data.remote.mal.providers
 
 import com.ghost.zeku.data.remote.mal.*
+import com.ghost.zeku.domain.model.UserProfile
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.common.TrackEntry
 import com.ghost.zeku.domain.model.enum.TrackStatus
@@ -8,6 +9,7 @@ import com.ghost.zeku.domain.model.media.Anime
 import com.ghost.zeku.domain.model.media.Manga
 import com.ghost.zeku.domain.model.media.PageResult
 import com.ghost.zeku.domain.provider.MediaTrackerProvider
+import com.ghost.zeku.domain.provider.UserProvider
 
 class MalMediaTracker(
     private val api: MalApi,
@@ -105,5 +107,22 @@ class MalMediaTracker(
         } catch (e: Exception) {
             false
         }
+    }
+}
+
+
+class MalUserProvider(
+    private val api: MalApi,
+    private val parser: MalResponseParser
+) : UserProvider {
+    override suspend fun getCurrentUser(): ApiResult<UserProfile> {
+        return parser.safeApiCall(
+            apiCall = {
+                api.getCurrentUser()
+            },
+            transform = { response ->
+                response.toDomain()
+            }
+        )
     }
 }

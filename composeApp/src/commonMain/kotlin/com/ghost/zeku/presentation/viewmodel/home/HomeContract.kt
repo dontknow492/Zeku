@@ -1,8 +1,12 @@
 package com.ghost.zeku.presentation.viewmodel.home
 
 import androidx.paging.PagingData
+import com.ghost.zeku.domain.model.MessageType
 import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.domain.model.media.Media
+import com.ghost.zeku.presentation.components.media.MediaAction
+import com.ghost.zeku.presentation.viewmodel.detail.Destination
+import com.ghost.zeku.presentation.viewmodel.detail.MediaDetailContract
 import kotlinx.coroutines.flow.Flow
 
 class HomeContract {
@@ -30,7 +34,7 @@ class HomeContract {
 
     sealed interface Event {
         // User Actions
-        data class OnMediaClick(val mediaId: Int) : Event
+        data class OnMediaAction(val action: MediaAction) : Event
         data class OnViewAllClick(val categoryId: String, val title: String) : Event
         data object OnRefresh : Event
 
@@ -39,8 +43,7 @@ class HomeContract {
     }
 
     sealed interface Effect {
-        data class NavigateToDetail(val mediaId: Int, val mediaType: MediaType) : Effect
-        data class NavigateToViewAll(val categoryId: String, val title: String, val mediaType: MediaType) : Effect
-        data class ShowToast(val message: String) : Effect
+        data class Navigate(val destination: Destination) : Effect
+        data class ShowMessage(val message: String, val type: MessageType) : Effect
     }
 }

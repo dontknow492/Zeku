@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
+import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.presentation.common.isDesktop
 import com.ghost.zeku.presentation.common.isWideScreen
 import com.ghost.zeku.presentation.common.rememberPlatformConfiguration
@@ -221,6 +222,7 @@ fun HeroCarouselPreview() {
     val items = listOf(
         MediaHeroUiData(
             id = 1,
+            mediaType = MediaType.ANIME,
             title = "Solo Leveling",
             bannerImageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/banner/151807-ngjsN8vJ8p83.jpg",
             coverImageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx151807-m1gX3iqITmI6.png",
@@ -230,7 +232,7 @@ fun HeroCarouselPreview() {
         ),
         MediaHeroUiData(
             id = 2,
-            title = "Jujutsu Kaisen",
+            mediaType = MediaType.ANIME, title = "Jujutsu Kaisen",
             bannerImageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/banner/145139-F2ZUCz7m4n5F.jpg",
             coverImageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx145139-2DqjM6XOwTb6.jpg",
             description = "A boy swallows a cursed object and fights evil spirits.",
@@ -239,6 +241,7 @@ fun HeroCarouselPreview() {
         ),
         MediaHeroUiData(
             id = 3,
+            mediaType = MediaType.ANIME,
             title = "Jujutsu Kaisen",
             bannerImageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/banner/145139-F2ZUCz7m4n5F.jpg",
             coverImageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx145139-2DqjM6XOwTb6.jpg",

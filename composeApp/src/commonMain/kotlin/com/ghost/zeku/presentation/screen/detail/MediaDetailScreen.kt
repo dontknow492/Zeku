@@ -75,6 +75,8 @@ import zeku.composeapp.generated.resources.*
 
 @Composable
 fun MediaDetailScreen(
+    mediaId: Int,
+    mediaType: MediaType,
     viewModel: MediaDetailViewModel = koinViewModel(),
     onNavigate: (Destination) -> Unit,
     onBack: () -> Unit
@@ -85,7 +87,10 @@ fun MediaDetailScreen(
     val recommendations = viewModel.recommendations.collectAsLazyPagingItems()
     val episodes = viewModel.episodes.collectAsLazyPagingItems()
 
-    val effect = viewModel.effect.collectAsState(initial = null)
+
+    LaunchedEffect(mediaId, mediaType) {
+        viewModel.onEvent(MediaDetailContract.Event.Load(mediaId, mediaType))
+    }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->

@@ -21,6 +21,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.ghost.zeku.domain.model.UserProfile
+import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.presentation.components.item.UserProfileItem
 import com.ghost.zeku.presentation.navigation.TopLevelDestination
 import com.ghost.zeku.presentation.theme.AppTheme
 import org.jetbrains.compose.resources.stringResource
@@ -39,6 +42,7 @@ fun ZekuAdaptiveSidebar(
     onToggleExpanded: () -> Unit,
     onBackPressed: () -> Unit,
     onLogoClick: () -> Unit,
+    userProfile: UserProfile? = null,
 ) {
     // Determine whether the sidebar should be permanently expanded
 //    val autoExpanded = appState.isMediumScreen || appState.isExpandedScreen
@@ -159,6 +163,20 @@ fun ZekuAdaptiveSidebar(
                     compactLabel = null
                 )
             }
+
+            Spacer(Modifier.weight(1f))
+            AnimatedVisibility(
+                userProfile != null,
+            ) {
+                UserProfileItem(
+                    user = userProfile,           // nullable UserProfile
+                    onLogout = { /* handle logout */ },
+                    onAvatarClick = { /* navigate to profile */ },
+                    isExpanded = expanded,
+                    modifier = Modifier
+                )
+            }
+
         }
     }
 }
@@ -257,7 +275,7 @@ private fun SidebarItem(
 @Composable
 private fun PreviewApp() {
     var currentDestination by remember { mutableStateOf(TopLevelDestination.ANIME) }
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(!false) }
     AppTheme {
         ZekuAdaptiveSidebar(
             currentDestination = currentDestination,
@@ -267,7 +285,13 @@ private fun PreviewApp() {
             onToggleExpanded = { expanded = !expanded },
             onNavigate = { currentDestination = it },
             onBackPressed = { },
-            onLogoClick = {}
+            onLogoClick = {},
+            userProfile = UserProfile(
+                id = "12345",
+                username = "User",
+                source = ProviderType.MYANIMELIST,
+                avatarUrl = "https://picsum.photos/200"
+            )
         )
     }
 }

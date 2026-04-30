@@ -22,3 +22,6 @@ data class AnimeDetailsEntity(
 
     val updatedAt: Long = System.currentTimeMillis()
 )
+
+
+

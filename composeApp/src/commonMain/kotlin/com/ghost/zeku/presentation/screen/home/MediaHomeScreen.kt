@@ -30,6 +30,7 @@ import com.ghost.zeku.presentation.common.isWideScreen
 import com.ghost.zeku.presentation.common.rememberPlatformConfiguration
 import com.ghost.zeku.presentation.components.hero.HeroCarousel
 import com.ghost.zeku.presentation.components.hero.toHeroUiData
+import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.components.media.list.ListCardShimmer
 import com.ghost.zeku.presentation.components.media.list.MediaListCard
 import com.ghost.zeku.presentation.components.media.list.PaginationErrorItem
@@ -77,6 +78,17 @@ fun MediaHomeScreen(
     LaunchedEffect(mediaType) {
         // Since you already built this event, use it!
         viewModel.onEvent(HomeContract.Event.LoadHomeData(mediaType))
+    }
+    LaunchedEffect(mediaType) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                is HomeContract.Effect.Navigate -> {
+                    onNavigate(effect.destination)
+                }
+
+                is HomeContract.Effect.ShowMessage -> TODO()
+            }
+        }
     }
 }
 
@@ -141,10 +153,24 @@ fun HomeContent(
                                 currentPage = currentPage,
                                 onPageChange = { currentPage = it },
                                 onWatchClick = { item ->
-                                    onEvent(HomeContract.Event.OnMediaClick(item.id))
+                                    onEvent(
+                                        HomeContract.Event.OnMediaAction(
+                                            MediaAction.MediaClick(
+                                                item.id,
+                                                item.mediaType
+                                            )
+                                        )
+                                    )
                                 },
                                 onDetailsClick = { item ->
-                                    onEvent(HomeContract.Event.OnMediaClick(item.id))
+                                    onEvent(
+                                        HomeContract.Event.OnMediaAction(
+                                            MediaAction.MediaClick(
+                                                item.id,
+                                                item.mediaType
+                                            )
+                                        )
+                                    )
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -211,9 +237,7 @@ fun HomeContent(
                                     data = media.toMediaListUiData(),
                                     variant = config.listCardVariant,
                                     config = config.listCardConfig,
-                                    onAction = {
-                                        onEvent(HomeContract.Event.OnMediaClick(media.id))
-                                    },
+                                    onAction = { onEvent(HomeContract.Event.OnMediaAction(it)) },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(horizontal = Dimens.paddingMedium)
@@ -391,9 +415,7 @@ private fun HorizontalMediaSection(
                 MediaPosterCard(
                     data = item.toPosterUiData(),
                     config = config.posterConfig,
-                    onAction = {
-                        onEvent(HomeContract.Event.OnMediaClick(item.id))
-                    },
+                    onAction = { onEvent(HomeContract.Event.OnMediaAction(it)) },
                     modifier = Modifier.padding(10.dp)
                 )
             } else {

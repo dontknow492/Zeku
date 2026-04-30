@@ -1,6 +1,5 @@
 package com.ghost.zeku.presentation.navigation
 
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
@@ -9,6 +8,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.savedstate.serialization.SavedStateConfiguration
 import com.ghost.zeku.presentation.viewmodel.detail.Destination
+import io.github.aakira.napier.Napier
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 
@@ -18,15 +18,15 @@ fun rememberZekuAppState(
         configuration = SavedStateConfiguration {
             serializersModule = SerializersModule {
                 polymorphic(NavKey::class) {
-                    subclass(AnimeHome::class, AnimeHome.serializer())
-                    subclass(MangaHome::class, MangaHome.serializer())
-                    subclass(Search::class, Search.serializer())
-                    subclass(Library::class, Library.serializer())
-                    subclass(Library::class, Library.serializer())
+                    subclass(AnimeHomeRoute::class, AnimeHomeRoute.serializer())
+                    subclass(MangaHomeRoute::class, MangaHomeRoute.serializer())
+                    subclass(SearchRoute::class, SearchRoute.serializer())
+                    subclass(LibraryRoute::class, LibraryRoute.serializer())
+                    subclass(LibraryRoute::class, LibraryRoute.serializer())
                 }
             }
         },
-        AnimeHome
+        AnimeHomeRoute
     ),
     screenWidthDp: Int
 ): ZekuAppState {
@@ -77,6 +77,7 @@ class ZekuAppState(
     }
 
     fun navigateToDestination(destination: Destination) {
+        Napier.d("Navigating to $destination")
         when (destination) {
             is Destination.AllCharacters -> TODO()
             is Destination.AllRecommendations -> TODO()
@@ -84,8 +85,17 @@ class ZekuAppState(
             is Destination.AllReviews -> TODO()
             is Destination.CharacterDetail -> TODO()
             is Destination.EpisodeDetail -> TODO()
-            is Destination.MediaDetail -> TODO()
-            is Destination.Search -> TODO()
+            is Destination.MediaDetail -> navigateTo(MediaDetailsRoute(destination.id, destination.type))
+            is Destination.Search -> navigateTo(SearchRoute)
+            is Destination.ViewAllCategories -> navigateTo(
+                AllCategoriesRoute(
+                    categoryId = destination.categoryId,
+                    type = destination.type,
+                    title = destination.title
+                )
+            )
+
+            Destination.Back -> popBackStack()
         }
     }
 

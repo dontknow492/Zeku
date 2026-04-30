@@ -13,6 +13,7 @@ data class Viewer(
     val id: Int,
     val name: String,
     val avatar: Avatar,
+    val bannerImage: String?,
     val statistics: Statistics
 )
 

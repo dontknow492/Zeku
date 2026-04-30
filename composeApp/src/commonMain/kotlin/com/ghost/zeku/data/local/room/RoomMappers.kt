@@ -2,7 +2,9 @@ package com.ghost.zeku.data.local.room
 
 
 import com.ghost.zeku.data.local.room.entities.*
+import com.ghost.zeku.domain.model.UserProfile
 import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
+import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.model.media.*
 
 /**
@@ -197,3 +199,21 @@ fun ChapterEntity.toDomain(): Chapter {
         volume = this.volume
     )
 }
+
+
+// Mapper functions to keep Domain and Data layers separate
+fun UserEntity.toDomain() = UserProfile(
+    id = userId,
+    username = username,
+    avatarUrl = avatarUrl,
+    bannerUrl = bannerUrl,
+    source = this.providerType
+)
+
+fun UserProfile.toEntity() = UserEntity(
+    providerType = source,
+    userId = id,
+    username = username,
+    avatarUrl = avatarUrl,
+    bannerUrl = bannerUrl
+)

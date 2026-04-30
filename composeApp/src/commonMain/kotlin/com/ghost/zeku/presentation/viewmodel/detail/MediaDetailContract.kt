@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.paging.PagingData
 import com.ghost.zeku.domain.model.MessageType
 import com.ghost.zeku.domain.model.enum.MediaFormat
 import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
@@ -13,6 +14,7 @@ import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.model.media.*
 import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.components.media.ReviewAction
+import kotlinx.coroutines.flow.Flow
 
 interface MediaDetailContract {
 
@@ -161,4 +163,12 @@ sealed interface Destination {
     data class AllRelations(val mediaId: Int) : Destination
 
     data class Search(val query: String?) : Destination
+
+    data class ViewAllCategories(
+        val title: String, // e.g., "Trending Now", "Popular"
+        val categoryId: String, // The enum name used to trigger "View All"
+        val type: MediaType,
+    ) : Destination
+
+    data object Back : Destination
 }

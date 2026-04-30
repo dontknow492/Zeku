@@ -10,6 +10,7 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import zeku.composeApp.BuildConfig
 
@@ -234,8 +235,11 @@ class MalApi(private val client: HttpClient) {
     // ========== USER PROFILE ==========
 
     suspend fun getCurrentUser(): MalUserDto {
-        return client.get("$baseUrl/users/@me") {
+        Napier.d("Get current user: My Anime List")
+        val response = client.get("$baseUrl/users/@me") {
             parameter("fields", "id,name,picture,anime_statistics")
-        }.body()
+        }
+        Napier.d("Get user info: ${response.bodyAsText()}")
+        return response.body()
     }
 }

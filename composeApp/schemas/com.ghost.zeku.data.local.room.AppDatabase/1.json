@@ -2,8 +2,48 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "a89ade9c1bb1e37d0f3b83f00ce137b5",
+    "identityHash": "06436d2fcd4696fed7ad39520980fca8",
     "entities": [
+      {
+        "tableName": "user_profiles",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`providerType` TEXT NOT NULL, `userId` TEXT NOT NULL, `username` TEXT NOT NULL, `avatarUrl` TEXT, `bannerUrl` TEXT, PRIMARY KEY(`providerType`))",
+        "fields": [
+          {
+            "fieldPath": "providerType",
+            "columnName": "providerType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "userId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "username",
+            "columnName": "username",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "avatarUrl",
+            "columnName": "avatarUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "bannerUrl",
+            "columnName": "bannerUrl",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "providerType"
+          ]
+        }
+      },
       {
         "tableName": "anime",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `source` TEXT NOT NULL, `title` TEXT NOT NULL, `coverImage` TEXT NOT NULL, `bannerImage` TEXT, `description` TEXT, `genres` TEXT NOT NULL, `status` TEXT, `score` REAL, `startDate` TEXT, `trackEntry` TEXT, `episodes` INTEGER, `duration` INTEGER, `studio` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`, `source`))",
@@ -788,7 +828,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a89ade9c1bb1e37d0f3b83f00ce137b5')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '06436d2fcd4696fed7ad39520980fca8')"
     ]
   }
 }

@@ -10,6 +10,7 @@ interface MediaSource :
     MangaSearchProvider,
     AnimeDetailsProvider,
     MangaDetailsProvider,
-    MediaTrackerProvider {
+    MediaTrackerProvider,
+    UserProvider {
     suspend fun getProviderType(): ProviderType
 }

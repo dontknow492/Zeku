@@ -1,8 +1,10 @@
 package com.ghost.zeku.domain.repository
 
+import com.ghost.zeku.domain.model.UserProfile
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.api.AuthState
 import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.provider.UserProvider
 import kotlinx.coroutines.flow.StateFlow
 
 interface AuthRepository {
