@@ -21,7 +21,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.ghost.zeku.TopLevelDestination
+import com.ghost.zeku.presentation.navigation.TopLevelDestination
 import com.ghost.zeku.presentation.theme.AppTheme
 import org.jetbrains.compose.resources.stringResource
 import zeku.composeapp.generated.resources.Res
