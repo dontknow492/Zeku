@@ -1,4 +1,4 @@
-package com.ghost.zeku.presentation.screen.detail
+package com.ghost.zeku.presentation.screen.details
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.unit.Dp

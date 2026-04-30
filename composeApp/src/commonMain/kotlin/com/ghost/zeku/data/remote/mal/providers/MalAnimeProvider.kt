@@ -162,10 +162,12 @@ class MalAnimeDetailsProvider(
                     }
 
                     val malData = malDeferred.await()
-                    val jikanChars = jikanDeferred.await()
+                    val jikanChars = jikanDeferred.await() ?: emptyList()
+
+                    val chars = jikanChars.mapNotNull { jikanChar -> jikanChar.toDomain() }
 
                     // Combine them!
-                    malData.toAnimeDetailsDomain(jikanChars)
+                    malData.toAnimeDetailsDomain(chars)
                 }
             },
             transform = { it } // Mapping is handled directly inside the apiCall block

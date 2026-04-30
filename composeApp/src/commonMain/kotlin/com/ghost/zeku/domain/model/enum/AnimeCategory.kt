@@ -9,3 +9,4 @@ enum class AnimeCategory {
     SEASONAL,      // Current season (Spring 2026, etc.)
     MOVIE          // Just movies
 }
+

@@ -22,7 +22,7 @@ fun Media.toHeroUiData(): MediaHeroUiData {
     return MediaHeroUiData(
         id = this.id,
         mediaType = this.mediaType,
-        title = this.title.getPreferred(),
+        title = this.title.getDisplayTitle(),
         bannerImageUrl = this.bannerImage ?: this.coverImage,
         coverImageUrl = this.coverImage,
         description = this.description ?: "",

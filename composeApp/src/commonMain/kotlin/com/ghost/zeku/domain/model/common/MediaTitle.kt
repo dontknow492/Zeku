@@ -8,12 +8,13 @@ data class MediaTitle(
     val romaji: String? = null,
     val english: String? = null,
     val native: String? = null,
+    val userPreferred: String? = null,
 ) {
     /**
      * Returns the best available title based on fallback logic.
      */
-    fun getPreferred(): String {
-        return romaji ?: english ?: native ?: "Unknown Title"
+    fun getDisplayTitle(): String {
+        return this.userPreferred ?: this.english ?: this.romaji ?: this.native ?: "Unknown Title"
     }
 }
 

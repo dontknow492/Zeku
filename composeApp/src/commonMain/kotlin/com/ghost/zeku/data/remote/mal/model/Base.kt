@@ -23,6 +23,7 @@ data class MalPaging(
 )
 
 // --- MAL Specific Models ---
+// --- MAL Specific Models ---
 @Serializable
 data class MalAnimeDto(
     val id: Int? = null,
@@ -31,22 +32,34 @@ data class MalAnimeDto(
     @SerialName("alternative_titles") val alternativeTitles: MalAlternativeTitles? = null,
     @SerialName("main_picture") val mainPicture: MalPicture? = null,
     val synopsis: String? = null,
-    @SerialName("num_episodes") val numEpisodes: Int? = null,
-    @SerialName("average_episode_duration") val averageEpisodeDuration: Int? = null, // ADDED: For duration mapping
-    val status: String? = null, // Airing status (e.g., "currently_airing")
-    val mean: Double? = null,
+    val background: String? = null, // ADDED
+    val pictures: List<MalPicture>? = null, // ADDED
+    val status: String? = null,
     val genres: List<MalGenre>? = null,
-    @SerialName("start_date") val startDate: String? = null, // ADDED: For date parsing
 
-    // Allows mapping user list data directly from a search or details request
+    @SerialName("start_date") val startDate: String? = null,
+    @SerialName("end_date") val endDate: String? = null, // ADDED
+    @SerialName("start_season") val startSeason: MalSeason? = null, // ADDED
+    val broadcast: MalBroadcast? = null, // ADDED
+
+    val mean: Double? = null,
+    val rank: Int? = null, // ADDED
+    val popularity: Int? = null, // ADDED
+    @SerialName("num_list_users") val numListUsers: Int? = null, // ADDED
+    val nsfw: String? = null, // "white", "gray", "black"
+    val rating: String? = null, // e.g., "pg_13", "r"
+    val source: String? = null, // e.g., "manga", "original"
+
+    @SerialName("num_episodes") val numEpisodes: Int? = null,
+    @SerialName("average_episode_duration") val averageEpisodeDuration: Int? = null,
+
+    val studios: List<MalStudio>? = null, // ADDED
+
     @SerialName("my_list_status") val myListStatus: MalListStatus? = null,
-    // Relational Data
     @SerialName("related_anime") val relatedAnime: List<MalRelatedEdge>? = null,
     @SerialName("related_manga") val relatedManga: List<MalRelatedEdge>? = null,
-    val recommendations: List<MalRecommendationEdge>? = null,
-
-
-    )
+    val recommendations: List<MalRecommendationEdge>? = null
+)
 
 @Serializable
 data class MalMangaDto(
@@ -56,26 +69,65 @@ data class MalMangaDto(
     @SerialName("alternative_titles") val alternativeTitles: MalAlternativeTitles? = null,
     @SerialName("main_picture") val mainPicture: MalPicture? = null,
     val synopsis: String? = null,
-    val mean: Double? = null,
-    val status: String? = null, // Publishing status
+    val background: String? = null, // ADDED
+    val pictures: List<MalPicture>? = null, // ADDED
+    val status: String? = null,
     val genres: List<MalGenre>? = null,
+
+    @SerialName("start_date") val startDate: String? = null,
+    @SerialName("end_date") val endDate: String? = null, // ADDED
+
+    val mean: Double? = null,
+    val rank: Int? = null, // ADDED
+    val popularity: Int? = null, // ADDED
+    @SerialName("num_list_users") val numListUsers: Int? = null, // ADDED
+    val nsfw: String? = null,
+
     @SerialName("num_chapters") val numChapters: Int? = null,
     @SerialName("num_volumes") val numVolumes: Int? = null,
-    @SerialName("start_date") val startDate: String? = null, // ADDED: For date parsing
 
-    // Relational Data
+    val authors: List<MalAuthorEdge>? = null, // ADDED
+    val serialization: List<MalSerializationEdge>? = null, // ADDED
+
     @SerialName("related_anime") val relatedAnime: List<MalRelatedEdge>? = null,
     @SerialName("related_manga") val relatedManga: List<MalRelatedEdge>? = null,
     val recommendations: List<MalRecommendationEdge>? = null,
-
     @SerialName("my_list_status") val myListStatus: MalListStatus? = null
 )
 
+
 @Serializable
-data class MalAlternativeTitles(
-    val en: String? = null,
-    val ja: String? = null
+data class MalStudio(val id: Int? = null, val name: String? = null)
+
+@Serializable
+data class MalAuthorEdge(val node: MalAuthorNode? = null, val role: String? = null)
+
+@Serializable
+data class MalAuthorNode(
+    val id: Int? = null,
+    @SerialName("first_name") val firstName: String? = null,
+    @SerialName("last_name") val lastName: String? = null
 )
+
+
+@Serializable
+data class MalAlternativeTitles(val en: String? = null, val ja: String? = null, val synonyms: List<String>? = null)
+
+@Serializable
+data class MalSeason(val year: Int? = null, val season: String? = null)
+
+@Serializable
+data class MalBroadcast(
+    @SerialName("day_of_the_week") val dayOfTheWeek: String? = null,
+    @SerialName("start_time") val startTime: String? = null
+)
+
+@Serializable
+data class MalSerializationEdge(val node: MalSerializationNode? = null)
+
+@Serializable
+data class MalSerializationNode(val id: Int? = null, val name: String? = null)
+
 
 @Serializable
 data class MalPicture(

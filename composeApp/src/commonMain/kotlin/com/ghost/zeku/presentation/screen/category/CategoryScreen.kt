@@ -6,29 +6,25 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
-import androidx.paging.PagingData
-import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.media.Media
-import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.components.media.poster.MediaPosterCard
-import com.ghost.zeku.presentation.components.media.poster.PosterConfig
 import com.ghost.zeku.presentation.components.media.poster.toPosterUiData
+import com.ghost.zeku.presentation.navigation.Destination
 import com.ghost.zeku.presentation.viewmodel.category.CategoryContract
 import com.ghost.zeku.presentation.viewmodel.category.CategoryViewModel
-import com.ghost.zeku.presentation.viewmodel.detail.Destination
 import com.ghost.zeku.utils.shimmerEffect
-import kotlinx.coroutines.flow.Flow
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

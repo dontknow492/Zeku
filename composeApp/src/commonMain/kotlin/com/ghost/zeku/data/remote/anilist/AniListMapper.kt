@@ -9,7 +9,7 @@ import com.ghost.zeku.domain.model.common.TrackEntry
 import com.ghost.zeku.domain.model.enum.*
 import com.ghost.zeku.domain.model.media.*
 import com.ghost.zeku.domain.model.search.SearchSort
-import java.util.Calendar
+import java.util.*
 
 // =========================================================================================
 // MAIN MAPPERS
@@ -69,23 +69,56 @@ fun AniListMedia.toAnimeDetailsDomain(): AnimeDetails {
     return AnimeDetails(
         id = this.id,
         source = ProviderType.ANILIST,
-        title = this.title.toDomain(), // Assuming you have this mapper already
-        coverImage = this.coverImage?.large ?: "",
-        bannerImage = this.bannerImage,
-        description = this.description,
-        status = this.status,
-        format = this.format.toMediaFormat(),
-        genres = this.genres ?: emptyList(),
-        averageScore = this.averageScore?.toDouble(),
+        title = this.title?.toDomain() ?: MediaTitle(),
+        synonyms = this.synonyms ?: emptyList(),
+        countryOfOrigin = this.countryOfOrigin,
 
-        trailer = this.trailer?.toDomain(),
-        externalLinks = this.externalLinks?.map { it.toDomain() } ?: emptyList(),
-        characters = this.characters?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
-        relations = this.relations?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
+        coverImage = this.coverImage?.extraLarge ?: this.coverImage?.large ?: "",
+        bannerImage = this.bannerImage,
+        extraPictures = emptyList(), // AniList doesn't supply an array of extra pictures directly
+        description = this.description,
+        background = null, // AniList descriptions contain the background context
+
+        status = mapToMediaReleaseStatus(this.status),
+        format = runCatching { MediaFormat.valueOf(this.format ?: "") }.getOrNull(),
+        sourceMaterial = this.source?.toSourceMaterial(),
+        isAdult = this.isAdult ?: false,
+
+        startDate = this.startDate?.toMediaDate(),
+        endDate = this.endDate?.toMediaDate(),
+        season = runCatching { MediaSeason.valueOf(this.season ?: "") }.getOrNull(),
+        seasonYear = this.seasonYear,
+        broadcastString = null, // AniList uses AiringSchedule instead of a string
+
+        genres = this.genres ?: emptyList(),
+        tags = this.tags?.map { it.toDomain() } ?: emptyList(),
+
+        averageScore = this.averageScore?.toDouble(),
+        meanScore = this.meanScore?.toDouble(),
+        popularity = this.popularity,
+        favourites = this.favourites,
+        rank = null, // Can be mapped later if ranking node is queried
 
         totalEpisodes = this.episodes,
-        nextAiringEpisode = this.nextAiringEpisode?.toDomain(),
-        trackEntry = this.mediaListEntry?.toTrackEntry(this.id, this.episodes)
+        durationPerEpisode = this.duration,
+        contentRating = if (this.isAdult == true) "18+" else null,
+        nextAiringEpisode = this.nextAiringEpisode?.let { AiringSchedule(it.episode, it.timeUntilAiring) },
+        studios = this.studios?.edges?.mapNotNull { it.node?.toDomain() } ?: emptyList(),
+
+        trailer = this.trailer?.let {
+            MediaTrailer(
+                title = null,
+                id = it.id ?: "",
+                site = it.site ?: "",
+                thumbnail = it.thumbnail
+            )
+        },
+        externalLinks = this.externalLinks?.map { ExternalLink(it.url, it.site, it.icon) } ?: emptyList(),
+        characters = this.characters?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
+        relations = this.relations?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
+        staff = this.staff?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
+
+        trackEntry = null // Map your mediaListEntry if needed
     )
 }
 
@@ -93,39 +126,72 @@ fun AniListMedia.toMangaDetailsDomain(): MangaDetails {
     return MangaDetails(
         id = this.id,
         source = ProviderType.ANILIST,
-        title = this.title.toDomain(),
-        coverImage = this.coverImage?.large ?: "",
-        bannerImage = this.bannerImage,
-        description = this.description,
-        status = this.status,
-        format = this.format.toMediaFormat(),
-        genres = this.genres ?: emptyList(),
-        averageScore = this.averageScore?.toDouble(),
+        title = this.title?.toDomain() ?: MediaTitle(),
+        synonyms = this.synonyms ?: emptyList(),
+        countryOfOrigin = this.countryOfOrigin,
 
-        externalLinks = this.externalLinks?.map { it.toDomain() } ?: emptyList(),
-        characters = this.characters?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
-        relations = this.relations?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
+        coverImage = this.coverImage?.extraLarge ?: this.coverImage?.large ?: "",
+        bannerImage = this.bannerImage,
+        extraPictures = emptyList(),
+        description = this.description,
+        background = null,
+
+        status = mapToMediaReleaseStatus(this.status),
+        format = runCatching { MediaFormat.valueOf(this.format ?: "") }.getOrNull(),
+        sourceMaterial = this.source?.toSourceMaterial(),
+        isAdult = this.isAdult ?: false,
+
+        startDate = this.startDate?.toMediaDate(),
+        endDate = this.endDate?.toMediaDate(),
+
+        genres = this.genres ?: emptyList(),
+        tags = this.tags?.map { it.toDomain() } ?: emptyList(),
+
+        averageScore = this.averageScore?.toDouble(),
+        meanScore = this.meanScore?.toDouble(),
+        popularity = this.popularity,
+        favourites = this.favourites,
+        rank = null,
 
         totalChapters = this.chapters,
         totalVolumes = this.volumes,
-        trackEntry = this.mediaListEntry?.toTrackEntry(this.id, this.chapters)
+        serializations = emptyList(), // External linking is best for this in AniList
+
+        authors = this.staff?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
+        externalLinks = this.externalLinks?.map { ExternalLink(it.url, it.site, it.icon) } ?: emptyList(),
+        characters = this.characters?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
+        relations = this.relations?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
+
+        trackEntry = null
     )
 }
 
-// --- Sub-component Mappers ---
+fun AniListDate.toMediaDate() = MediaDate(year = this.year, month = this.month, day = this.day)
 
-private fun AniListTrailer.toDomain() = MediaTrailer(
-    id = this.id ?: "",
-    site = this.site ?: "unknown",
-    thumbnail = this.thumbnail,
-    title = null
+
+fun AniListTag.toDomain() = MediaTag(
+    name = this.name,
+    description = this.description,
+    rank = this.rank,
+    isSpoiler = this.isMediaSpoiler ?: false,
+    category = this.category
 )
 
-private fun AniListExternalLink.toDomain() = ExternalLink(
-    url = this.url ?: "",
-    site = this.site ?: "Website",
-    iconUrl = this.icon
+fun AniListStudioNode.toDomain() = MediaStudio(
+    id = this.id,
+    name = this.name,
+    isAnimationStudio = this.isAnimationStudio
 )
+
+fun AniListStaffEdge.toDomain(): MediaStaff? {
+    val node = this.node ?: return null
+    return MediaStaff(
+        id = node.id,
+        name = node.name?.userPreferred ?: "Unknown",
+        role = this.role ?: "Unknown Role",
+        imageUrl = node.image?.large
+    )
+}
 
 fun AniListCharacterEdge.toDomain(): MediaCharacter? {
     val node = this.node ?: return null
@@ -142,15 +208,12 @@ fun AniListCharacterEdge.toDomain(): MediaCharacter? {
 fun AniListRelationEdge.toDomain(): MediaRelation? {
     val node = this.node ?: return null
     return MediaRelation(
-        id = node.id ?: return null,
-
-        // SAFE CONVERSIONS
-        relationType = RelationType.fromString(this.relationType),
-        mediaType = MediaType.fromString(node.type),
-        format = node.format.toMediaFormat(),
-
-        title = node.title?.toDomain() ?: return null, // assuming toDomain() exists for Title
-        coverImage = node.coverImage?.large
+        id = node.id,
+        relationType = runCatching { RelationType.valueOf(this.relationType ?: "") }.getOrDefault(RelationType.OTHER),
+        title = node.title?.toDomain() ?: MediaTitle(),
+        coverImage = node.coverImage?.large,
+        mediaType = if (node.type == "ANIME") MediaType.ANIME else MediaType.MANGA,
+        format = runCatching { MediaFormat.valueOf(node.format ?: "") }.getOrDefault(MediaFormat.UNKNOWN)
     )
 }
 
@@ -183,7 +246,8 @@ private fun AniListTitle?.toDomain(): MediaTitle {
     return MediaTitle(
         romaji = this?.romaji,
         english = this?.english,
-        native = this?.native
+        native = this?.native,
+        userPreferred = this?.userPreferred,
     )
 }
 
@@ -277,7 +341,7 @@ fun mapDomainToTrackStatus(status: TrackStatus): String {
 /**
  * Maps the Anime/Manga's global release status (e.g., Releasing, Finished)
  */
-fun mapToMediaReleaseStatus(statusStr: String?): MediaReleaseStatus {
+private fun mapToMediaReleaseStatus(statusStr: String?): MediaReleaseStatus {
     return when (statusStr?.uppercase()) {
         "FINISHED" -> MediaReleaseStatus.FINISHED
         "RELEASING" -> MediaReleaseStatus.RELEASING
@@ -385,4 +449,9 @@ fun getCurrentSeasonAndYear(): Pair<String, Int> {
         else -> "FALL"
     }
     return season to year
+}
+
+
+private fun String.toSourceMaterial(): MediaSourceMaterial {
+    return runCatching { MediaSourceMaterial.valueOf(this) }.getOrDefault(MediaSourceMaterial.UNKNOWN)
 }

@@ -18,8 +18,11 @@ interface MainContract {
 
     sealed interface Event {
         data object Initialize : Event
-        data class SwitchAccount(val providerType: ProviderType) : Event
-        data class Logout(val providerType: ProviderType) : Event
+        data object OpenZekuSite : Event
+        data class SwitchAccount(val user: UserProfile) : Event
+        data class Logout(val user: UserProfile) : Event
+        data object AddAccountClick : Event
+        data class ViewAccount(val user: UserProfile) : Event
     }
 
     sealed interface Effect {

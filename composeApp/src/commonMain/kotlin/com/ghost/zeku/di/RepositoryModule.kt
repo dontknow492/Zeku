@@ -4,7 +4,6 @@ import com.ghost.zeku.data.remote.anilist.AniListSource
 import com.ghost.zeku.data.remote.mal.MalSource
 import com.ghost.zeku.data.repository.MediaRepositoryImpl
 import com.ghost.zeku.data.repository.UserRepositoryImpl
-import com.ghost.zeku.domain.MediaSource
 import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.repository.MediaRepository
 import com.ghost.zeku.domain.repository.UserRepository
@@ -25,6 +24,7 @@ val repoModule = module {
         UserRepositoryImpl(
             authRepository = get(),
             userDao = get(),
+            userSettings = get(),
             mediaSources = listOf(
                 get<MalSource>(),
                 get<AniListSource>()

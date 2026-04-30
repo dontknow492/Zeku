@@ -11,11 +11,13 @@ import com.ghost.zeku.domain.model.api.getErrorMessage
 import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.repository.AuthRepository
 import com.ghost.zeku.domain.repository.UserRepository
+import com.ghost.zeku.domain.repository.UserSettings
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 class UserRepositoryImpl(
+    private val userSettings: UserSettings,
     private val authRepository: AuthRepository, // INJECT YOUR CENTRALIZED REPO HERE!
     private val userDao: UserDao,
     private val mediaSources: List<MediaSource> // INJECT YOUR SOURCES INSTEAD!
@@ -24,15 +26,18 @@ class UserRepositoryImpl(
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     // The currently selected provider (Ideally backed by DataStore/Preferences!)
-    private val _activeProvider = MutableStateFlow<ProviderType?>(null)
-    override val activeProvider: StateFlow<ProviderType?> = _activeProvider.asStateFlow()
+
+    override val activeProvider = userSettings.preferences.map { it.activeProvider }.stateIn(
+        scope = repositoryScope,
+        started = SharingStarted.Lazily,
+        initialValue = userSettings.preferences.value.activeProvider
+    )
 
     // 1. ACTIVE USER: Automatically switches when _activeProvider changes
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val currentUser: StateFlow<UserProfile?> = _activeProvider
+    override val currentUser: StateFlow<UserProfile?> = activeProvider
         .flatMapLatest { provider ->
-            if (provider == null) flowOf(null)
-            else userDao.getUserProfileFlow(provider).map { it?.toDomain() }
+            userDao.getUserProfileFlow(provider).map { it?.toDomain() }
         }
         .stateIn(repositoryScope, SharingStarted.Eagerly, null)
 
@@ -42,9 +47,6 @@ class UserRepositoryImpl(
         .stateIn(repositoryScope, SharingStarted.Eagerly, emptyList())
 
     init {
-        // Set initial active provider (Fallback to MAL or whatever is first)
-        _activeProvider.value = ProviderType.MYANIMELIST
-
         // Listen to AuthState for EVERY provider cleanly using the Map!
         ProviderType.entries.forEach { provider ->
             repositoryScope.launch {
@@ -76,14 +78,15 @@ class UserRepositoryImpl(
     }
 
     override suspend fun switchProvider(provider: ProviderType) {
+
         // Verify it's a valid enum string before switching
-        _activeProvider.value = provider
+        userSettings.updatePreferences { it.copy(activeProvider = provider) }
         Napier.d { "Switched active app provider to: $provider" }
     }
 
     override suspend fun fetchUserProfile(provider: ProviderType?): Result<Unit> {
         val targetProvider =
-            provider ?: _activeProvider.value ?: return Result.failure(Exception("No provider selected"))
+            provider ?: activeProvider.value ?: return Result.failure(Exception("No provider selected"))
 
         val source = mediaSources.find { it.getProviderType() == targetProvider }
             ?: return Result.failure(Exception("No MediaSource implemented for $targetProvider"))
@@ -93,9 +96,7 @@ class UserRepositoryImpl(
                 ?: throw IllegalStateException("Cannot fetch profile without a token")
 
             // FIX: Pass the token to the source!
-            val result = source.getCurrentUser()
-
-            val actualUser = when (result) {
+            val actualUser = when (val result = source.getCurrentUser()) {
                 is ApiResult.Empty -> throw IllegalStateException("No user found")
                 is ApiResult.Error -> throw result.error.cause ?: Exception(result.getErrorMessage())
                 is ApiResult.Loading -> throw Exception("Fetching profile")
@@ -113,12 +114,20 @@ class UserRepositoryImpl(
     }
 
     override suspend fun clearUserData(provider: ProviderType?) {
-        val targetProvider = provider ?: _activeProvider.value ?: return
+        Napier.d { "Request to clear user data" }
+        if (provider == null) {
+            Napier.d { "No user found" }
+            return
+        }
+
+        Napier.d { "Clearing user data for user: $provider" }
+
+        val targetProvider = provider ?: activeProvider.value ?: return
         userDao.deleteUser(targetProvider)
 
         // If we deleted the active user, fallback to null (or handle fallback logic)
-        if (_activeProvider.value == targetProvider) {
-            _activeProvider.value = null
+        if (activeProvider.value == targetProvider) {
+            userSettings.updatePreferences { it.copy(activeProvider = targetProvider) }
         }
     }
 }

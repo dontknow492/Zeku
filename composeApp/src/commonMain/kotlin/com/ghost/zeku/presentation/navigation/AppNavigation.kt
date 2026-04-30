@@ -7,15 +7,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.NavDisplay
@@ -23,33 +21,44 @@ import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.presentation.components.sidebar.ZekuAdaptiveSidebar
 import com.ghost.zeku.presentation.screen.category.CategoryScreen
 import com.ghost.zeku.presentation.screen.detail.MediaDetailScreen
+import com.ghost.zeku.presentation.screen.details.DetailScreen
 import com.ghost.zeku.presentation.screen.home.MediaHomeScreen
-import io.github.aakira.napier.Napier
+import com.ghost.zeku.presentation.viewmodel.main.MainContract
+import com.ghost.zeku.presentation.viewmodel.main.MainViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 
 @Composable
-fun ZekuAppWrapper() {
+fun ZekuAppWrapper(
+    viewModel: MainViewModel = koinViewModel()
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
     val layoutDirection = LocalLayoutDirection.current
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val appState = rememberZekuAppState(
+        val uiState = rememberZekuAppState(
             screenWidthDp = maxWidth.value.toInt()
         )
 
+        LaunchedEffect(state.currentUser) {
+            uiState.resetStack()
+            uiState.navigateTo(AnimeHomeRoute)
+        }
+
         // Remember whether the user has toggled the sidebar to be wide or narrow.
         // Defaults to expanded on large screens, collapsed on tablets.
-        var isSidebarExpanded by rememberSaveable(appState.isExpandedScreen) {
-            mutableStateOf(appState.isExpandedScreen)
+        var isSidebarExpanded by rememberSaveable(uiState.isExpandedScreen) {
+            mutableStateOf(uiState.isExpandedScreen)
         }
 
         Scaffold(
             bottomBar = {
                 AnimatedVisibility(
-                    visible = appState.shouldShowBottomBar,
+                    visible = uiState.shouldShowBottomBar,
                     enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
                     exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
                 ) {
-                    ZekuBottomNavigationBar(appState)
+                    ZekuBottomNavigationBar(uiState)
                 }
             },
             snackbarHost = { SnackbarHost(SnackbarHostState()) }
@@ -65,34 +74,42 @@ fun ZekuAppWrapper() {
             ) {
                 // Adaptive Animated Sidebar
                 AnimatedVisibility(
-                    visible = appState.shouldShowSideNavigation,
+                    visible = uiState.shouldShowSideNavigation,
                     enter = slideInHorizontally(initialOffsetX = { -it }) + fadeIn(),
                     exit = slideOutHorizontally(targetOffsetX = { -it }) + fadeOut()
                 ) {
                     ZekuAdaptiveSidebar(
-                        currentDestination = appState.currentTopLevelDestination,
+                        currentDestination = uiState.currentTopLevelDestination,
                         expanded = isSidebarExpanded,
-                        expandEnabled = appState.isExpandedScreen,
-                        canGoBack = appState.canGoBack,
+                        expandEnabled = uiState.isExpandedScreen,
+                        canGoBack = uiState.canGoBack,
                         onToggleExpanded = { isSidebarExpanded = !isSidebarExpanded },
                         onNavigate = { destination ->
-                            appState.navigateToTopLevelDestination(destination)
+                            uiState.navigateToTopLevelDestination(destination)
                         },
                         onBackPressed = {
-                            appState.popBackStack()
+                            uiState.popBackStack()
                         },
-                        onLogoClick = { TODO("Implement: Open app site") }
+                        onLogoClick = { viewModel.onEvent(MainContract.Event.OpenZekuSite) },
+                        currentUser = state.currentUser,
+                        allUsers = state.availableUsers,
+                        onAccountSwitch = { viewModel.onEvent(MainContract.Event.SwitchAccount(it)) },
+                        onLogoutClick = { viewModel.onEvent(MainContract.Event.Logout(it)) },
+                        onAddAccountClick = { viewModel.onEvent(MainContract.Event.AddAccountClick) },
+                        onAvatarClick = { viewModel.onEvent(MainContract.Event.ViewAccount(it)) },
                     )
                 }
 
                 // Content is rendered via NavDisplay
                 ZekuNavDisplay(
-                    appState = appState,
+                    appState = uiState,
                     modifier = Modifier.weight(1f)
                 )
             }
         }
     }
+
+
 }
 
 // ============================================================================
@@ -173,7 +190,7 @@ fun ZekuNavDisplay(
                 }
 
                 is MediaDetailsRoute -> NavEntry(key) {
-                    MediaDetailScreen(
+                    DetailScreen(
                         mediaId = key.id,
                         mediaType = key.type,
                         onNavigate = appState::navigateToDestination,

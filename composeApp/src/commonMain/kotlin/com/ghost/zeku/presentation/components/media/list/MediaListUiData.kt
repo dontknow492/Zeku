@@ -57,7 +57,7 @@ fun Media.toMediaListUiData(): MediaListUiData {
         id = this.id,
         mediaType = this.mediaType,
         description = this.description,
-        title = this.title.getPreferred(),
+        title = this.title.getDisplayTitle(),
         coverImageUrl = this.coverImage,
         subTitle = formatAndYearStr,
         genres = this.genres,

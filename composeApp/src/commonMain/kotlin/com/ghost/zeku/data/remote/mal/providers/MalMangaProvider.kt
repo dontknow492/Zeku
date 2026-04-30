@@ -156,9 +156,11 @@ class MalMangaDetailsProvider(
                     }
 
                     val malData = malDeferred.await()
-                    val jikanChars = jikanDeferred.await()
+                    val jikanChars = jikanDeferred.await() ?: emptyList()
 
-                    malData.toMangaDetailsDomain(jikanChars)
+                    val chars = jikanChars.mapNotNull { jikanChar -> jikanChar.toDomain() }
+
+                    malData.toMangaDetailsDomain(chars)
                 }
             },
             transform = { it }

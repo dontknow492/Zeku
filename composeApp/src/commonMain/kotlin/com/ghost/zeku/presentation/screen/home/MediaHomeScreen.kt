@@ -39,7 +39,7 @@ import com.ghost.zeku.presentation.components.media.poster.MediaPosterCard
 import com.ghost.zeku.presentation.components.media.poster.PosterCardShimmer
 import com.ghost.zeku.presentation.components.media.poster.toPosterUiData
 import com.ghost.zeku.presentation.components.section.*
-import com.ghost.zeku.presentation.viewmodel.detail.Destination
+import com.ghost.zeku.presentation.navigation.Destination
 import com.ghost.zeku.presentation.viewmodel.home.HomeContract
 import com.ghost.zeku.presentation.viewmodel.home.HomeViewModel
 import com.ghost.zeku.utils.desktopDragScroll

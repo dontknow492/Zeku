@@ -23,7 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ghost.zeku.domain.model.UserProfile
 import com.ghost.zeku.domain.model.enum.ProviderType
-import com.ghost.zeku.presentation.components.item.UserProfileItem
+import com.ghost.zeku.presentation.components.item.UserProfileWithDropdown
 import com.ghost.zeku.presentation.navigation.TopLevelDestination
 import com.ghost.zeku.presentation.theme.AppTheme
 import org.jetbrains.compose.resources.stringResource
@@ -38,11 +38,16 @@ fun ZekuAdaptiveSidebar(
     expanded: Boolean,
     expandEnabled: Boolean,
     canGoBack: Boolean,
+    currentUser: UserProfile? = null,
+    allUsers: List<UserProfile>,
     onNavigate: (topLevelDestination: TopLevelDestination) -> Unit,
     onToggleExpanded: () -> Unit,
     onBackPressed: () -> Unit,
     onLogoClick: () -> Unit,
-    userProfile: UserProfile? = null,
+    onAccountSwitch: (UserProfile) -> Unit,
+    onLogoutClick: (UserProfile) -> Unit,
+    onAddAccountClick: () -> Unit,
+    onAvatarClick: (userProfile: UserProfile) -> Unit,
 ) {
     // Determine whether the sidebar should be permanently expanded
 //    val autoExpanded = appState.isMediumScreen || appState.isExpandedScreen
@@ -165,18 +170,16 @@ fun ZekuAdaptiveSidebar(
             }
 
             Spacer(Modifier.weight(1f))
-            AnimatedVisibility(
-                userProfile != null,
-            ) {
-                UserProfileItem(
-                    user = userProfile,           // nullable UserProfile
-                    onLogout = { /* handle logout */ },
-                    onAvatarClick = { /* navigate to profile */ },
-                    isExpanded = expanded,
-                    modifier = Modifier
-                )
-            }
 
+            UserProfileWithDropdown(
+                currentUser = currentUser,
+                allAccounts = allUsers,
+                expanded = expanded,
+                onAccountSwitch = onAccountSwitch,
+                onLogout = onLogoutClick,
+                onAddAccount = onAddAccountClick,
+                onAvatarClick = onAvatarClick,
+            )
         }
     }
 }
@@ -265,6 +268,8 @@ private fun SidebarItem(
                         )
                     }
                 }
+
+
             }
         }
     }
@@ -276,22 +281,39 @@ private fun SidebarItem(
 private fun PreviewApp() {
     var currentDestination by remember { mutableStateOf(TopLevelDestination.ANIME) }
     var expanded by remember { mutableStateOf(!false) }
+    val users = listOf(
+        UserProfile(
+            id = "1",
+            source = ProviderType.MYANIMELIST,
+            username = "alice",
+            avatarUrl = "https://example.com/alice.png",
+            bannerUrl = "https://example.com/alice/_banner.png"
+        ),
+        UserProfile(
+            id = "2",
+            source = ProviderType.ANILIST,
+            username = "bob",
+            avatarUrl = "https://example.com/bob.jpg",
+            bannerUrl = null
+        ),
+    )
     AppTheme {
         ZekuAdaptiveSidebar(
             currentDestination = currentDestination,
             expanded = expanded,
             expandEnabled = true,
             canGoBack = true,
+            currentUser = users[0],
+            allUsers = users,
             onToggleExpanded = { expanded = !expanded },
             onNavigate = { currentDestination = it },
             onBackPressed = { },
             onLogoClick = {},
-            userProfile = UserProfile(
-                id = "12345",
-                username = "User",
-                source = ProviderType.MYANIMELIST,
-                avatarUrl = "https://picsum.photos/200"
-            )
+            onAvatarClick = {},
+            onAccountSwitch = {},
+            onLogoutClick = {},
+            onAddAccountClick = {}
+
         )
     }
 }

@@ -13,11 +13,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,17 +26,130 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.ghost.zeku.data.remote.anilist.model.Avatar
 import com.ghost.zeku.domain.model.UserProfile
 import com.ghost.zeku.domain.model.enum.ProviderType
-import com.ghost.zeku.presentation.theme.AppTheme
+import org.jetbrains.compose.resources.stringResource
+import zeku.composeapp.generated.resources.Res
+import zeku.composeapp.generated.resources.unknown
+
+@Composable
+fun UserProfileWithDropdown(
+    currentUser: UserProfile?,
+    allAccounts: List<UserProfile>, // includes current
+    expanded: Boolean, // ui expanded not drop down
+    onAccountSwitch: (UserProfile) -> Unit,
+    onAddAccount: () -> Unit,
+    onLogout: (UserProfile) -> Unit,
+    onAvatarClick: (UserProfile) -> Unit, // kept as separate for avatar click if they still want it
+    modifier: Modifier = Modifier
+) {
+    var dropDownExpanded by remember { mutableStateOf(false) }
+
+    Box(modifier = modifier) {
+        // Trigger row
+        UserProfileItem(
+            user = currentUser,
+            onClick = { dropDownExpanded = !dropDownExpanded },
+            onLogout = {
+                if (currentUser != null) {
+                    onLogout(currentUser)
+                }
+            },
+            onAvatarClick = {
+                if (currentUser != null) {
+                    onAvatarClick(currentUser)
+                }
+            },
+            modifier = Modifier,
+            isExpanded = expanded
+        )
+
+        // Dropdown menu
+        DropdownMenu(
+            expanded = dropDownExpanded,
+            onDismissRequest = { dropDownExpanded = false },
+            // Offsets the menu slightly so it floats nicely next to the sidebar
+            offset = DpOffset(x = 16.dp, y = (-16).dp),
+            modifier = Modifier.width(300.dp) // Keep it a fixed, clean width
+        ) {
+            Text(
+                text = "Switch Account",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+
+            allAccounts.forEach { user ->
+                val isActive = user.id == currentUser?.id
+
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(user.username, style = MaterialTheme.typography.titleSmall)
+                            Text(user.source.name, style = MaterialTheme.typography.bodySmall)
+                        }
+                    },
+                    leadingIcon = {
+                        if (user.avatarUrl != null) {
+                            Avatar(user, onClick = { onAvatarClick(user) }, size = 32.dp)
+                        } else {
+                            Icon(Icons.Default.Person, contentDescription = null)
+                        }
+                    },
+                    trailingIcon = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (isActive) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Active",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp).padding(end = 8.dp)
+                                )
+                            }
+                            IconButton(
+                                onClick = { onLogout(user) },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                                    contentDescription = "Logout",
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                    },
+                    onClick = {
+                        if (!isActive) {
+                            onAccountSwitch(user)
+                            dropDownExpanded = false
+                        }
+                    }
+                )
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+            DropdownMenuItem(
+                text = { Text("Add another account") },
+                leadingIcon = { Icon(Icons.Default.Add, contentDescription = null) },
+                onClick = {
+                    onAddAccount()
+                    dropDownExpanded = false
+                }
+            )
+        }
+    }
+}
 
 
 @Composable
 fun UserProfileItem(
     user: UserProfile?,
+    onClick: () -> Unit,
     onLogout: () -> Unit,
     onAvatarClick: () -> Unit,
     isExpanded: Boolean,
@@ -59,7 +172,7 @@ fun UserProfileItem(
     )
 
     Surface(
-        onClick = {},
+        onClick = onClick,
         interactionSource = interaction,
         shape = RoundedCornerShape(20.dp),
         color = containerColor,
@@ -77,16 +190,16 @@ fun UserProfileItem(
     ) {
 
         if (isExpanded) {
-            ExpandedContent(user, onAvatarClick, onLogout)
+            ExpandedUserContent(user, onAvatarClick, onLogout)
         } else {
-            CollapsedContent(user, onAvatarClick, onLogout)
+            CollapsedUserContent(user, onAvatarClick, onLogout)
         }
     }
 }
 
 
 @Composable
-private fun ExpandedContent(
+private fun ExpandedUserContent(
     user: UserProfile?,
     onAvatarClick: () -> Unit,
     onLogout: () -> Unit
@@ -107,18 +220,23 @@ private fun ExpandedContent(
         Spacer(Modifier.width(12.dp))
 
         Column(Modifier.weight(1f)) {
+
             Text(
                 text = user?.username ?: "Guest",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold
             )
+            Spacer(Modifier.width(4.dp))
+            // Source pill / label
 
             Text(
-                text = "View profile",
+                text = user?.source?.name ?: stringResource(Res.string.unknown),
+                maxLines = 1,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary
             )
         }
+
 
         // 🔥 Better logout (icon button, not stretched text button)
         IconButton(
@@ -135,7 +253,7 @@ private fun ExpandedContent(
 
 
 @Composable
-private fun CollapsedContent(
+private fun CollapsedUserContent(
     user: UserProfile?,
     onAvatarClick: () -> Unit,
     onLogout: () -> Unit
@@ -171,7 +289,7 @@ private fun CollapsedContent(
 
 
 @Composable
-private fun Avatar(
+fun Avatar(
     user: UserProfile?,
     onClick: () -> Unit,
     size: Dp
@@ -216,19 +334,34 @@ private fun Avatar(
 }
 
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun UserProfileItemPreview() {
-    val user = UserProfile(
-        id = "12345",
-        username = "User",
-        source = ProviderType.MYANIMELIST,
-        avatarUrl = "https://picsum.photos/200"
+    val users = listOf(
+        UserProfile(
+            id = "1",
+            source = ProviderType.MYANIMELIST,
+            username = "alice",
+            avatarUrl = "https://example.com/alice.png",
+            bannerUrl = "https://example.com/alice/_banner.png"
+        ),
+        UserProfile(
+            id = "2",
+            source = ProviderType.ANILIST,
+            username = "bob",
+            avatarUrl = "https://example.com/bob.jpg",
+            bannerUrl = null
+        ),
     )
-    AppTheme {
-        Column {
-            UserProfileItem(user = user, onLogout = {}, onAvatarClick = {}, true)
-            UserProfileItem(user = user, onLogout = {}, onAvatarClick = {}, false)
-        }
-    }
+
+    UserProfileWithDropdown(
+        currentUser = users[0],
+        allAccounts = users,
+        expanded = false,
+        onAccountSwitch = {},
+        onLogout = {},
+        onAvatarClick = {},
+        onAddAccount = {}
+    )
+
 }

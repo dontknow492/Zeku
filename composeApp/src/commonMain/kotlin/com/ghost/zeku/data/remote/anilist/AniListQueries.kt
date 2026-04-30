@@ -22,14 +22,26 @@ object AniListQueries {
     private const val MEDIA_CORE_FIELDS = """
         id
         type
-        title { romaji english native }
-        coverImage { large }
+        title { romaji english native userPreferred }
+        synonyms
+        countryOfOrigin
+        coverImage { large extraLarge }
         bannerImage
-        description
-        genres
+        description(asHtml: false)
         status
-        averageScore
+        format
+        source
+        isAdult
         startDate { year month day }
+        endDate { year month day }
+        season
+        seasonYear
+        genres
+        tags { name description rank isMediaSpoiler category }
+        averageScore
+        meanScore
+        popularity
+        favourites
     """
 
     private const val MEDIA_LIST_ENTRY_FIELDS = """
@@ -42,8 +54,20 @@ object AniListQueries {
 
     // Specific fields based on type
     private fun getExtraFields(type: String) = when (type.uppercase()) {
-        "ANIME" -> "episodes duration"
-        "MANGA" -> "chapters volumes"
+        "ANIME" -> """
+            episodes 
+            duration 
+            nextAiringEpisode { episode timeUntilAiring }
+            studios { edges { isMain node { id name isAnimationStudio } } }
+            staff { edges { role node { id name { userPreferred } image { large } } } }
+        """.trimIndent()
+
+        "MANGA" -> """
+            chapters 
+            volumes
+            staff { edges { role node { id name { userPreferred } image { large } } } }
+        """.trimIndent()
+
         else -> ""
     }
 
@@ -187,13 +211,12 @@ object AniListQueries {
             query(${'$'}id: Int) {
                 Media(id: ${'$'}id, type: $type) {
                     $MEDIA_CORE_FIELDS
-                    format
                     trailer { id site thumbnail }
                     externalLinks { url site icon }
                     characters(sort: [ROLE, RELEVANCE], perPage: 15) {
                         edges {
                             role
-                            node { id name { full } image { large } }
+                            node { id name { userPreferred } image { large } }
                         }
                     }
                     relations {
@@ -201,12 +224,12 @@ object AniListQueries {
                             relationType
                             node { 
                                 id type format status averageScore episodes chapters
-                                title { romaji english native } 
+                                title { romaji english native userPreferred } 
                                 coverImage { large } 
                             }
                         }
                     }
-                    mediaListEntry { $MEDIA_LIST_ENTRY_FIELDS }
+                    mediaListEntry { id status score progress }
                     ${getExtraFields(type)}
                 }
             }

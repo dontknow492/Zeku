@@ -1,7 +1,6 @@
 package com.ghost.zeku.presentation.viewmodel.category
 
 import androidx.lifecycle.ViewModel
-import com.ghost.zeku.domain.repository.MediaRepository
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import androidx.paging.map
@@ -10,8 +9,9 @@ import com.ghost.zeku.domain.model.enum.AnimeCategory
 import com.ghost.zeku.domain.model.enum.MangaCategory
 import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.domain.model.media.Media
+import com.ghost.zeku.domain.repository.MediaRepository
 import com.ghost.zeku.presentation.components.media.MediaAction
-import com.ghost.zeku.presentation.viewmodel.detail.Destination
+import com.ghost.zeku.presentation.navigation.Destination
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch

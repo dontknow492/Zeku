@@ -1,9 +1,11 @@
-package com.ghost.zeku.presentation.screen.detail
+package com.ghost.zeku.presentation.screen.details
+
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,6 +32,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
@@ -48,11 +51,16 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import com.ghost.zeku.domain.model.common.MediaDate
 import com.ghost.zeku.domain.model.common.MediaTitle
+import com.ghost.zeku.domain.model.common.TrackEntry
+import com.ghost.zeku.domain.model.common.format
 import com.ghost.zeku.domain.model.enum.*
 import com.ghost.zeku.domain.model.media.*
-import com.ghost.zeku.presentation.common.*
+import com.ghost.zeku.presentation.common.HeroImage
+import com.ghost.zeku.presentation.common.MediaAsyncImage
 import com.ghost.zeku.presentation.common.chips.GenreChip
 import com.ghost.zeku.presentation.common.chips.MyChips
+import com.ghost.zeku.presentation.common.isWideScreen
+import com.ghost.zeku.presentation.common.rememberPlatformConfiguration
 import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.components.media.character.MediaCharacterCard
 import com.ghost.zeku.presentation.components.media.character.MediaCharacterCardConfig
@@ -66,15 +74,18 @@ import com.ghost.zeku.presentation.components.media.review.ReviewCard
 import com.ghost.zeku.presentation.components.section.MediaSection
 import com.ghost.zeku.presentation.components.section.MediaSectionConfig
 import com.ghost.zeku.presentation.components.section.PagedMediaSection
-import com.ghost.zeku.presentation.viewmodel.detail.*
-import com.ghost.zeku.utils.formatTimestamp
+import com.ghost.zeku.presentation.navigation.Destination
+import com.ghost.zeku.presentation.theme.AppTheme
+import com.ghost.zeku.presentation.viewmodel.detail.MediaDetailContract
+import com.ghost.zeku.presentation.viewmodel.detail.MediaDetailViewModel
 import com.ghost.zeku.utils.toPagingItems
+import io.github.aakira.napier.Napier
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import zeku.composeapp.generated.resources.*
 
 @Composable
-fun MediaDetailScreen(
+fun DetailScreen(
     mediaId: Int,
     mediaType: MediaType,
     viewModel: MediaDetailViewModel = koinViewModel(),
@@ -87,32 +98,35 @@ fun MediaDetailScreen(
     val recommendations = viewModel.recommendations.collectAsLazyPagingItems()
     val episodes = viewModel.episodes.collectAsLazyPagingItems()
 
-
     LaunchedEffect(mediaId, mediaType) {
+        Napier.d(tag = "MediaDetailUI") { "🚀 Screen launched for ${mediaType.name} ID: $mediaId" }
         viewModel.onEvent(MediaDetailContract.Event.Load(mediaId, mediaType))
     }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-
                 is MediaDetailContract.Effect.Navigate -> {
+                    Napier.d(tag = "MediaDetailUI") { "Navigating to ${effect.destination}" }
                     onNavigate(effect.destination)
                 }
 
                 is MediaDetailContract.Effect.OpenExternalLink -> {
+                    Napier.d(tag = "MediaDetailUI") { "Opening external link: ${effect.link.url}" }
                     TODO("Not yet implemented")
                 }
 
                 is MediaDetailContract.Effect.PlayTrailer -> {
+                    Napier.d(tag = "MediaDetailUI") { "Playing trailer: ${effect.trailerId}" }
                     TODO("Not yet implemented")
                 }
 
                 is MediaDetailContract.Effect.ShowMessage -> {
-                    TODO()
+                    TODO("Implement snackbar messaging")
                 }
 
                 is MediaDetailContract.Effect.OpenChat -> {
+                    Napier.d(tag = "MediaDetailUI") { "Opening chat room for media: ${effect.id}" }
                     TODO("Not yet implemented")
                 }
             }
@@ -128,7 +142,6 @@ fun MediaDetailScreen(
         config = MediaDetailUiConfig(),
         isWideScreen = isWideScreen,
     )
-
 }
 
 @Composable
@@ -143,6 +156,7 @@ fun MediaDetailContent(
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val dimens = MediaDetailDimens
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
@@ -165,7 +179,10 @@ fun MediaDetailContent(
 
             // Floating chat button
             FloatingActionButton(
-                onClick = { /* chat */ },
+                onClick = {
+                    Napier.d(tag = "MediaDetailUI") { "FAB Clicked: Open Chat" }
+                    onEvent(MediaDetailContract.Event.OpenChat)
+                },
                 containerColor = MaterialTheme.colorScheme.secondary,
                 contentColor = MaterialTheme.colorScheme.onSecondary,
                 modifier = Modifier
@@ -192,6 +209,7 @@ private fun DesktopLayout(
 ) {
     val dimens = MediaDetailDimens
     val mediaId = state.id
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 80.dp),
@@ -223,6 +241,8 @@ private fun DesktopLayout(
                     verticalArrangement = Arrangement.spacedBy(config.desktopItemSpacing)
                 ) {
                     SynopsisSection(state.description)
+                    TagsSection(state.tags, onEvent)
+
                     AnimatedVisibility(config.showTrailer) {
                         TrailerSection(state.trailer, onEvent)
                     }
@@ -243,9 +263,7 @@ private fun DesktopLayout(
                         SectionHeader(
                             title = stringResource(Res.string.reviews),
                             action = stringResource(Res.string.view_all),
-                            onAction = {
-                                onEvent(MediaDetailContract.Event.ViewAllReviews(mediaId = mediaId))
-                            }
+                            onAction = { onEvent(MediaDetailContract.Event.ViewAllReviews(mediaId = mediaId)) }
                         )
                         reviewsPreview.forEach { review ->
                             if (review != null) {
@@ -268,13 +286,15 @@ private fun DesktopLayout(
                     verticalArrangement = Arrangement.spacedBy(config.desktopItemSpacing)
                 ) {
                     InfoPanel(Modifier, state, onEvent = onEvent)
+
                     AnimatedVisibility(config.showExternalLinks) {
                         ExternalLinksPanel(
                             state.externalLinks,
                             isMobile = false,
-                            onClick = { onEvent(MediaDetailContract.Event.OnExternalLinkClick(it)) }
+                            onClick = { onEvent(MediaDetailContract.Event.OpenExternalLink(it)) }
                         )
                     }
+
                     Column(
                         verticalArrangement = Arrangement.spacedBy(dimens.spacingMedium),
                         modifier = Modifier.padding(start = dimens.horizontalPadding)
@@ -287,9 +307,7 @@ private fun DesktopLayout(
                         state.relations.forEach {
                             MediaRelationCard(
                                 relation = it,
-                                config = config.relationCard.copy(
-                                    layout = RelationCardLayout.WIDE
-                                ),
+                                config = config.relationCard.copy(layout = RelationCardLayout.WIDE),
                                 onClick = { onEvent(MediaDetailContract.Event.ViewRelation(it)) }
                             )
                         }
@@ -306,9 +324,7 @@ private fun DesktopLayout(
                             onAction = { onEvent(MediaDetailContract.Event.ViewAllRecommendations(mediaId = mediaId)) },
                         )
                         previewItems.chunked(2).forEach { row ->
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(dimens.spacingMedium),
-                            ) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(dimens.spacingMedium)) {
                                 row.forEach { item ->
                                     MediaPosterCard(
                                         data = item.toPosterUiData(),
@@ -317,9 +333,7 @@ private fun DesktopLayout(
                                         config = config.recommendationCard
                                     )
                                 }
-                                if (row.size == 1) {
-                                    Spacer(Modifier.weight(1f))
-                                }
+                                if (row.size == 1) Spacer(Modifier.weight(1f))
                             }
                         }
                     }
@@ -341,6 +355,7 @@ private fun MobileLayout(
 ) {
     val dimens = MediaDetailDimens
     val mediaId = state.id
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 80.dp),
@@ -351,7 +366,7 @@ private fun MobileLayout(
             Box(
                 modifier = Modifier.layout { measurable, constraints ->
                     val placeable = measurable.measure(constraints)
-                    val overlap = config.androidHeroMetaOffset.roundToPx() // fixed: now uses config
+                    val overlap = config.androidHeroMetaOffset.roundToPx()
                     layout(placeable.width, placeable.height - overlap) {
                         placeable.placeRelative(0, 0)
                     }
@@ -364,7 +379,10 @@ private fun MobileLayout(
         // Watch button right on top of the hero
         item {
             Button(
-                onClick = { /* TODO */ },
+                onClick = {
+                    Napier.d(tag = "MediaDetailUI") { "Mobile Watch Now clicked" }
+                    onEvent(MediaDetailContract.Event.StartWatching)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = dimens.horizontalPadding)
@@ -383,9 +401,10 @@ private fun MobileLayout(
 
         item { SynopsisSection(state.description) }
 
-        item {
-            InfoPanel(Modifier.padding(horizontal = dimens.horizontalPadding), state, onEvent = onEvent)
-        }
+        item { TagsSection(state.tags, onEvent) }
+
+        item { InfoPanel(Modifier.padding(horizontal = dimens.horizontalPadding), state, onEvent = onEvent) }
+
         if (config.showTrailer) {
             item { TrailerSection(state.trailer, onEvent) }
         }
@@ -406,7 +425,7 @@ private fun MobileLayout(
                 ExternalLinksPanel(
                     state.externalLinks,
                     isMobile = true,
-                    onClick = { onEvent(MediaDetailContract.Event.OnExternalLinkClick(it)) }
+                    onClick = { onEvent(MediaDetailContract.Event.OpenExternalLink(it)) }
                 )
             }
         }
@@ -438,12 +457,10 @@ private fun MobileLayout(
                 modifier = Modifier.padding(horizontal = dimens.horizontalPadding),
                 title = stringResource(Res.string.reviews),
                 action = stringResource(Res.string.view_all),
-                onAction = {
-                    onEvent(MediaDetailContract.Event.ViewAllReviews(mediaId = mediaId))
-                }
-
+                onAction = { onEvent(MediaDetailContract.Event.ViewAllReviews(mediaId = mediaId)) }
             )
         }
+
         items(reviews.itemCount) { index ->
             val review = reviews[index]
             if (review != null) {
@@ -520,10 +537,14 @@ private fun MetadataAndActions(
     onEvent: (MediaDetailContract.Event) -> Unit
 ) {
     val dimens = MediaDetailDimens
+
     // Genres
     Row(horizontalArrangement = Arrangement.spacedBy(dimens.chipSpacing)) {
         state.genres.forEach { genre ->
-            GenreChip(onClick = { onEvent(MediaDetailContract.Event.OnGenreClick(genre)) }, genre)
+            GenreChip(onClick = {
+                Napier.d(tag = "MediaDetailUI") { "Genre Clicked: $genre" }
+                onEvent(MediaDetailContract.Event.OnGenreClick(genre))
+            }, genre)
         }
     }
     Spacer(Modifier.height(dimens.spacingSmall))
@@ -536,7 +557,13 @@ private fun MetadataAndActions(
 
     Spacer(Modifier.height(dimens.spacingSmall))
 
-    // Rating, Release date, Studio/Author
+    // Determine the main display creator (Animation Studio > Any Studio > Any Staff)
+    val displayCreator = state.studios.firstOrNull { it.isAnimationStudio }?.name
+        ?: state.studios.firstOrNull()?.name
+        ?: state.staff.firstOrNull()?.name
+        ?: stringResource(Res.string.unknown)
+
+    // Rating, Release date, Creator
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             Icons.Filled.Star,
@@ -545,25 +572,19 @@ private fun MetadataAndActions(
             modifier = Modifier.size(dimens.iconSize)
         )
         Text(
-            text = " ${state.rating}",
+            text = " ${state.averageScore?.let { "$it" } ?: stringResource(Res.string.unknown)}",
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.secondary
         )
+        Text(" ${stringResource(Res.string.dot_separator)} ", color = MaterialTheme.colorScheme.outline)
         Text(
-            stringResource(Res.string.dot_separator),
-            color = MaterialTheme.colorScheme.outline
-        )
-        Text(
-            text = state.releaseDate?.let { formatTimestamp(it) } ?: stringResource(Res.string.unknown),
+            text = state.startDate?.format() ?: stringResource(Res.string.unknown),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f)
         )
+        Text(" ${stringResource(Res.string.dot_separator)} ", color = MaterialTheme.colorScheme.outline)
         Text(
-            stringResource(Res.string.dot_separator),
-            color = MaterialTheme.colorScheme.outline
-        )
-        Text(
-            text = state.studio ?: state.author ?: stringResource(Res.string.unknown),
+            text = displayCreator,
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f)
         )
@@ -573,7 +594,10 @@ private fun MetadataAndActions(
         Spacer(Modifier.height(dimens.spacingMedium))
         Row(horizontalArrangement = Arrangement.spacedBy(dimens.spacingMedium)) {
             Button(
-                onClick = {},
+                onClick = {
+                    Napier.d(tag = "MediaDetailUI") { "Desktop Watch Now clicked" }
+                    onEvent(MediaDetailContract.Event.StartWatching)
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                 shape = RoundedCornerShape(50)
             ) {
@@ -581,7 +605,10 @@ private fun MetadataAndActions(
                 Text(stringResource(Res.string.watch_now), color = MaterialTheme.colorScheme.onSecondary)
             }
             OutlinedButton(
-                onClick = {},
+                onClick = {
+                    Napier.d(tag = "MediaDetailUI") { "Toggle Watchlist clicked" }
+                    onEvent(MediaDetailContract.Event.ToggleWatchlist)
+                },
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
             ) {
@@ -593,16 +620,13 @@ private fun MetadataAndActions(
 }
 
 @Composable
-private fun SynopsisSection(
-    synopsis: String?
-) {
+private fun SynopsisSection(synopsis: String?) {
     val dimens = MediaDetailDimens
     val text = synopsis?.trim().takeUnless { it.isNullOrBlank() }
         ?: stringResource(Res.string.no_description)
 
     var expanded by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
-
     val clipboard = LocalClipboardManager.current
 
     Column(
@@ -612,29 +636,16 @@ private fun SynopsisSection(
             .animateContentSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-
-        // Header with actions
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             SectionHeader(
                 title = stringResource(Res.string.synopsis),
                 modifier = Modifier.weight(1f)
             )
-
             Box {
                 IconButton(onClick = { showMenu = true }) {
-                    Icon(
-                        Icons.Default.MoreVert,
-                        contentDescription = "More options"
-                    )
+                    Icon(Icons.Default.MoreVert, contentDescription = "More options")
                 }
-
-                DropdownMenu(
-                    expanded = showMenu,
-                    onDismissRequest = { showMenu = false }
-                ) {
-
+                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                     DropdownMenuItem(
                         text = { Text("Copy") },
                         onClick = {
@@ -642,7 +653,6 @@ private fun SynopsisSection(
                             showMenu = false
                         }
                     )
-
                     DropdownMenuItem(
                         text = { Text(if (expanded) "Collapse" else "Expand") },
                         onClick = {
@@ -654,32 +664,23 @@ private fun SynopsisSection(
             }
         }
 
-        // Content with fade edge
         Box {
-
             SelectionContainer {
                 Text(
                     text = text,
                     maxLines = if (expanded) Int.MAX_VALUE else 4,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        lineHeight = 22.sp
-                    ),
+                    style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
-            // Gradient fade when collapsed
             if (!expanded && text.length > 150) {
                 Box(
                     modifier = Modifier
                         .matchParentSize()
                         .background(
                             Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    MaterialTheme.colorScheme.background
-                                ),
+                                colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background),
                                 startY = 100f
                             )
                         )
@@ -687,15 +688,50 @@ private fun SynopsisSection(
             }
         }
 
-        // Expand / Collapse CTA
         if (text.length > 150) {
             Text(
                 text = if (expanded) "Show less" else "Read more",
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier
-                    .clickable { expanded = !expanded }
+                modifier = Modifier.clickable { expanded = !expanded }
             )
+        }
+    }
+}
+
+@Composable
+private fun TagsSection(
+    tags: List<MediaTag>,
+    onEvent: (MediaDetailContract.Event) -> Unit
+) {
+    if (tags.isEmpty()) return
+    val dimens = MediaDetailDimens
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = dimens.horizontalPadding),
+        verticalArrangement = Arrangement.spacedBy(dimens.spacingSmall)
+    ) {
+        SectionHeader(title = "Tags")
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(dimens.chipSpacing),
+            verticalArrangement = Arrangement.spacedBy(dimens.chipSpacing)
+        ) {
+            tags.forEach { tag ->
+                MyChips(
+                    onClick = {
+                        Napier.d(tag = "MediaDetailUI") { "Tag Clicked: ${tag.name}" }
+                        onEvent(MediaDetailContract.Event.OnTagClick(tag))
+                    },
+                    text = {
+                        Text(
+                            text = "${tag.name}${if (tag.rank != null) " (${tag.rank}%)" else ""}",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+                )
+            }
         }
     }
 }
@@ -746,19 +782,16 @@ private fun TrailerSection(
                     indication = null
                 ) {
                     trailer?.id?.let {
+                        Napier.d(tag = "MediaDetailUI") { "Trailer Video Clicked" }
                         onEvent(MediaDetailContract.Event.PlayTrailer(it))
                     }
                 }
         ) {
-
-            // 🎞️ Thumbnail
             MediaAsyncImage(
                 url = trailer?.thumbnail ?: "",
                 contentDescription = stringResource(Res.string.official_trailer),
                 modifier = Modifier.fillMaxSize(),
             )
-
-            // 🌈 Gradient overlay (better than flat black)
             Box(
                 modifier = Modifier
                     .matchParentSize()
@@ -771,8 +804,6 @@ private fun TrailerSection(
                         )
                     )
             )
-
-            // ▶️ Play Button (center)
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
@@ -788,8 +819,6 @@ private fun TrailerSection(
                     modifier = Modifier.size(dimens.trailerPlayIconSize)
                 )
             }
-
-            // 📝 Bottom Info
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -801,7 +830,6 @@ private fun TrailerSection(
                     color = Color.White,
                     maxLines = 2
                 )
-
                 if (!hasTrailer) {
                     Text(
                         text = stringResource(Res.string.trailer_not_available),
@@ -814,7 +842,6 @@ private fun TrailerSection(
     }
 }
 
-
 @Composable
 private fun SectionHeader(
     modifier: Modifier = Modifier,
@@ -822,7 +849,6 @@ private fun SectionHeader(
     action: String? = null,
     onAction: (() -> Unit)? = null,
 ) {
-    val dimens = MediaDetailDimens
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Text(text = title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Spacer(Modifier.weight(1f))
@@ -834,8 +860,7 @@ private fun SectionHeader(
     }
 }
 
-
-// ---------- Character Section ----------
+// ---------- Sections ----------
 @Composable
 fun CharacterSection(
     modifier: Modifier = Modifier,
@@ -853,17 +878,11 @@ fun CharacterSection(
         modifier = modifier,
         key = null,
         isLoading = false,
-    ) { character, modifier ->
-        MediaCharacterCard(
-            character = character,
-            config = cardConfig,
-            modifier = modifier,
-            onClick = onCharacterClick
-        )
+    ) { character, mod ->
+        MediaCharacterCard(character = character, config = cardConfig, modifier = mod, onClick = onCharacterClick)
     }
 }
 
-// ---------- Relation Section ----------
 @Composable
 fun RelationSection(
     modifier: Modifier = Modifier,
@@ -875,24 +894,17 @@ fun RelationSection(
 ) {
     MediaSection(
         title = stringResource(Res.string.relations),
-        items = relations.take(1), // Keep original logic, might need full list elsewhere
+        items = relations.take(1),
         onViewAllClick = onViewAllClick,
         config = sectionConfig,
         key = null,
         isLoading = false,
         modifier = modifier
-    ) { relation, modifier ->
-        MediaRelationCard(
-            relation = relation,
-            config = cardConfig,
-            modifier = modifier,
-            onClick = onRelationClick
-        )
+    ) { relation, mod ->
+        MediaRelationCard(relation = relation, config = cardConfig, modifier = mod, onClick = onRelationClick)
     }
 }
 
-
-// ---------- Recommendation Section ----------
 @Composable
 fun RecommendationSection(
     modifier: Modifier = Modifier,
@@ -908,13 +920,8 @@ fun RecommendationSection(
         config = sectionConfig,
         items = recommendations,
         onViewAllClick = onViewAllClick
-    ) { media, modifier ->
-        MediaPosterCard(
-            data = media.toPosterUiData(),
-            modifier = modifier,
-            onAction = onAction,
-            config = cardConfig
-        )
+    ) { media, mod ->
+        MediaPosterCard(data = media.toPosterUiData(), modifier = mod, onAction = onAction, config = cardConfig)
     }
 }
 
@@ -925,52 +932,32 @@ private fun ExternalLinksPanel(
     onClick: (ExternalLink) -> Unit
 ) {
     val dimens = MediaDetailDimens
-
-    // ✅ 1. Empty state guard
-    val safeLinks = remember(links) {
-        links
-            .filter { it.url.isNotBlank() }
-            .distinctBy { it.url } // avoid duplicates
-    }
-
+    val safeLinks = remember(links) { links.filter { it.url.isNotBlank() }.distinctBy { it.url } }
     if (safeLinks.isEmpty()) return
 
     val title = stringResource(Res.string.watch_follow)
 
     if (isMobile) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = dimens.horizontalPadding),
-        ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = dimens.horizontalPadding)) {
             SectionHeader(title = title)
-
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(dimens.spacingMedium)
-            ) {
-                items(
-                    items = safeLinks,
-                    key = { it.url } // ✅ stable key
-                ) { link ->
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(dimens.spacingMedium)) {
+                items(items = safeLinks, key = { it.url }) { link ->
                     ExternalLinkItem(link = link, onClick = onClick)
                 }
             }
         }
     } else {
-        GlassCard(
-            shape = RoundedCornerShape(MediaDetailDimens.glassCardCornerRadius)
-        ) {
+        GlassCard(shape = RoundedCornerShape(dimens.glassCardCornerRadius)) {
             Column(
                 modifier = Modifier.fillMaxWidth()
                     .padding(horizontal = dimens.spacingMedium, vertical = dimens.verticalPadding)
             ) {
                 SectionHeader(title = title)
-
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(dimens.spacingMedium),
                     verticalArrangement = Arrangement.spacedBy(dimens.spacingSmall)
                 ) {
-                    safeLinks.forEach { link ->
-                        ExternalLinkItem(link = link, onClick = onClick)
-                    }
+                    safeLinks.forEach { link -> ExternalLinkItem(link = link, onClick = onClick) }
                 }
             }
         }
@@ -978,12 +965,8 @@ private fun ExternalLinksPanel(
 }
 
 @Composable
-private fun ExternalLinkItem(
-    link: ExternalLink,
-    onClick: (ExternalLink) -> Unit
-) {
+private fun ExternalLinkItem(link: ExternalLink, onClick: (ExternalLink) -> Unit) {
     val fallbackIcon = remember(link.site) {
-        // Simple fallback based on name
         when {
             link.site.contains("twitter", true) -> Icons.Default.Share
             link.site.contains("youtube", true) -> Icons.Default.PlayArrow
@@ -992,46 +975,27 @@ private fun ExternalLinkItem(
         }
     }
 
-
     MyChips(
-        onClick = {
-            if (link.url.isNotBlank()) {
-                onClick(link)
-            }
-        },
+        onClick = { if (link.url.isNotBlank()) onClick(link) },
         shape = RoundedCornerShape(percent = 25),
         leadingIcon = {
-
-            // ✅ 1. If no icon URL → fallback immediately
             if (link.iconUrl.isNullOrBlank()) {
-                Icon(
-                    imageVector = fallbackIcon,
-                    contentDescription = link.site,
-                    modifier = Modifier.size(18.dp)
-                )
+                Icon(imageVector = fallbackIcon, contentDescription = link.site, modifier = Modifier.size(18.dp))
                 return@MyChips
             }
-
-            // ✅ 2. Async image with loading + error fallback
             AsyncImage(
                 model = link.iconUrl,
                 contentDescription = link.site,
-
                 modifier = Modifier.size(18.dp),
-
-                // ✅ Placeholder while loading
                 placeholder = rememberVectorPainter(Icons.Default.Web),
-
-                // ✅ If fails → fallback icon
                 error = rememberVectorPainter(Icons.Default.BrokenImage),
                 fallback = rememberVectorPainter(Icons.Default.Link),
-
                 contentScale = ContentScale.Fit
             )
         },
         text = {
             Text(
-                text = link.site.ifBlank { stringResource(Res.string.open_link) }, // ✅ fallback text
+                text = link.site.ifBlank { stringResource(Res.string.open_link) },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 textDecoration = TextDecoration.Underline,
@@ -1040,7 +1004,6 @@ private fun ExternalLinkItem(
         }
     )
 }
-
 
 // ---------------------- Info Panel ----------------------
 
@@ -1055,7 +1018,7 @@ private fun InfoPanel(
 
     GlassCard(
         modifier = modifier,
-        shape = RoundedCornerShape(MediaDetailDimens.glassCardCornerRadius)
+        shape = RoundedCornerShape(dimens.glassCardCornerRadius)
     ) {
         Column(
             modifier = Modifier
@@ -1063,88 +1026,59 @@ private fun InfoPanel(
                 .padding(dimens.horizontalPadding),
             verticalArrangement = Arrangement.spacedBy(dimens.spacingMedium)
         ) {
-
-            // -------------------------
-            // HEADER
-            // -------------------------
             Text(
                 text = stringResource(Res.string.information),
                 style = MaterialTheme.typography.titleMedium,
                 color = colors.onSurface
             )
 
-            // -------------------------
-            // CORE INFO
-            // -------------------------
             InfoGroup {
-                InfoRow(stringResource(Res.string.status), state.status.name)
-                InfoRow(stringResource(Res.string.format), state.format.name)
-
-                InfoRow(
-                    stringResource(Res.string.premiered),
-                    state.releaseDate?.let { formatTimestamp(it) }
-                        ?: stringResource(Res.string.unknown)
-                )
+                InfoRow(stringResource(Res.string.status), state.status.name.replace("_", " "))
+                InfoRow(stringResource(Res.string.format), state.format.name.replace("_", " "))
+                InfoRowIfValid("Source", state.sourceMaterial?.name?.replace("_", " "))
+                InfoRowIfValid(stringResource(Res.string.premiered), state.startDate?.format())
+                InfoRowIfValid("Season", state.season?.name?.plus(state.seasonYear?.let { " $it" } ?: ""))
+                InfoRowIfValid("Broadcast", state.broadcastString)
             }
 
-            // -------------------------
-            // TYPE SPECIFIC
-            // -------------------------
             InfoGroup {
                 when (state.type) {
                     MediaType.ANIME -> {
-                        InfoRowIfValid(
-                            stringResource(Res.string.episodes),
-                            state.totalEpisodes
-                        )
-                        InfoRowIfValid(
-                            stringResource(Res.string.duration),
-                            state.episodeDuration?.let { "$it min" }
-                        )
+                        InfoRowIfValid(stringResource(Res.string.episodes), state.totalEpisodes)
+                        InfoRowIfValid(stringResource(Res.string.duration), state.durationPerEpisode?.let { "$it min" })
                     }
 
                     MediaType.MANGA -> {
-                        InfoRowIfValid(
-                            stringResource(Res.string.volumes),
-                            state.totalVolumes
-                        )
-                        InfoRowIfValid(
-                            stringResource(Res.string.chapters),
-                            state.totalChapters
-                        )
+                        InfoRowIfValid(stringResource(Res.string.volumes), state.totalVolumes)
+                        InfoRowIfValid(stringResource(Res.string.chapters), state.totalChapters)
                     }
 
                     else -> {}
                 }
+            }
 
-                InfoRowIfValid(
-                    stringResource(Res.string.score),
-                    state.rating.takeIf { it != null && it > 0 }?.toString()
-                )
+            InfoGroup {
+                InfoRowIfValid(stringResource(Res.string.score), state.averageScore?.let { "$it%" })
+                InfoRowIfValid("Mean Score", state.meanScore)
+                InfoRowIfValid("Rank", state.rank?.let { "#$it" })
+                InfoRowIfValid("Popularity", state.popularity?.let { "#$it" })
+                InfoRowIfValid("Favorites", state.favourites)
             }
 
             HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.5f))
 
-            // -------------------------
-            // CREDITS
-            // -------------------------
-            val credits = listOfNotNull(
-                state.artist?.let { CreditType.Artist(it) },
-                state.author?.let { CreditType.Author(it) },
-                state.studio?.let { CreditType.Studio(it) }
-            )
+            // Map all structured staff & studios into our uniform CreditType
+            val credits = remember(state.staff, state.studios) {
+                state.staff.map { CreditType.Staff(it) } + state.studios.map { CreditType.Studio(it) }
+            }
 
             if (credits.isNotEmpty()) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(dimens.spacingSmall)
-                ) {
-
+                Column(verticalArrangement = Arrangement.spacedBy(dimens.spacingSmall)) {
                     Text(
                         text = stringResource(Res.string.producers),
                         style = MaterialTheme.typography.labelLarge,
                         color = colors.onSurfaceVariant
                     )
-
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(dimens.chipSpacing),
                         verticalArrangement = Arrangement.spacedBy(dimens.chipSpacing)
@@ -1152,7 +1086,10 @@ private fun InfoPanel(
                         credits.forEach { credit ->
                             CreditChip(
                                 credit = credit,
-                                onClick = { onEvent(credit.toEvent()) }
+                                onClick = {
+                                    Napier.d(tag = "MediaDetailUI") { "Credit Clicked: ${credit.name} (${credit.label})" }
+                                    onEvent(credit.toEvent())
+                                }
                             )
                         }
                     }
@@ -1162,33 +1099,33 @@ private fun InfoPanel(
     }
 }
 
-@Composable
-private fun InfoGroup(
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-        content = content
-    )
+
+// Sealed class for mapping Domain Staff/Studio cleanly to UI Chips
+sealed class CreditType(val name: String, val label: String, val icon: ImageVector) {
+    data class Staff(val staff: MediaStaff) : CreditType(staff.name, staff.role, Icons.Filled.Person)
+    data class Studio(val studio: MediaStudio) :
+        CreditType(studio.name, if (studio.isAnimationStudio) "Animation Studio" else "Producer", Icons.Filled.Business)
+
+    fun toEvent(): MediaDetailContract.Event = when (this) {
+        is Staff -> MediaDetailContract.Event.OnStaffClick(staff)
+        is Studio -> MediaDetailContract.Event.OnStudioClick(studio)
+    }
 }
 
 @Composable
-private fun InfoRow(
-    label: String,
-    value: String
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+private fun InfoGroup(content: @Composable ColumnScope.() -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp), content = content)
+}
 
+@Composable
+private fun InfoRow(label: String, value: String) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = label,
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-
         Text(
             text = value,
             modifier = Modifier.weight(1f),
@@ -1201,10 +1138,7 @@ private fun InfoRow(
 }
 
 @Composable
-fun CreditChip(
-    credit: CreditType,
-    onClick: () -> Unit
-) {
+fun CreditChip(credit: CreditType, onClick: () -> Unit) {
     MyChips(
         onClick = onClick,
         text = {
@@ -1214,79 +1148,127 @@ fun CreditChip(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Text(
-                    text = when (credit) {
-                        is CreditType.Artist -> credit.name
-                        is CreditType.Author -> credit.name
-                        is CreditType.Studio -> credit.name
-                    },
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Text(text = credit.name, style = MaterialTheme.typography.bodyMedium)
             }
         },
-        leadingIcon = {
-            Icon(
-                credit.icon,
-                contentDescription = credit.label
-            )
-        }
+        leadingIcon = { Icon(credit.icon, contentDescription = credit.label) }
     )
 }
 
 @Composable
-private fun InfoRowIfValid(
-    label: String,
-    value: Any?
-) {
+private fun InfoRowIfValid(label: String, value: Any?) {
     val text = when (value) {
         null -> null
         is String -> value.takeIf { it.isNotBlank() }
-        is Number -> value.toString()
         else -> value.toString()
     }
-
-    if (text != null) {
-        InfoRow(label, text)
-    }
+    if (text != null) InfoRow(label, text)
 }
 
-// ---------- Glass Card ----------
-
+@Composable
+private fun GlassCard(
+    modifier: Modifier = Modifier,
+    shape: RoundedCornerShape = RoundedCornerShape(12.dp),
+    content: @Composable () -> Unit
+) {
+    Surface(
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+        shape = shape,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+    ) { content() }
+}
 
 // ---------- Previews ----------
 @Preview(showBackground = true, widthDp = 450)
 @Composable
 fun PreviewMediaDetailContent() {
-    val state = MediaDetailContract.State(
-        id = 1,
+
+    val previewAnimeState = MediaDetailContract.State(
+        id = 40748,
         type = MediaType.ANIME,
-        source = ProviderType.MYANIMELIST,
+        source = ProviderType.ANILIST,
+
+        // Identity
         title = "Jujutsu Kaisen",
-        description = """
-            Although Yuji Itadori looks like your average teenager, his immense physical strength is something to behold! Every sports club wants him to join, but Itadori would rather hang out with the school outcasts in the Occult Research Club. One day, the club manages to get their hands on a sealed cursed object. Little do they know the terror they’ll unleash when they break the seal…
+        nativeTitle = "呪術廻戦",
+        synonyms = listOf("JJK", "Sorcery Fight"),
+        countryOfOrigin = "JP",
 
-            (Source: VIZ Media)
+        // Visuals & Text
+        coverImage = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx113415-bbBWj4pEFseh.jpg",
+        bannerImage = "https://s4.anilist.co/file/anilistcdn/media/anime/banner/113415-jQBSkxWAAk83.jpg",
+        extraPictures = listOf(
+            "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx113415-bbBWj4pEFseh.jpg"
+        ),
+        description = "Idly indulging in baseless paranormal activities with the Occult Club, high schooler Yuuji Itadori spends his days at either the clubroom or the hospital, where he visits his bedridden grandfather. However, this leisurely lifestyle soon takes a turn for the bizarre when he unknowingly encounters a cursed item. Triggering a chain of supernatural occurrences, Yuuji finds himself suddenly thrust into the world of Curses—terrible beings formed from human malice and negativity—after swallowing the said item, revealed to be a finger belonging to the demon Sukuna Ryoumen, the \"King of Curses.\"\n\nYuuji experiences first-hand the threat these Curses pose to society as he discovers his own newly found magic powers. Introduced to the Tokyo Metropolitan Curse Technical School, he begins to walk down a path from which he cannot return—the path of a Jujutsu sorcerer.",
+        background = "Jujutsu Kaisen won the Anime of the Year award at the 2021 Crunchyroll Anime Awards.",
 
-            Notes:
-            - Ranked 1st in Japan's Bookstore Employees Top Manga of 2018.
-            - Nominated for the 25th Annual Tezuka Osamu Cultural Prize in 2021.
-            - Nominated for the 65th Shogakukan Manga Award in the Shounen Category in 2019.
-            - Includes one extra chapter.
-        """.trimIndent(),
-        coverImage = "https://www.themoviedb.org/t/p/w1280/fHpKWq9ayzSk8nSwqRuaAUemRKh.jpg",
-        bannerImage = "https://media.themoviedb.org/t/p/w1066_and_h600_face/gmECX1DvFgdUPjtio2zaL8BPYPu.jpg",
-        genres = listOf("Action", "Supernatural", "Shounen"),
-        rating = 8.7,
+        // Metadata
+        genres = listOf("Action", "Dark Fantasy", "Supernatural", "Shounen"),
+        tags = listOf(
+            MediaTag("Male Protagonist", rank = 96),
+            MediaTag("Curses", rank = 92),
+            MediaTag("School", rank = 85),
+            MediaTag("Gore", rank = 78),
+            MediaTag("Hand-to-Hand Combat", rank = 88)
+        ),
+        status = MediaReleaseStatus.FINISHED,
+        format = MediaFormat.TV,
+        sourceMaterial = MediaSourceMaterial.MANGA,
+        isAdult = false,
+
+        // Dates & Schedules
+        startDate = MediaDate(2020, 10, 3),
+        endDate = MediaDate(2021, 3, 27),
+        season = MediaSeason.FALL,
+        seasonYear = 2020,
+        broadcastString = "Saturdays at 01:25 (JST)",
+
+        // Statistics
+        averageScore = 86.0,
+        meanScore = 86.4,
+        popularity = 1354000,
+        favourites = 89000,
+        rank = 34,
+
+        // Anime Specific
+        totalEpisodes = 24,
+        durationPerEpisode = 24,
+        contentRating = "R - 17+ (violence & profanity)",
+        nextAiringEpisode = null, // Finished airing
+        studios = listOf(
+            MediaStudio(1, "MAPPA", isAnimationStudio = true),
+            MediaStudio(2, "TOHO animation", isAnimationStudio = false),
+            MediaStudio(3, "Shueisha", isAnimationStudio = false)
+        ),
+
+        // Relational Data (Eager)
+        trailer = MediaTrailer(
+            id = "pkKu9hLT-t8",
+            site = "youtube",
+            thumbnail = "https://i.ytimg.com/vi/pkKu9hLT-t8/hqdefault.jpg",
+            title = "Official Trailer #1"
+        ),
+        externalLinks = listOf(
+            ExternalLink(
+                "https://www.crunchyroll.com/jujutsu-kaisen",
+                "Crunchyroll",
+                "https://crunchyroll.com/favicon.ico"
+            ),
+            ExternalLink("https://twitter.com/animejujutsu", "Twitter", null),
+            ExternalLink("https://jujutsukaisen.jp/", "Official Site", null)
+        ),
         characters = listOf(
             MediaCharacter(
                 1,
-                "Yuji Itadori",
+                "Yuuji Itadori",
                 "https://s4.anilist.co/file/anilistcdn/character/large/b127212-FVm2tD0erQ5B.png",
                 CharacterRole.MAIN
             ),
             MediaCharacter(
                 2,
-                "Gojo Satoru",
+                "Satoru Gojou",
                 "https://s4.anilist.co/file/anilistcdn/character/large/b127691-9zqh1xpIubn7.png",
                 CharacterRole.MAIN
             ),
@@ -1294,48 +1276,206 @@ fun PreviewMediaDetailContent() {
                 3,
                 "Megumi Fushiguro",
                 "https://s4.anilist.co/file/anilistcdn/character/large/b126635-L0y3I92JSUkN.png",
+                CharacterRole.MAIN
+            ),
+            MediaCharacter(
+                4,
+                "Nobara Kugisaki",
+                "https://s4.anilist.co/file/anilistcdn/character/large/b126636-1eAIE0v9KioO.png",
+                CharacterRole.MAIN
+            ),
+            MediaCharacter(
+                5,
+                "Sukuna Ryoumen",
+                "https://s4.anilist.co/file/anilistcdn/character/large/b127213-9U3P91B8rZk0.png",
                 CharacterRole.SUPPORTING
             )
         ),
         relations = listOf(
             MediaRelation(
-                10,
+                131573,
                 RelationType.SEQUEL,
-                MediaTitle(romaji = "Jujutsu Kaisen 0", null, null),
-                "https://myanimelist.net/images/manga/1/157897l.webp",
+                MediaTitle(english = "JUJUTSU KAISEN 0"),
+                "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx131573-0IAlR0R4Y4rO.jpg",
                 MediaType.ANIME,
                 MediaFormat.MOVIE
             ),
             MediaRelation(
-                11,
-                RelationType.PREQUEL,
-                MediaTitle(romaji = "Jujutsu Kaisen: Final", null, null),
-                "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101922-WBsBl0ClmgYL.jpg",
+                145064,
+                RelationType.SEQUEL,
+                MediaTitle(english = "JUJUTSU KAISEN Season 2"),
+                "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx145064-xP8UeP3AIO06.jpg",
+                MediaType.ANIME,
+                MediaFormat.TV
+            )
+        ),
+        staff = listOf(
+            MediaStaff(
+                1,
+                "Gege Akutami",
+                "Original Creator",
+                "https://s4.anilist.co/file/anilistcdn/staff/large/n131652-5g8wR83h3dEI.png"
+            ),
+            MediaStaff(2, "Sunghoo Park", "Director", null),
+            MediaStaff(3, "Hiroshi Seko", "Series Composition", null)
+        ),
+
+        // User Context (Simulating a user who is currently watching it)
+        trackEntry = TrackEntry(
+            entryId = 999,
+            mediaId = 40748,
+            status = TrackStatus.CURRENT,
+            progress = 12, // Watched 12 out of 24
+            totalProgress = 24,
+            score = 9.0
+        ),
+
+        isLoading = false,
+        error = null
+    )
+
+    val previewMangaState = MediaDetailContract.State(
+        id = 30002,
+        type = MediaType.MANGA,
+        source = ProviderType.ANILIST,
+
+        title = "Berserk",
+        nativeTitle = "ベルセルク",
+        synonyms = listOf("Berserk: The Prototype"),
+        countryOfOrigin = "JP",
+
+        coverImage = "https://s4.anilist.co/file/anilistcdn/media/manga/cover/large/bx30002-7KuhiROEEAie.jpg",
+        bannerImage = "https://s4.anilist.co/file/anilistcdn/media/manga/banner/30002-Hj8F6z1H9Q10.jpg",
+        description = "Guts, a former mercenary now known as the \"Black Swordsman,\" is out for revenge. After a tumultuous childhood, he finally finds someone he respects and believes he can trust, only to have everything fall apart when this person takes away everything important to Guts for the purpose of fulfilling his own desires. Now marked for death, Guts becomes condemned to a fate in which he is relentlessly pursued by demonic beings.\n\nSetting out on a dreadful quest riddled with misfortune, Guts, armed with a massive sword and an iron will, will let nothing stop him, not even death itself, until he is finally able to take the head of the one who stripped him—and his loved one—of their humanity.",
+        background = "Berserk won the Award for Excellence at the 6th Tezuka Osamu Cultural Prize in 2002.",
+
+        genres = listOf("Action", "Adventure", "Drama", "Fantasy", "Horror", "Psychological"),
+        tags = listOf(
+            MediaTag("Dark Fantasy", rank = 98),
+            MediaTag("Tragedy", rank = 95),
+            MediaTag("Demons", rank = 92),
+            MediaTag("Gore", rank = 90),
+            MediaTag("Revenge", rank = 89)
+        ),
+        status = MediaReleaseStatus.RELEASING,
+        format = MediaFormat.MANGA,
+        sourceMaterial = MediaSourceMaterial.ORIGINAL,
+        isAdult = true, // NSFW flag
+
+        startDate = MediaDate(1989, 8, 25),
+        endDate = null, // Still publishing
+
+        // Empty for Manga
+        season = null,
+        seasonYear = null,
+        broadcastString = null,
+        totalEpisodes = null,
+        durationPerEpisode = null,
+        nextAiringEpisode = null,
+        studios = emptyList(),
+        trailer = null,
+
+        averageScore = 93.0,
+        meanScore = 93.8,
+        popularity = 645000,
+        favourites = 125000,
+        rank = 1, // #1 Ranked Manga
+
+        // Manga Specific
+        totalChapters = null, // Ongoing
+        totalVolumes = null,  // Ongoing
+        serializations = listOf("Young Animal"),
+
+        externalLinks = listOf(
+            ExternalLink("https://www.younganimal.com/title/berserk/", "Young Animal", null)
+        ),
+        characters = listOf(
+            MediaCharacter(
+                1,
+                "Guts",
+                "https://s4.anilist.co/file/anilistcdn/character/large/b422-tH4QeH21b6B4.png",
+                CharacterRole.MAIN
+            ),
+            MediaCharacter(
+                2,
+                "Griffith",
+                "https://s4.anilist.co/file/anilistcdn/character/large/b423-kO12BszQ0aBc.png",
+                CharacterRole.MAIN
+            ),
+            MediaCharacter(
+                3,
+                "Casca",
+                "https://s4.anilist.co/file/anilistcdn/character/large/b424-Q3wX4t5Nl8rJ.png",
+                CharacterRole.MAIN
+            )
+        ),
+        relations = listOf(
+            MediaRelation(
+                33,
+                RelationType.ADAPTATION,
+                MediaTitle(english = "Berserk (1997)"),
+                "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx33-10L61ZBEhGqg.jpg",
+                MediaType.ANIME,
+                MediaFormat.TV
+            ),
+            MediaRelation(
+                10218,
+                RelationType.ADAPTATION,
+                MediaTitle(english = "Berserk: The Golden Age Arc I"),
+                "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx10218-WjPndIu0D5s1.png",
                 MediaType.ANIME,
                 MediaFormat.MOVIE
             )
         ),
-        trailer = MediaTrailer(
-            id = "xdsss",
-            site = "Crunchy Role",
-            thumbnail = "https://img.youtube.com/vi/pkKu9hLT-t8/maxresdefault.jpg",
-            title = "Trailer #1: Awakening"
-        ),
-        releaseDate = 1525440713000,
-        studio = "Madox",
-        author = "Ghost",
-        artist = null,
-        externalLinks = listOf(
-            ExternalLink(site = "Crunchyroll", url = "https://logodix.com/logo/1679460.png"),
-            ExternalLink(
-                site = "AniList",
-                url = "https://anilist.co/",
-                iconUrl = "https://anilist.co/img/icons/icon.svg"
+        staff = listOf(
+            MediaStaff(
+                1,
+                "Kentarou Miura",
+                "Story & Art",
+                "https://s4.anilist.co/file/anilistcdn/staff/large/n96898-rZk0R1Z2Z9U1.png"
             ),
-            ExternalLink(
-                site = "MyAnimeList",
-                url = "https://myanimelist.net/",
-                iconUrl = "https://myanimelist.net/images/event/20240226_YSRTM_2024/badge.png?v=17139276"
+            MediaStaff(2, "Studio Gaga", "Art", null)
+        ),
+
+        // User Context (Simulating a user planning to read it)
+        trackEntry = TrackEntry(
+            entryId = 1002,
+            mediaId = 30002,
+            status = TrackStatus.PLANNING,
+            progress = 0,
+            totalProgress = null,
+            score = null
+        ),
+
+        isLoading = false,
+        error = null
+    )
+
+    val state = MediaDetailContract.State(
+        id = 1,
+        type = MediaType.ANIME,
+        source = ProviderType.MYANIMELIST,
+        title = "Jujutsu Kaisen",
+        description = "A boy swallows a cursed finger...",
+        coverImage = "https://www.themoviedb.org/t/p/w1280/fHpKWq9ayzSk8nSwqRuaAUemRKh.jpg",
+        bannerImage = "https://media.themoviedb.org/t/p/w1066_and_h600_face/gmECX1DvFgdUPjtio2zaL8BPYPu.jpg",
+        genres = listOf("Action", "Supernatural", "Shounen"),
+        tags = listOf(MediaTag("Male Protagonist", rank = 90), MediaTag("Curses", rank = 85)),
+        averageScore = 87.0,
+        popularity = 124500,
+        rank = 24,
+        sourceMaterial = MediaSourceMaterial.MANGA,
+        startDate = MediaDate(2020, 10, 3),
+        season = MediaSeason.FALL,
+        seasonYear = 2020,
+        studios = listOf(MediaStudio(1, "MAPPA", true), MediaStudio(2, "TOHO animation", false)),
+        staff = listOf(MediaStaff(1, "Gege Akutami", "Original Creator")),
+        characters = listOf(
+            MediaCharacter(
+                1,
+                "Yuji Itadori",
+                "https://s4.anilist.co/file/anilistcdn/character/large/b127212-FVm2tD0erQ5B.png",
+                CharacterRole.MAIN
             )
         ),
         isLoading = false,
@@ -1344,189 +1484,12 @@ fun PreviewMediaDetailContent() {
 
     val isWideScreen = rememberPlatformConfiguration().isWideScreen
 
-    val fakeEpisodes = listOf(
-        Episode("1", 1, "The Beginning", null, null),
-        Episode("2", 2, "Cursed Spirit", null, null)
-    )
-    val tempAnimeList = listOf(
-        Anime(
-            1,
-            ProviderType.MYANIMELIST,
-            MediaTitle(romaji = "Shirobako"),
-            MediaFormat.TV,
-            "https://myanimelist.net/images/manga/3/258224l.webp",
-            "",
-            "desc",
-            listOf("Comedy"),
-            MediaReleaseStatus.FINISHED,
-            8.0f,
-            MediaDate(2014, 10, 9),
-            24,
-            24,
-            "P.A.Works"
-        ),
-        Anime(
-            2,
-            ProviderType.ANILIST,
-            MediaTitle(romaji = "Kimi no Na wa."),
-            MediaFormat.MOVIE,
-            "https://myanimelist.net/images/manga/2/287344l.webp",
-            "",
-            "desc",
-            listOf("Romance"),
-            MediaReleaseStatus.FINISHED,
-            9.0f,
-            MediaDate(2016, 8, 26),
-            1,
-            106,
-            "CoMix Wave Films"
-        ),
-        Anime(
-            3,
-            ProviderType.MYANIMELIST,
-            MediaTitle(romaji = "Mushoku Tensei"),
-            MediaFormat.TV,
-            "https://myanimelist.net/images/manga/2/253146l.jpg",
-            null,
-            "desc",
-            listOf("Isekai"),
-            MediaReleaseStatus.RELEASING,
-            7.8f,
-            MediaDate(2021, 10, 3),
-            23,
-            24,
-            "Studio Bind"
-        ),
-        Anime(
-            4,
-            ProviderType.MYANIMELIST,
-            MediaTitle(romaji = "Made-up Adventure"),
-            MediaFormat.ONA,
-            "https://myanimelist.net/images/manga/1/259070l.webp",
-            null,
-            "desc",
-            listOf("Adventure"),
-            MediaReleaseStatus.NOT_YET_RELEASED,
-            null,
-            MediaDate(2026, 7, 1),
-            3,
-            12,
-            "Indie Studio"
-        ),
-        Anime(
-            5,
-            ProviderType.ANILIST,
-            MediaTitle(romaji = "Slice of Life Example"),
-            MediaFormat.TV_SHORT,
-            "https://myanimelist.net/images/manga/3/179882l.webp",
-            "banner",
-            "desc",
-            listOf("Slice of Life"),
-            MediaReleaseStatus.FINISHED,
-            6.5f,
-            MediaDate(2019, 4, 5),
-            12,
-            8,
-            "Shorts Studio"
-        )
-    )
-    val mockReviews = listOf(
-        Review(
-            id = 1,
-            author = "Mika Tanaka",
-            authorAvatar = "https://example.com/avatars/mika.jpg",
-            score = 90,
-            summary = "A beautiful, emotional ride",
-            body = "Stunning animation and a soundtrack that stays with you. Character development is top-notch and the pacing kept me hooked until the very end.",
-            upvotes = 124,
-            isSpoiler = false,
-            createdAt = 1682505600000L // 2023-04-26T00:00:00Z
-        ),
-        Review(
-            id = 2,
-            author = "DevOnDuty",
-            authorAvatar = "https://example.com/avatars/devonduty.png",
-            score = 78,
-            summary = "Great mechanics, weak finale",
-            body = "I loved the worldbuilding and the battle choreography, but the last arc felt rushed and some plot threads were left unresolved.",
-            upvotes = 87,
-            isSpoiler = true,
-            createdAt = 1685097600000L // 2023-05-26T00:00:00Z
-        ),
-        Review(
-            id = 3,
-            author = "Aoi",
-            authorAvatar = null,
-            score = 100,
-            summary = "Masterpiece",
-            body = "Everything aligned perfectly — story, visuals, and music. One of my all-time favorites; rewatching is a must.",
-            upvotes = 340,
-            isSpoiler = false,
-            createdAt = 1677628800000L // 2023-03-01T00:00:00Z
-        ),
-        Review(
-            id = 4,
-            author = "Sam R.",
-            authorAvatar = "https://example.com/avatars/samr.jpg",
-            score = null,
-            summary = null,
-            body = "Mixed feelings. The first half is brilliant, but the tone shift later on lost me. Worth trying if you like experimental storytelling.",
-            upvotes = 22,
-            isSpoiler = false,
-            createdAt = 1690848000000L // 2023-07-31T00:00:00Z
-        ),
-        Review(
-            id = 5,
-            author = "OtakuLuna",
-            authorAvatar = "https://example.com/avatars/luna.jpg",
-            score = 85,
-            summary = "Solid and fun",
-            body = "Funny moments balance the darker themes well. I enjoyed the side characters almost as much as the leads.",
-            upvotes = 59,
-            isSpoiler = false,
-            createdAt = 1693526400000L // 2023-08-31T00:00:00Z
-        ),
-        Review(
-            id = 6,
-            author = "CodeSensei",
-            authorAvatar = "https://example.com/avatars/codesensei.png",
-            score = 70,
-            summary = "Good, not great",
-            body = "Technical merits are clear — consistent animation and smart direction — but the story repeats familiar beats.",
-            upvotes = 15,
-            isSpoiler = false,
-            createdAt = 1688169600000L // 2023-07-01T00:00:00Z
-        ),
-        Review(
-            id = 7,
-            author = "Yuki",
-            authorAvatar = "https://example.com/avatars/yuki.jpg",
-            score = 92,
-            summary = "Heartwarming and profound",
-            body = "A quiet show that grows on you. The emotional payoff in the final episodes is incredible without resorting to cheap tricks.",
-            upvotes = 201,
-            isSpoiler = false,
-            createdAt = 1700000000000L // example future timestamp
-        ),
-        Review(
-            id = 8,
-            author = "NoSpoilerPlease",
-            authorAvatar = null,
-            score = 60,
-            summary = "Not for everyone",
-            body = "If you prefer straightforward plots, this might frustrate you. It experiments a lot, which is admirable, but it won't click with every viewer.",
-            upvotes = 8,
-            isSpoiler = false,
-            createdAt = 1675209600000L // 2023-02-01T00:00:00Z
-        )
-    )
-
-    MaterialTheme {
+    AppTheme {
         MediaDetailContent(
-            state = state,
-            episodes = fakeEpisodes.toPagingItems(),
-            recommendations = tempAnimeList.toPagingItems(),
-            reviews = mockReviews.toPagingItems(),
+            state = previewAnimeState,
+            episodes = emptyList<Episode>().toPagingItems(),
+            recommendations = emptyList<Anime>().toPagingItems(),
+            reviews = emptyList<Review>().toPagingItems(),
             onEvent = {},
             config = MediaDetailUiConfig(),
             isWideScreen = isWideScreen

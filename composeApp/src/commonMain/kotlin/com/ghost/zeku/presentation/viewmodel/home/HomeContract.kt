@@ -5,8 +5,7 @@ import com.ghost.zeku.domain.model.MessageType
 import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.domain.model.media.Media
 import com.ghost.zeku.presentation.components.media.MediaAction
-import com.ghost.zeku.presentation.viewmodel.detail.Destination
-import com.ghost.zeku.presentation.viewmodel.detail.MediaDetailContract
+import com.ghost.zeku.presentation.navigation.Destination
 import kotlinx.coroutines.flow.Flow
 
 class HomeContract {

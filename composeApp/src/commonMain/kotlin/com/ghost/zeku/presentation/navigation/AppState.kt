@@ -7,7 +7,6 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.savedstate.serialization.SavedStateConfiguration
-import com.ghost.zeku.presentation.viewmodel.detail.Destination
 import io.github.aakira.napier.Napier
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -107,5 +106,9 @@ class ZekuAppState(
         if (backStack.size > 1) {
             backStack.removeAt(backStack.lastIndex)
         }
+    }
+
+    fun resetStack() {
+        backStack.clear()
     }
 }

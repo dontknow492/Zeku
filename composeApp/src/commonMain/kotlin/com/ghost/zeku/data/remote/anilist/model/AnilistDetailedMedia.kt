@@ -4,22 +4,6 @@ package com.ghost.zeku.data.remote.anilist.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-// Note: Add these fields to your existing AniListMedia data class!
-// val format: String? = null
-// val trailer: AniListTrailer? = null
-// val externalLinks: List<AniListExternalLink>? = null
-// val characters: AniListCharacterConnection? = null
-// val relations: AniListRelationConnection? = null
-// val nextAiringEpisode: AniListAiringSchedule? = null
-
-@Serializable
-data class AniListTrailer(val id: String? = null, val site: String? = null, val thumbnail: String? = null)
-
-@Serializable
-data class AniListExternalLink(val url: String? = null, val site: String? = null, val icon: String? = null)
-
-@Serializable
-data class AniListAiringSchedule(val episode: Int? = null, val timeUntilAiring: Long? = null)
 
 // --- Connections & Edges ---
 

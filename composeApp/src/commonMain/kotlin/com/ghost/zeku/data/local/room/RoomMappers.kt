@@ -3,8 +3,6 @@ package com.ghost.zeku.data.local.room
 
 import com.ghost.zeku.data.local.room.entities.*
 import com.ghost.zeku.domain.model.UserProfile
-import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
-import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.model.media.*
 
 /**
@@ -141,7 +139,7 @@ fun AnimeDetails.toBaseEntity(): AnimeEntity {
         bannerImage = this.bannerImage,
         description = this.description,
         genres = this.genres,
-        status = MediaReleaseStatus.fromString(this.status),
+        status = this.status,
         score = this.averageScore?.toFloat(),
 
         // These fields aren't in the Details view right now, so they default to null.
@@ -166,7 +164,7 @@ fun MangaDetails.toBaseEntity(): MangaEntity {
         bannerImage = this.bannerImage,
         description = this.description,
         genres = this.genres,
-        status = MediaReleaseStatus.fromString(this.status),
+        status = this.status,
         score = this.averageScore?.toFloat(),
         startDate = null,
         author = null,

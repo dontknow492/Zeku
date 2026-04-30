@@ -22,7 +22,7 @@ data class HomeUiConfig(
     val posterConfig: PosterConfig = PosterConfig(
         layout = PosterLayout.Modern
 
-        ),
+    ),
     val listCardVariant: MediaListCardVariant = MediaListCardVariant.COMFORTABLE,
     val listCardConfig: MediaListCardConfig = MediaListDefaults.config(
         MediaListCardVariant.COMFORTABLE,

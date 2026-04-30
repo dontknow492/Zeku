@@ -18,8 +18,8 @@ fun formatTimestamp(timestamp: Long): String {
         hours < 24 -> "$hours hr ago"
         days < 7 -> "$days day${if (days > 1) "s" else ""} ago"
         else -> {
-            val sdf = java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault())
-            sdf.format(java.util.Date(timestamp))
+            val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+            sdf.format(Date(timestamp))
         }
     }
 }

@@ -7,7 +7,6 @@ import com.ghost.zeku.data.remote.anilist.providers.*
 import com.ghost.zeku.data.remote.mal.MalResponseParser
 import com.ghost.zeku.data.remote.mal.MalSource
 import com.ghost.zeku.data.remote.mal.providers.*
-import com.ghost.zeku.domain.model.UserProfile
 import org.koin.dsl.module
 
 

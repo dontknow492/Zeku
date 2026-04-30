@@ -4,6 +4,7 @@ package com.ghost.zeku.presentation.viewmodel.main
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ghost.zeku.domain.model.MessageType
+import com.ghost.zeku.domain.model.UserProfile
 import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.repository.AuthRepository
 import com.ghost.zeku.domain.repository.UserRepository
@@ -38,13 +39,25 @@ class MainViewModel(
 
             is MainContract.Event.SwitchAccount -> {
                 viewModelScope.launch {
-                    Napier.d { "User requested account switch to: ${event.providerType}" }
-                    userRepository.switchProvider(event.providerType)
+                    Napier.d { "User requested account switch to: ${event.user.source}" }
+                    userRepository.switchProvider(event.user.source)
                 }
             }
 
             is MainContract.Event.Logout -> {
-                logoutAccount(event.providerType)
+                logoutAccount(event.user)
+            }
+
+            MainContract.Event.AddAccountClick -> {
+                Napier.d { "Add account click" }
+            }
+
+            MainContract.Event.OpenZekuSite -> {
+                Napier.d { "Open Zeku Site requested" }
+            }
+
+            is MainContract.Event.ViewAccount -> {
+                Napier.d { "User requested account view from: ${event.user}" }
             }
         }
     }
@@ -74,7 +87,8 @@ class MainViewModel(
         }
     }
 
-    private fun logoutAccount(providerType: ProviderType) {
+    private fun logoutAccount(user: UserProfile) {
+        val providerType = user.source
         viewModelScope.launch {
             _state.update { it.copy(isLoggingOut = true) }
             try {

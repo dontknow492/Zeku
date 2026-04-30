@@ -36,7 +36,7 @@ fun Media.toPosterUiData(): MediaPosterUiData {
     return MediaPosterUiData(
         id = this.id,
         // Uses the helper we created in MediaTitle.kt!
-        title = this.title.getPreferred(),
+        title = this.title.getDisplayTitle(),
         imageUrl = this.coverImage,
         score = this.score,
         badgeText = generateBadgeText(this),
