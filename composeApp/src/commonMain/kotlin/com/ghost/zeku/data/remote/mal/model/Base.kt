@@ -105,6 +105,7 @@ data class MalUserDto(
     val gender: String? = null,
     val birthday: String? = null,
     val location: String? = null,
+    @SerialName("joined_at") val joinedAt: String? = null,
     @SerialName("anime_statistics") val animeStatistics: MalAnimeStatistics? = null
 )
 

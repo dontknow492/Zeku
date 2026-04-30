@@ -239,7 +239,7 @@ class MalApi(private val client: HttpClient) {
         val response = client.get("$baseUrl/users/@me") {
             parameter("fields", "id,name,picture,anime_statistics")
         }
-        Napier.d("Get user info: ${response.bodyAsText()}")
+//        Napier.d("Get user info: ${response.bodyAsText()}")
         return response.body()
     }
 }
