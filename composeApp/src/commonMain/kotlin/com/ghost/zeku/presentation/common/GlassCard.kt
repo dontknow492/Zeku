@@ -24,11 +24,12 @@ fun GlassCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     shape: Shape = RoundedCornerShape(16.dp),
+    color: Color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
     content: @Composable () -> Unit
 ) {
     Surface(
         modifier = modifier,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+        color = color,
         shape = shape,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
         onClick = onClick ?: {}
