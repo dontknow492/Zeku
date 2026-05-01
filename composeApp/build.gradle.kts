@@ -137,6 +137,9 @@ kotlin {
             implementation(libs.jetbrains.navigation3.ui)
             implementation(libs.jetbrains.lifecycle.viewmodelNavigation3)
 
+            // json
+            implementation(libs.kotlinx.serialization.json)
+
 
         }
         commonTest.dependencies {

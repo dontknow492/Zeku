@@ -20,7 +20,6 @@ import androidx.navigation3.ui.NavDisplay
 import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.presentation.components.sidebar.ZekuAdaptiveSidebar
 import com.ghost.zeku.presentation.screen.category.CategoryScreen
-import com.ghost.zeku.presentation.screen.detail.MediaDetailScreen
 import com.ghost.zeku.presentation.screen.details.DetailScreen
 import com.ghost.zeku.presentation.screen.home.MediaHomeScreen
 import com.ghost.zeku.presentation.viewmodel.main.MainContract
