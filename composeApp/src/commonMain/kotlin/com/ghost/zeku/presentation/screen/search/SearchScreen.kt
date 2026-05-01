@@ -918,7 +918,7 @@ private fun PreviewSearchScreen() {
 
     val mangaItems = flowOf(PagingData.from(fakeMangaList)).collectAsLazyPagingItems()
     val animeItems = flowOf(PagingData.from(emptyList<Anime>())).collectAsLazyPagingItems()
-    val state = SearchContract.State(mediaType = MediaType.MANGA, isInitializing = false)
+    val state = SearchContract.State(mediaType = MediaType.MANGA, isInitializing = false, isFilterSheetOpen = true)
 
     AppTheme {
         SearchScreenContent(

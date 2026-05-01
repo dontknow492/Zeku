@@ -22,8 +22,10 @@ import com.ghost.zeku.presentation.components.sidebar.ZekuAdaptiveSidebar
 import com.ghost.zeku.presentation.screen.category.CategoryScreen
 import com.ghost.zeku.presentation.screen.details.DetailScreen
 import com.ghost.zeku.presentation.screen.home.MediaHomeScreen
+import com.ghost.zeku.presentation.screen.search.SearchScreen
 import com.ghost.zeku.presentation.viewmodel.main.MainContract
 import com.ghost.zeku.presentation.viewmodel.main.MainViewModel
+import com.ghost.zeku.presentation.viewmodel.search.SearchViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 
@@ -181,7 +183,7 @@ fun ZekuNavDisplay(
                 }
 
                 is SearchRoute -> NavEntry(key) {
-                    MockScreen("${navBackStack.size}: Search") {}
+                    SearchScreen(koinViewModel(), onNavigate = appState::navigateToDestination)
                 }
 
                 is LibraryRoute -> NavEntry(key) {
