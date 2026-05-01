@@ -1,6 +1,7 @@
 package com.ghost.zeku.domain.model.search
 
 import com.ghost.zeku.domain.model.enum.MediaFormat
+import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
 import com.ghost.zeku.domain.model.enum.MediaSeason
 import com.ghost.zeku.domain.model.enum.MediaStatus
 
@@ -21,7 +22,7 @@ data class AnimeSearchFilter(
     val year: Int? = null,
     val season: MediaSeason? = null,
     val format: MediaFormat? = null,
-    val status: MediaStatus? = null,
+    val status: MediaReleaseStatus? = null,
 
     // Sorting
     val sort: SearchSort = SearchSort.TRENDING_DESC
@@ -33,7 +34,7 @@ data class MangaSearchFilter(
     val includedTags: List<String> = emptyList(),
     val excludedTags: List<String> = emptyList(),
     val format: MediaFormat? = null, // e.g., Manga vs Manhwa vs Novel
-    val status: MediaStatus? = null,
+    val status: MediaReleaseStatus? = null,
     val sort: SearchSort = SearchSort.TRENDING_DESC
 )
 

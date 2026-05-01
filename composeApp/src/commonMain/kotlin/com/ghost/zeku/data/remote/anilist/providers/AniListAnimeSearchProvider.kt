@@ -6,6 +6,8 @@ import com.ghost.zeku.data.remote.anilist.model.GraphQLRequest
 import com.ghost.zeku.data.remote.anilist.toAniListSort
 import com.ghost.zeku.data.remote.anilist.toAnimeDomain
 import com.ghost.zeku.domain.model.api.ApiResult
+import com.ghost.zeku.domain.model.enum.MediaFormat
+import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
 import com.ghost.zeku.domain.model.media.Anime
 import com.ghost.zeku.domain.model.media.PageResult
 import com.ghost.zeku.domain.model.search.AnimeSearchFilter
@@ -21,32 +23,15 @@ class AniListAnimeSearchProvider(
     // AniList is the gold standard, it supports everything!
     override suspend fun getAnimeSearchCapabilities(): SearchCapabilities {
         return SearchCapabilities(
-            supportedGenres = listOf(
-                "Action",
-                "Adventure",
-                "Comedy",
-                "Drama",
-                "Ecchi",
-                "Fantasy",
-                "Horror",
-                "Mahou Shoujo",
-                "Mecha",
-                "Music",
-                "Mystery",
-                "Psychological",
-                "Romance",
-                "Sci-Fi",
-                "Slice of Life",
-                "Sports",
-                "Supernatural",
-                "Thriller"
-            ),
-            supportsFormatFilter = true,
-            supportsStatusFilter = true,
-            supportsYearFilter = true,
-            supportsSeasonFilter = true,
-            supportsExclusion = true,
-            supportedSorts = SearchSort.entries
+            supportsGenres = true,
+            supportsTags = true,
+            supportsYear = true,
+            supportsSeason = true,
+            supportedFormats = MediaFormat.entries, // Supports all formats
+            supportedStatus = MediaReleaseStatus.entries,
+            supportedSorts = SearchSort.entries, // Supports all sorting
+            availableGenres = listOf("Action", "Adventure", "Comedy", "Drama", "Sci-Fi" /* ... */),
+            availableTags = listOf("Isekai", "Magic", "Swordplay", "Time Travel" /* ... */)
         )
     }
 

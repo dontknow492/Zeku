@@ -21,6 +21,7 @@ import com.ghost.zeku.domain.model.enum.*
 import com.ghost.zeku.domain.model.media.*
 import com.ghost.zeku.domain.model.search.AnimeSearchFilter
 import com.ghost.zeku.domain.model.search.MangaSearchFilter
+import com.ghost.zeku.domain.model.search.SearchCapabilities
 import com.ghost.zeku.domain.provider.AnimeDetailsProvider
 import com.ghost.zeku.domain.provider.AnimeListProvider
 import com.ghost.zeku.domain.provider.MangaDetailsProvider
@@ -443,6 +444,15 @@ class MediaRepositoryImpl(
                     }
                 ).flow
             }
+    }
+
+    override suspend fun getSearchCapabilities(provider: ProviderType, type: MediaType): SearchCapabilities {
+        val source = sources[provider] ?: throw IllegalStateException("No source Implemented for $provider")
+        return when (type) {
+            MediaType.ANIME -> source.getAnimeSearchCapabilities()
+            MediaType.MANGA -> source.getMangaSearchCapabilities()
+            MediaType.UNKNOWN -> throw IllegalStateException("Invalid Media Type")
+        }
     }
 
     // ========================================================================

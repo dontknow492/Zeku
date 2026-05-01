@@ -6,6 +6,8 @@ import com.ghost.zeku.data.remote.anilist.model.GraphQLRequest
 import com.ghost.zeku.data.remote.anilist.toAniListSort
 import com.ghost.zeku.data.remote.anilist.toMangaDomain
 import com.ghost.zeku.domain.model.api.ApiResult
+import com.ghost.zeku.domain.model.enum.MediaFormat
+import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
 import com.ghost.zeku.domain.model.media.Manga
 import com.ghost.zeku.domain.model.media.PageResult
 import com.ghost.zeku.domain.model.search.MangaSearchFilter
@@ -20,17 +22,36 @@ class AniListMangaSearchProvider(
 
     override suspend fun getMangaSearchCapabilities(): SearchCapabilities {
         return SearchCapabilities(
-            supportedGenres = listOf(
+            supportsGenres = true,
+            supportsTags = true,
+            supportsYear = true, // Users can search by publishing start year
+            supportsSeason = false, // Manga does not have Winter/Spring broadcast seasons!
+
+            supportedFormats = listOf(
+                MediaFormat.MANGA,
+                MediaFormat.NOVEL,
+                MediaFormat.ONE_SHOT
+            ),
+            supportedStatus = listOf(
+                MediaReleaseStatus.FINISHED,
+                MediaReleaseStatus.RELEASING,
+                MediaReleaseStatus.NOT_YET_RELEASED,
+                MediaReleaseStatus.HIATUS,
+                MediaReleaseStatus.CANCELLED
+            ),
+
+            supportedSorts = SearchSort.entries, // Supports all standard sorting (Trending, Score, etc.)
+
+            // In a real app, you might fetch these from a database or a one-time API call,
+            // but hardcoding the standard list is perfectly fine and much faster.
+            availableGenres = listOf(
                 "Action",
                 "Adventure",
                 "Comedy",
                 "Drama",
-                "Ecchi",
                 "Fantasy",
                 "Horror",
-                "Mahou Shoujo",
                 "Mecha",
-                "Music",
                 "Mystery",
                 "Psychological",
                 "Romance",
@@ -40,12 +61,18 @@ class AniListMangaSearchProvider(
                 "Supernatural",
                 "Thriller"
             ),
-            supportsFormatFilter = true, // To separate MANGA vs NOVEL vs ONE_SHOT
-            supportsStatusFilter = true,
-            supportsYearFilter = false, // Manga doesn't usually use "Seasons/Years" like anime does
-            supportsSeasonFilter = false,
-            supportsExclusion = true,
-            supportedSorts = SearchSort.entries
+            availableTags = listOf(
+                "Anti-Hero",
+                "Dark Fantasy",
+                "Demons",
+                "Isekai",
+                "Magic",
+                "Revenge",
+                "Swordplay",
+                "Tragedy",
+                "Vampires",
+                "Zombies"
+            ) // Usually you'd include the top 50-100 AniList tags here
         )
     }
 

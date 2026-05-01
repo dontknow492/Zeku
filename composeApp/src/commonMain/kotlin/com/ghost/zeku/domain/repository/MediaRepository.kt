@@ -8,6 +8,7 @@ import com.ghost.zeku.domain.model.enum.*
 import com.ghost.zeku.domain.model.media.*
 import com.ghost.zeku.domain.model.search.AnimeSearchFilter
 import com.ghost.zeku.domain.model.search.MangaSearchFilter
+import com.ghost.zeku.domain.model.search.SearchCapabilities
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -54,6 +55,11 @@ interface MediaRepository {
         perPage: Int = 20,
         filter: MangaSearchFilter
     ): Flow<PagingData<Manga>>
+
+    suspend fun getSearchCapabilities(
+        provider: ProviderType,
+        type: MediaType
+    ): SearchCapabilities
 
 
     // ========================================================================

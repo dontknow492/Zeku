@@ -10,6 +10,8 @@ import com.ghost.zeku.data.remote.mal.toAnimeDomain
 import com.ghost.zeku.domain.model.api.ApiError
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.enum.AnimeCategory
+import com.ghost.zeku.domain.model.enum.MediaFormat
+import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
 import com.ghost.zeku.domain.model.enum.MediaStatus
 import com.ghost.zeku.domain.model.media.*
 import com.ghost.zeku.domain.model.search.AnimeSearchFilter
@@ -84,13 +86,24 @@ class MalAnimeSearchProvider(
 
     override suspend fun getAnimeSearchCapabilities(): SearchCapabilities {
         return SearchCapabilities(
-            supportedGenres = malGenreMap.keys.toList(),
-            supportsFormatFilter = false, // MAL API doesn't filter format easily via standard search
-            supportsStatusFilter = true,
-            supportsYearFilter = false,
-            supportsSeasonFilter = false,
-            supportsExclusion = false, // MAL does not support "NOT IN" queries
-            supportedSorts = listOf(SearchSort.ALPHABETICAL_ASC) // Standard search endpoint is limited
+            supportsGenres = true,
+            supportsTags = false, // MAL has no concept of AniList-style tags
+            supportsYear = false, // Standard search endpoint doesn't support year filtering
+            supportsSeason = false,
+
+            // MAL only reliably filters these specific formats in search
+            supportedFormats = listOf(
+                MediaFormat.TV, MediaFormat.MOVIE, MediaFormat.OVA, MediaFormat.SPECIAL
+            ),
+            supportedStatus = listOf(
+                MediaReleaseStatus.RELEASING, MediaReleaseStatus.FINISHED
+            ),
+
+            // MAL search only supports a few sorts, it relies on /ranking for the rest
+            supportedSorts = listOf(
+                SearchSort.SCORE_DESC, SearchSort.ALPHABETICAL_ASC
+            ),
+            availableGenres = listOf("Action", "Adventure", "Comedy" /* ... */)
         )
     }
 
@@ -111,9 +124,9 @@ class MalAnimeSearchProvider(
 
                 // Translate our MediaStatus enum to MAL's required strings
                 val statusString = when (filter.status) {
-                    MediaStatus.FINISHED -> "completed"
-                    MediaStatus.RELEASING -> "currently_airing"
-                    MediaStatus.NOT_YET_RELEASED -> "not_yet_aired"
+                    MediaReleaseStatus.FINISHED -> "completed"
+                    MediaReleaseStatus.RELEASING -> "currently_airing"
+                    MediaReleaseStatus.NOT_YET_RELEASED -> "not_yet_aired"
                     else -> null
                 }
 

@@ -1,24 +1,25 @@
 package com.ghost.zeku.domain.model.search
 
+import com.ghost.zeku.domain.model.enum.MediaFormat
+import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
+
 /**
  * This class tells the UI what filters to display.
  * If a provider doesn't support Tags, it returns 'supportsTags = false',
  * and the UI completely hides the Tags section!
  */
 data class SearchCapabilities(
-    // The exact list of genres this specific provider supports (MAL vs AniList differ greatly)
-    val supportedGenres: List<String> = emptyList(),
+    val supportsGenres: Boolean = false,
+    val supportsTags: Boolean = false, // MAL doesn't have tags!
+    val supportsYear: Boolean = false,
+    val supportsSeason: Boolean = false,
 
-    // The exact list of tags (usually empty for MAL, huge for AniList)
-    val supportedTags: List<String> = emptyList(),
+    // Lists of exactly what this provider allows
+    val supportedFormats: List<MediaFormat> = emptyList(),
+    val supportedStatus: List<MediaReleaseStatus> = emptyList(),
+    val supportedSorts: List<SearchSort> = emptyList(),
 
-    // Booleans to tell the UI whether to show certain sections
-    val supportsFormatFilter: Boolean = false,
-    val supportsStatusFilter: Boolean = false,
-    val supportsYearFilter: Boolean = false,
-    val supportsSeasonFilter: Boolean = false,
-    val supportsExclusion: Boolean = false, // E.g., Can it filter OUT a genre?
-
-    // Which sorting options this provider can actually handle
-    val supportedSorts: List<SearchSort> = listOf(SearchSort.POPULARITY_DESC)
+    // This allows you to fetch the actual string lists for the UI chips
+    val availableGenres: List<String> = emptyList(),
+    val availableTags: List<String> = emptyList()
 )

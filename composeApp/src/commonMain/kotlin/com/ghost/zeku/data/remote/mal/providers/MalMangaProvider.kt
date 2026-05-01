@@ -9,6 +9,8 @@ import com.ghost.zeku.domain.model.api.ApiError
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.api.ErrorType
 import com.ghost.zeku.domain.model.enum.MangaCategory
+import com.ghost.zeku.domain.model.enum.MediaFormat
+import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
 import com.ghost.zeku.domain.model.enum.MediaStatus
 import com.ghost.zeku.domain.model.media.*
 import com.ghost.zeku.domain.model.search.MangaSearchFilter
@@ -81,13 +83,59 @@ class MalMangaSearchProvider(
 
     override suspend fun getMangaSearchCapabilities(): SearchCapabilities {
         return SearchCapabilities(
-            supportedGenres = malGenreMap.keys.toList(),
-            supportsFormatFilter = false,
-            supportsStatusFilter = true,
-            supportsYearFilter = false,
-            supportsSeasonFilter = false,
-            supportsExclusion = false,
-            supportedSorts = listOf(SearchSort.ALPHABETICAL_ASC)
+            supportsGenres = true,
+            supportsTags = false, // MAL has no tag system
+            supportsYear = false, // The basic search endpoint doesn't cleanly filter by year
+            supportsSeason = false,
+
+            // MAL has a much wider definition of "Formats" for print media
+            supportedFormats = listOf(
+                MediaFormat.MANGA,
+                MediaFormat.NOVEL, // Light Novels
+                MediaFormat.ONE_SHOT,
+//                MediaFormat.DOUJINSHI,
+//                MediaFormat.MANHWA, // Korean
+//                MediaFormat.MANHUA, // Chinese
+//                MediaFormat.OEL     // Original English Language
+            ),
+
+            supportedStatus = listOf(
+                MediaReleaseStatus.RELEASING, // MAL: "currently_publishing"
+                MediaReleaseStatus.FINISHED,  // MAL: "finished"
+                MediaReleaseStatus.NOT_YET_RELEASED,
+                MediaReleaseStatus.HIATUS,
+                MediaReleaseStatus.CANCELLED  // MAL: "discontinued"
+            ),
+
+            // Standard MAL search limits sorting primarily to Alphabetical or Score
+            supportedSorts = listOf(
+                SearchSort.ALPHABETICAL_ASC,
+                SearchSort.SCORE_DESC
+            ),
+
+            // Note: On MAL, demographics like "Shounen" and "Seinen" share the same list as Genres
+            availableGenres = listOf(
+                "Action",
+                "Adventure",
+                "Avant Garde",
+                "Boys Love",
+                "Comedy",
+                "Drama",
+                "Fantasy",
+                "Girls Love",
+                "Gourmet",
+                "Horror",
+                "Mystery",
+                "Romance",
+                "Sci-Fi",
+                "Slice of Life",
+                "Sports",
+                "Supernatural",
+                "Suspense",
+                "Seinen",
+                "Shoujo",
+                "Shounen"
+            )
         )
     }
 
@@ -106,10 +154,10 @@ class MalMangaSearchProvider(
                     .takeIf { it.isNotEmpty() }
 
                 val statusString = when (filter.status) {
-                    MediaStatus.FINISHED -> "completed"
-                    MediaStatus.RELEASING -> "currently_publishing"
-                    MediaStatus.NOT_YET_RELEASED -> "not_yet_published"
-                    MediaStatus.HIATUS -> "on_hiatus"
+                    MediaReleaseStatus.FINISHED -> "completed"
+                    MediaReleaseStatus.RELEASING -> "currently_publishing"
+                    MediaReleaseStatus.NOT_YET_RELEASED -> "not_yet_published"
+                    MediaReleaseStatus.HIATUS -> "on_hiatus"
                     else -> null
                 }
 
