@@ -118,7 +118,20 @@ fun AniListMedia.toAnimeDetailsDomain(): AnimeDetails {
         relations = this.relations?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
         staff = this.staff?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
 
-        trackEntry = null // Map your mediaListEntry if needed
+        trackEntry = this.mediaListEntry?.toTrackEntry(
+            this.id,
+            totalProgress = null
+        ), // Map your mediaListEntry if needed
+
+
+        //not provided by anilist
+        createdAt = null,
+        updatedAt = null,
+        watching = null,
+        completed = null,
+        onHold = null,
+        dropped = null,
+        planToWatch = null,
     )
 }
 
@@ -162,7 +175,16 @@ fun AniListMedia.toMangaDetailsDomain(): MangaDetails {
         characters = this.characters?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
         relations = this.relations?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
 
-        trackEntry = null
+        trackEntry = this.mediaListEntry?.toTrackEntry(this.id, totalProgress = null),
+
+        //not provided by anilist
+        createdAt = null,
+        updatedAt = null,
+        watching = null,
+        completed = null,
+        onHold = null,
+        dropped = null,
+        planToWatch = null,
     )
 }
 

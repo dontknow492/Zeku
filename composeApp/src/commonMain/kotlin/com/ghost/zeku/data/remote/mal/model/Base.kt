@@ -46,6 +46,13 @@ data class MalAnimeDto(
     val rank: Int? = null, // ADDED
     val popularity: Int? = null, // ADDED
     @SerialName("num_list_users") val numListUsers: Int? = null, // ADDED
+    @SerialName("num_scoring_users") val numScoringUsers: Int? = null,
+
+    @SerialName("created_at") val createdAt: String? = null,
+    @SerialName("updated_at") val updatedAt: String? = null,
+
+
+
     val nsfw: String? = null, // "white", "gray", "black"
     val rating: String? = null, // e.g., "pg_13", "r"
     val source: String? = null, // e.g., "manga", "original"
@@ -58,7 +65,10 @@ data class MalAnimeDto(
     @SerialName("my_list_status") val myListStatus: MalListStatus? = null,
     @SerialName("related_anime") val relatedAnime: List<MalRelatedEdge>? = null,
     @SerialName("related_manga") val relatedManga: List<MalRelatedEdge>? = null,
-    val recommendations: List<MalRecommendationEdge>? = null
+    val recommendations: List<MalRecommendationEdge>? = null,
+
+    //statics
+    val statistics: MalStatistics? = null
 )
 
 @Serializable
@@ -81,6 +91,10 @@ data class MalMangaDto(
     val rank: Int? = null, // ADDED
     val popularity: Int? = null, // ADDED
     @SerialName("num_list_users") val numListUsers: Int? = null, // ADDED
+    @SerialName("num_scoring_users") val numScoringUsers: Int? = null,
+
+    @SerialName("created_at") val createdAt: String? = null,
+    @SerialName("updated_at") val updatedAt: String? = null,
     val nsfw: String? = null,
 
     @SerialName("num_chapters") val numChapters: Int? = null,
@@ -92,7 +106,9 @@ data class MalMangaDto(
     @SerialName("related_anime") val relatedAnime: List<MalRelatedEdge>? = null,
     @SerialName("related_manga") val relatedManga: List<MalRelatedEdge>? = null,
     val recommendations: List<MalRecommendationEdge>? = null,
-    @SerialName("my_list_status") val myListStatus: MalListStatus? = null
+    @SerialName("my_list_status") val myListStatus: MalListStatus? = null,
+
+    val statistics: MalStatistics? = null
 )
 
 
@@ -139,8 +155,13 @@ data class MalPicture(
 data class MalListStatus(
     val status: String? = null,
     @SerialName("num_episodes_watched") val numEpisodesWatched: Int? = null,
+    @SerialName("num_volumes_read") val numVolumesRead: Int? = null,
     @SerialName("num_chapters_read") val numChaptersRead: Int? = null,
-    val score: Int? = null
+    val score: Double? = null,
+    @SerialName("is_rewatching") val isRewatching: Boolean? = null,
+    @SerialName("is_rereading") val isRereading: Boolean? = null,
+    @SerialName("updated_at") val updatedAt: String? = null,
+    @SerialName("start_date") val startDate: String? = null,
 )
 
 @Serializable
@@ -195,3 +216,20 @@ data class MalRecommendationEdge(
     @SerialName("num_recommendations") val numRecommendations: Int? = null
 )
 
+@Serializable
+data class MalStatistics(
+    val status: MalStatisticsStatus? = null,
+    @SerialName("num_list_users")
+    val numListUsers: Int? = null
+)
+
+@Serializable
+data class MalStatisticsStatus(
+    val watching: String? = null,
+    val completed: String? = null,
+    @SerialName("on_hold")
+    val onHold: String? = null,
+    val dropped: String? = null,
+    @SerialName("plan_to_watch")
+    val planToWatch: String? = null
+)

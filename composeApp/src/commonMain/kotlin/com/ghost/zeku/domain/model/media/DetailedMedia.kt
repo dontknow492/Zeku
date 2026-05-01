@@ -5,6 +5,7 @@ import com.ghost.zeku.domain.model.common.MediaDate
 import com.ghost.zeku.domain.model.common.MediaTitle
 import com.ghost.zeku.domain.model.common.TrackEntry
 import com.ghost.zeku.domain.model.enum.*
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 
@@ -41,6 +42,8 @@ data class AnimeDetails(
     // -------------------------
     val startDate: MediaDate?,
     val endDate: MediaDate?,
+    val createdAt: MediaDate?,
+    val updatedAt: MediaDate?,
     val season: MediaSeason?, // WINTER, SPRING, SUMMER, FALL
     val seasonYear: Int?,
     val broadcastString: String?, // e.g., "Tuesdays at 22:30 (JST)"
@@ -77,6 +80,13 @@ data class AnimeDetails(
     val characters: List<MediaCharacter>,
     val relations: List<MediaRelation>,
     val staff: List<MediaStaff>, // Directors, Composers, etc.
+
+    //stats
+    val watching: String?,
+    val completed: String?,
+    val onHold: String?,
+    val dropped: String?,
+    val planToWatch: String?,
 
     // -------------------------
     // USER TRACKING
@@ -117,6 +127,8 @@ data class MangaDetails(
     // -------------------------
     val startDate: MediaDate?,
     val endDate: MediaDate?,
+    val createdAt: MediaDate?,
+    val updatedAt: MediaDate?,
 
     // -------------------------
     // CATEGORIZATION
@@ -147,6 +159,13 @@ data class MangaDetails(
     val externalLinks: List<ExternalLink>,
     val characters: List<MediaCharacter>,
     val relations: List<MediaRelation>,
+
+    //stats
+    val watching: String?,
+    val completed: String?,
+    val onHold: String?,
+    val dropped: String?,
+    val planToWatch: String?,
 
     // -------------------------
     // USER TRACKING

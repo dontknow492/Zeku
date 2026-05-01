@@ -10,6 +10,7 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import zeku.composeApp.BuildConfig
 
@@ -148,9 +149,12 @@ class MalApi(private val client: HttpClient) {
 
 
     suspend fun getAnimeDetails(id: Int): MalAnimeDto {
-        return client.get("$baseUrl/anime/$id") {
+        val response = client.get("$baseUrl/anime/$id") {
             parameter("fields", MalApiConstants.ANIME_DETAILS_FIELDS)
-        }.body()
+        }
+        val body = response.bodyAsText()
+        Napier.i("Anime Details Body: $body")
+        return response.body()
     }
 
     suspend fun getMangaDetails(id: Int): MalMangaDto {

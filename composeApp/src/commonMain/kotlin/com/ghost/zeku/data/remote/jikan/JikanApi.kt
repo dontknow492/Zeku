@@ -49,4 +49,19 @@ class JikanApi(private val client: HttpClient) {
     suspend fun getMangaRecommendations(id: Int): JikanResponse<List<JikanRecommendationEdge>> {
         return client.get("$baseUrl/manga/$id/recommendations").body()
     }
+
+    // Note: Make sure you have the ContentNegotiation plugin installed in your HttpClient
+    suspend fun getAnimeDetail(id: Int): JikanResponse<JikanAnime> {
+        return client.get("${baseUrl}/anime/$id") {
+            // Jikan supports additional fields like characters or recommendations
+            // if you add them to the query, but basic detail is standard.
+        }.body()
+    }
+
+    suspend fun getMangaDetail(id: Int): JikanResponse<JikanManga> {
+        return client.get("$baseUrl/manga/$id") {
+            // You can add parameters here if needed
+        }.body()
+    }
+
 }

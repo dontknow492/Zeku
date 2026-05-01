@@ -132,10 +132,17 @@ fun MalAnimeDto.toAnimeDetailsDomain(jikanCharacters: List<MediaCharacter>? = nu
                 mediaId = this.id ?: 0,
                 status = status.status.toDomainTrackStatus(),
                 progress = status.numEpisodesWatched ?: 0,
-                score = status.score?.toDouble(),
+                score = status.score,
                 totalProgress = this.numEpisodes
             )
-        }
+        },
+        createdAt = this.createdAt.toMediaDate(),
+        updatedAt = this.updatedAt.toMediaDate(),
+        watching = this.statistics?.status?.watching,
+        completed = this.statistics?.status?.completed,
+        onHold = this.statistics?.status?.onHold,
+        dropped = this.statistics?.status?.dropped,
+        planToWatch = this.statistics?.status?.planToWatch,
     )
 }
 
@@ -198,10 +205,19 @@ fun MalMangaDto.toMangaDetailsDomain(jikanCharacters: List<MediaCharacter>? = nu
                 mediaId = this.id ?: 0,
                 status = status.status.toDomainTrackStatus(),
                 progress = status.numChaptersRead ?: 0,
-                score = status.score?.toDouble(),
+                score = status.score,
                 totalProgress = this.numChapters
             )
-        }
+        },
+        createdAt = this.createdAt.toMediaDate(),
+        updatedAt = this.updatedAt.toMediaDate(),
+
+        // null for manga always 
+        watching = this.statistics?.status?.watching,
+        completed = this.statistics?.status?.completed,
+        onHold = this.statistics?.status?.onHold,
+        dropped = this.statistics?.status?.dropped,
+        planToWatch = this.statistics?.status?.planToWatch,
     )
 }
 
