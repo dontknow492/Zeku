@@ -33,14 +33,7 @@ import java.util.concurrent.TimeUnit
 
 @Composable
 fun App() = AppTheme {
-
-//    val mediaRepository: MediaRepository = koinInject()
-
-
     ZekuAppWrapper()
-//    AnimeDetailPreview()
-//    MangaDetailPreview()
-//    Token()
 }
 
 @Composable
