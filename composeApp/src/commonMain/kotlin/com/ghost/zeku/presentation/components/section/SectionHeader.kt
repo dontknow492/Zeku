@@ -17,7 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ghost.zeku.presentation.components.media.list.ListCardShimmer
-import com.ghost.zeku.presentation.components.media.list.MediaListCardConfig
+import com.ghost.zeku.presentation.components.media.list.ListConfig
 import com.ghost.zeku.presentation.components.media.poster.PosterCardShimmer
 import com.ghost.zeku.presentation.components.media.poster.PosterConfig
 import org.jetbrains.compose.resources.stringResource
@@ -111,7 +111,7 @@ fun SectionLoadingShimmer(layout: SectionLayout, count: Int) {
                 verticalArrangement = Arrangement.spacedBy(layout.itemSpacing)
             ) {
                 repeat(count) {
-                    ListCardShimmer(config = MediaListCardConfig())
+                    ListCardShimmer(config = ListConfig())
                 }
             }
         }

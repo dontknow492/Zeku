@@ -6,7 +6,7 @@ object MediaListDefaults {
 
     fun config(variant: MediaListCardVariant) = when (variant) {
 
-        MediaListCardVariant.COMPACT -> MediaListCardConfig(
+        MediaListCardVariant.COMPACT -> ListConfig(
             ui = MediaListUiConfig(
                 maxWidth = 600.dp,
                 imageWidth = 70.dp,
@@ -20,13 +20,13 @@ object MediaListDefaults {
 
         )
 
-        MediaListCardVariant.COMFORTABLE -> MediaListCardConfig(
+        MediaListCardVariant.COMFORTABLE -> ListConfig(
             content = MediaListContentConfig(
                 showDescription = false
             )
         )
 
-        MediaListCardVariant.DETAILED -> MediaListCardConfig(
+        MediaListCardVariant.DETAILED -> ListConfig(
             ui = MediaListUiConfig(
                 maxWidth = 900.dp,
                 imageWidth = 110.dp,

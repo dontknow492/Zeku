@@ -9,7 +9,9 @@ import com.ghost.zeku.domain.model.enum.AnimeCategory
 import com.ghost.zeku.domain.model.enum.MangaCategory
 import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.domain.model.media.Media
+import com.ghost.zeku.domain.model.settings.MediaDisplayPreference
 import com.ghost.zeku.domain.repository.MediaRepository
+import com.ghost.zeku.domain.repository.UserSettings
 import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.navigation.Destination
 import io.github.aakira.napier.Napier
@@ -17,8 +19,17 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class CategoryViewModel(
-    private val repository: MediaRepository
+    private val repository: MediaRepository,
+    private val userSettings: UserSettings,
 ) : ViewModel() {
+
+    val displayMode: StateFlow<MediaDisplayPreference> =
+        userSettings.preferences.map { it.displayPreferences.category }.stateIn(
+            viewModelScope,
+            SharingStarted.Eagerly,
+            MediaDisplayPreference()
+        )
+
 
     // Initialized with empty defaults until LoadCategory is called
     private val _state = MutableStateFlow(CategoryContract.State())
@@ -44,8 +55,34 @@ class CategoryViewModel(
             is CategoryContract.Event.OnBack -> {
                 sendEffect(CategoryContract.Effect.Navigate(Destination.Back)) // Adjust as needed
             }
+
+            is CategoryContract.Event.OnMediaDisplayPreferencesChange -> {
+                updatePreference(event.displayPreference)
+            }
         }
     }
+
+    private fun updatePreference(
+        pref: MediaDisplayPreference
+    ) {
+        Napier.d { "UI Mode changed to: ${pref}" }
+        viewModelScope.launch {
+            val result = userSettings.updatePreferences {
+                it.copy(
+                    displayPreferences = it.displayPreferences.copy(
+                        category = pref
+                    )
+                )
+            }
+            val isError = result.isFailure
+            val type = when (isError) {
+                true -> MessageType.Error.UserPreference
+                false -> MessageType.Success
+            }
+            _effects.emit(CategoryContract.Effect.ShowMessage(result.getOrThrow().toString(), type))
+        }
+    }
+
 
     private fun loadData(categoryId: String, title: String, mediaType: MediaType) {
         Napier.d { "Loading Category -> ID: $categoryId, Type: $mediaType, Title: $title" }

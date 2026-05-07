@@ -1,4 +1,4 @@
-package com.ghost.zeku.domain.model.settings
+package com.ghost.zeku.utils.serializer
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.isSpecified
@@ -42,3 +42,5 @@ object ColorSerializer : KSerializer<Color> {
         }
     }
 }
+
+

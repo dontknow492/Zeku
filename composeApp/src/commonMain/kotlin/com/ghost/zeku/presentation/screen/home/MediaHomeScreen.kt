@@ -105,8 +105,6 @@ fun HomeContent(
 
     val listState = rememberLazyListState()
 
-//    val visibleItems = listState.layoutInfo.visibleItemsInfo.map { it.key }
-
     // Hoist the vertical paging items collection OUTSIDE the LazyColumn into a valid @Composable scope
     val verticalPagingItems = remember(state.verticalSection?.data) {
         state.verticalSection?.data ?: flowOf(PagingData.empty())
@@ -188,12 +186,6 @@ fun HomeContent(
 
                             val pagingItems = section.data.collectAsLazyPagingItems()
 
-//                            val isVisible = visibleItems.contains("horizontal_${section.categoryId}")
-//                            val pagingItems = if (isVisible) {
-//                                section.data.collectAsLazyPagingItems()
-//                            } else {
-//                                null
-//                            }
 
                             HorizontalMediaSection(
                                 title = section.title,
@@ -284,7 +276,7 @@ fun HomeContent(
 
                                     item {
                                         FullScreenError(
-                                            message = error.error.message ?: "Something went wrong",
+                                            error = error.error.cause ?: Exception("Something went wrong"),
                                             onRetry = { retry() }
                                         )
                                     }

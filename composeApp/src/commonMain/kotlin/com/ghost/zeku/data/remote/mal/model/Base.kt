@@ -52,7 +52,6 @@ data class MalAnimeDto(
     @SerialName("updated_at") val updatedAt: String? = null,
 
 
-
     val nsfw: String? = null, // "white", "gray", "black"
     val rating: String? = null, // e.g., "pg_13", "r"
     val source: String? = null, // e.g., "manga", "original"

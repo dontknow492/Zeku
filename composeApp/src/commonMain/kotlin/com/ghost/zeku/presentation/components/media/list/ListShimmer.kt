@@ -15,7 +15,7 @@ import zeku.composeapp.generated.resources.Res
 import zeku.composeapp.generated.resources.retry
 
 @Composable
-fun ListCardShimmer(config: MediaListCardConfig) {
+fun ListCardShimmer(config: ListConfig) {
     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         Box(
             modifier = Modifier

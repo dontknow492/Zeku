@@ -25,7 +25,6 @@ import com.ghost.zeku.presentation.screen.home.MediaHomeScreen
 import com.ghost.zeku.presentation.screen.search.SearchScreen
 import com.ghost.zeku.presentation.viewmodel.main.MainContract
 import com.ghost.zeku.presentation.viewmodel.main.MainViewModel
-import com.ghost.zeku.presentation.viewmodel.search.SearchViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 

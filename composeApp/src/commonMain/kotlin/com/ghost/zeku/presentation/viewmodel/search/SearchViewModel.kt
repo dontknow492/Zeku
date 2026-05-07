@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.ghost.zeku.domain.model.MessageType
 import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.domain.model.media.Anime
 import com.ghost.zeku.domain.model.media.Manga
@@ -11,7 +12,9 @@ import com.ghost.zeku.domain.model.search.AnimeSearchFilter
 import com.ghost.zeku.domain.model.search.MangaSearchFilter
 import com.ghost.zeku.domain.model.search.SearchCapabilities
 import com.ghost.zeku.domain.model.search.SearchSort
+import com.ghost.zeku.domain.model.settings.MediaDisplayPreference
 import com.ghost.zeku.domain.repository.MediaRepository
+import com.ghost.zeku.domain.repository.UserSettings
 import com.ghost.zeku.presentation.navigation.Destination
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,8 +26,15 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class SearchViewModel(
-    private val repository: MediaRepository
+    private val repository: MediaRepository,
+    private val userSettings: UserSettings,
 ) : ViewModel() {
+
+    val displayMode = userSettings.preferences.map { it.displayPreferences.category }.stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        MediaDisplayPreference()
+    )
 
     private val _state = MutableStateFlow(SearchContract.State())
     val state: StateFlow<SearchContract.State> = _state.asStateFlow()
@@ -152,6 +162,35 @@ class SearchViewModel(
                     _effect.send(SearchContract.Effect.Navigate(Destination.MediaDetail(event.mediaId, event.type)))
                 }
             }
+
+            is SearchContract.Event.SetTuneSheetVisibility -> {
+                _state.update { it.copy(isTuneSheetOpen = event.isOpen) }
+            }
+
+            is SearchContract.Event.OnMediaDisplayPreferencesChange -> {
+                updatePreference(event.displayPreference)
+            }
+        }
+    }
+
+    private fun updatePreference(
+        pref: MediaDisplayPreference
+    ) {
+        Napier.d { "UI Mode changed to: ${pref}" }
+        viewModelScope.launch {
+            val result = userSettings.updatePreferences {
+                it.copy(
+                    displayPreferences = it.displayPreferences.copy(
+                        category = pref
+                    )
+                )
+            }
+            val isError = result.isFailure
+            val type = when (isError) {
+                true -> MessageType.Error.UserPreference
+                false -> MessageType.Success
+            }
+            _effect.send(SearchContract.Effect.ShowMessage(result.getOrThrow().toString(), type))
         }
     }
 

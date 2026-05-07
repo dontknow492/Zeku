@@ -1,30 +1,25 @@
 package com.ghost.zeku.presentation.screen.category
 
-import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
 import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.presentation.components.media.poster.MediaPosterCard
-import com.ghost.zeku.presentation.components.media.poster.toPosterUiData
+import com.ghost.zeku.domain.model.settings.MediaDisplayPreference
+import com.ghost.zeku.presentation.components.media.MediaGrid
+import com.ghost.zeku.presentation.components.media.settings.DisplaySettingsPanel
 import com.ghost.zeku.presentation.navigation.Destination
 import com.ghost.zeku.presentation.viewmodel.category.CategoryContract
 import com.ghost.zeku.presentation.viewmodel.category.CategoryViewModel
-import com.ghost.zeku.utils.shimmerEffect
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,6 +33,7 @@ fun CategoryScreen(
     onBack: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    val displayMode by viewModel.displayMode.collectAsState(MediaDisplayPreference())
 
 
     // Dispatch Load Event
@@ -64,7 +60,7 @@ fun CategoryScreen(
 
     CategoryScreenContent(
         state = state,
-        config = CategoryUiConfig(),
+        displayPreference = displayMode,
         onBack = onBack,
         onEvent = viewModel::onEvent,
     )
@@ -75,11 +71,12 @@ fun CategoryScreen(
 @Composable
 private fun CategoryScreenContent(
     state: CategoryContract.State,
-    config: CategoryUiConfig,
+    displayPreference: MediaDisplayPreference,
     onBack: () -> Unit,
     onEvent: (CategoryContract.Event) -> Unit,
 ) {
     val pagingItems = state.data.collectAsLazyPagingItems()
+    var showSettingsSheet by remember { mutableStateOf(false) } // 👈 State for sheet
     Scaffold(
         topBar = {
             TopAppBar(
@@ -101,7 +98,12 @@ private fun CategoryScreenContent(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                ),
+                actions = { // 👈 Add action button to TopAppBar
+                    IconButton(onClick = { showSettingsSheet = true }) {
+                        Icon(Icons.Rounded.Tune, contentDescription = "Display Settings")
+                    }
+                }
             )
         }
     ) { paddingValues ->
@@ -110,144 +112,33 @@ private fun CategoryScreenContent(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            Crossfade(
-                targetState = pagingItems.loadState.refresh,
-                label = "category_loading_crossfade"
-            ) { loadState ->
-                when (loadState) {
-                    is LoadState.Loading -> {
-                        // Show Shimmer Grid
-                        LoadingGrid()
-                    }
+            MediaGrid(
+                displayPreferences = displayPreference,
+                pagingItems = pagingItems,
+                onMediaAction = { onEvent(CategoryContract.Event.OnMediaAction(it)) }
+            )
+        }
+        // 👈 Bottom Sheet implementation
+        if (showSettingsSheet) {
+            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-                    is LoadState.Error -> {
-                        // Show Error State
-                        ErrorState(
-                            message = loadState.error.localizedMessage ?: "Unknown Error",
-                            onRetry = { pagingItems.retry() }
-                        )
-                    }
-
-                    is LoadState.NotLoading -> {
-                        if (pagingItems.itemCount == 0 && state.data != kotlinx.coroutines.flow.emptyFlow<Any>()) {
-                            EmptyState()
-                        } else {
-                            // Main Content Grid
-                            LazyVerticalGrid(
-                                columns = config.layout,
-                                contentPadding = PaddingValues(16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp),
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                items(
-                                    count = pagingItems.itemCount,
-                                    key = pagingItems.itemKey { it.id }
-                                ) { index ->
-                                    val item = pagingItems[index]
-                                    if (item != null) {
-                                        // Convert Domain Model to UI Model if needed
-                                        // Assuming you have a mapping function or your PosterCard takes the domain model directly.
-                                        // Here we map it assuming a toUiData() exists.
-                                        MediaPosterCard(
-                                            data = item.toPosterUiData(),
-                                            config = config.posterConfig,
-                                            onAction = { onEvent(CategoryContract.Event.OnMediaAction(it)) }
-                                        )
-                                    }
-                                }
-
-                                // Handle Append Loading (Pagination loading spinner at bottom)
-                                if (pagingItems.loadState.append is LoadState.Loading) {
-                                    item {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(16.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            CircularProgressIndicator()
-                                        }
-                                    }
-                                }
-
-                                // Handle Append Error
-                                if (pagingItems.loadState.append is LoadState.Error) {
-                                    item {
-                                        TextButton(
-                                            onClick = { pagingItems.retry() },
-                                            modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            Text("Retry Loading More")
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+            ModalBottomSheet(
+                onDismissRequest = { showSettingsSheet = false },
+                sheetState = sheetState,
+                containerColor = MaterialTheme.colorScheme.surface,
+//                windowInsets = BottomSheetDefaults.windowInsets
+            ) {
+                DisplaySettingsPanel(
+                    displayPreferences = displayPreference,
+                    onMediaDisplayPreferenceChange = { onEvent(CategoryContract.Event.OnMediaDisplayPreferencesChange(it)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 16.dp)
+                        .padding(bottom = 32.dp) // Padding for system navigation bars
+                )
             }
         }
     }
-}
 
-@Composable
-private fun LoadingGrid() {
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 120.dp),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.fillMaxSize()
-    ) {
-        items(20) {
-            Box(
-                modifier = Modifier
-                    .aspectRatio(2f / 3f)
-                    .shimmerEffect() // Assuming this is the modifier we built earlier
-            )
-        }
-    }
-}
 
-@Composable
-private fun ErrorState(message: String, onRetry: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "Failed to load category.",
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.error
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(onClick = onRetry) {
-            Text("Retry")
-        }
-    }
-}
-
-@Composable
-private fun EmptyState() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "No items found in this category.",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
 }

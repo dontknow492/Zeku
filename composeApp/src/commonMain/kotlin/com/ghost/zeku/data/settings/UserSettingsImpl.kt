@@ -6,7 +6,6 @@ import com.russhwolf.settings.Settings
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.serialization.json.Json
 
 class UserSettingsImpl(
@@ -21,6 +20,7 @@ class UserSettingsImpl(
         ignoreUnknownKeys = true
         encodeDefaults = true
         isLenient = true
+        allowSpecialFloatingPointValues = true
     }
 
     private val _preferences = MutableStateFlow(loadPreferences())
@@ -41,13 +41,28 @@ class UserSettingsImpl(
         }
     }
 
-    override fun updatePreferences(transform: (UserPreferences) -> UserPreferences) {
-        Napier.d { "Updating preferences..." }
-        _preferences.update { currentPrefs ->
-            val newPrefs = transform(currentPrefs)
-            saveToDisk(newPrefs)
+    override suspend fun updatePreferences(
+        transform: (UserPreferences) -> UserPreferences
+    ): Result<Unit> {
+
+        return runCatching {
+
+            Napier.d { "Updating preferences..." }
+
+            val updated = transform(_preferences.value)
+
+            saveToDisk(updated)
+
+            _preferences.value = updated
+
             Napier.d { "Preferences updated." }
-            newPrefs
+        }.onFailure { error ->
+
+            Napier.e(
+                throwable = error
+            ) {
+                "Failed to update preferences."
+            }
         }
     }
 
@@ -55,6 +70,7 @@ class UserSettingsImpl(
         try {
             val jsonString = json.encodeToString(prefs)
             settings.putString(KEY_PREFS_JSON, jsonString)
+            Napier.d { "Saved UserPreferences to disk." }
         } catch (e: Exception) {
             Napier.e(e) { "Failed to save UserPreferences to disk." }
         }
@@ -74,7 +90,7 @@ class UserSettingsImpl(
         }
     }
 
-    override fun importSettingsJson(jsonString: String): Boolean {
+    override suspend fun importSettingsJson(jsonString: String): Boolean {
         if (jsonString.isBlank()) return false
 
         return try {

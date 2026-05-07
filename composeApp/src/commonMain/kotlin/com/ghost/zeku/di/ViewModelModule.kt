@@ -19,10 +19,10 @@ val viewmodelModule = module {
         HomeViewModel(repository = get())
     }
     viewModel {
-        CategoryViewModel(repository = get())
+        CategoryViewModel(repository = get(), userSettings = get())
     }
     viewModel {
-        SearchViewModel(get())
+        SearchViewModel(get(), userSettings = get())
     }
 
 }

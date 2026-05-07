@@ -4,6 +4,7 @@ import androidx.paging.PagingData
 import com.ghost.zeku.domain.model.MessageType
 import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.domain.model.media.Media
+import com.ghost.zeku.domain.model.settings.MediaDisplayPreference
 import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.navigation.Destination
 import kotlinx.coroutines.flow.Flow
@@ -30,6 +31,7 @@ interface CategoryContract {
         data class OnMediaAction(val action: MediaAction) : Event
         data object OnRefresh : Event
         data object OnBack : Event
+        data class OnMediaDisplayPreferencesChange(val displayPreference: MediaDisplayPreference) : Event
     }
 
     sealed interface Effect {

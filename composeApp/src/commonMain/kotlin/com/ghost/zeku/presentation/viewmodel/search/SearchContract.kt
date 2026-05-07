@@ -1,12 +1,10 @@
 package com.ghost.zeku.presentation.viewmodel.search
 
-import com.ghost.zeku.domain.model.enum.MediaFormat
-import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
-import com.ghost.zeku.domain.model.enum.MediaSeason
-import com.ghost.zeku.domain.model.enum.ProviderType
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.MessageType
+import com.ghost.zeku.domain.model.enum.*
 import com.ghost.zeku.domain.model.search.SearchCapabilities
 import com.ghost.zeku.domain.model.search.SearchSort
+import com.ghost.zeku.domain.model.settings.MediaDisplayPreference
 import com.ghost.zeku.presentation.navigation.Destination
 
 interface SearchContract {
@@ -31,6 +29,7 @@ interface SearchContract {
 
         // UI State
         val isFilterSheetOpen: Boolean = false,
+        val isTuneSheetOpen: Boolean = false,
         val isInitializing: Boolean = true // True while fetching initial capabilities
     )
 
@@ -40,6 +39,8 @@ interface SearchContract {
         data class OnQueryChange(val query: String) : Event
         data class ChangeProvider(val provider: ProviderType) : Event
         data class ChangeMediaType(val type: MediaType) : Event
+
+        data class OnMediaDisplayPreferencesChange(val displayPreference: MediaDisplayPreference) : Event
 
         // Filter Interactions
         data class ToggleGenre(val genre: String) : Event
@@ -53,6 +54,7 @@ interface SearchContract {
         // UI Actions
         data class SetFilterSheetVisibility(val isOpen: Boolean) : Event
         object ClearAllFilters : Event
+        data class SetTuneSheetVisibility(val isOpen: Boolean) : Event
 
         // Navigation
         data class OnMediaClick(val mediaId: Int, val type: MediaType) : Event
@@ -60,6 +62,6 @@ interface SearchContract {
 
     sealed interface Effect {
         data class Navigate(val destination: Destination) : Effect
-        data class ShowMessage(val message: String, val isError: Boolean = false) : Effect
+        data class ShowMessage(val message: String, val type: MessageType) : Effect
     }
 }

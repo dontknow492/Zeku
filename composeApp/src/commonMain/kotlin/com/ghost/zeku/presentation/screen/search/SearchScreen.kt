@@ -1,14 +1,12 @@
 package com.ghost.zeku.presentation.screen.search
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,33 +19,36 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.ghost.zeku.domain.model.common.MediaDate
 import com.ghost.zeku.domain.model.common.MediaTitle
+import com.ghost.zeku.domain.model.enum.MediaFormat
 import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
 import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.model.media.Anime
 import com.ghost.zeku.domain.model.media.Manga
-import com.ghost.zeku.domain.model.media.Media
-import com.ghost.zeku.presentation.components.media.poster.MediaPosterCard
-import com.ghost.zeku.presentation.components.media.poster.PosterConfig
-import com.ghost.zeku.presentation.components.media.poster.toPosterUiData
+import com.ghost.zeku.domain.model.search.SearchCapabilities
+import com.ghost.zeku.domain.model.search.SearchSort
+import com.ghost.zeku.domain.model.settings.MediaDisplayPreference
+import com.ghost.zeku.presentation.common.isWideScreen
+import com.ghost.zeku.presentation.common.rememberPlatformConfiguration
+import com.ghost.zeku.presentation.components.media.MediaGrid
+import com.ghost.zeku.presentation.components.media.settings.DisplaySettingsPanel
 import com.ghost.zeku.presentation.navigation.Destination
 import com.ghost.zeku.presentation.theme.AppTheme
 import com.ghost.zeku.presentation.viewmodel.search.SearchContract
 import com.ghost.zeku.presentation.viewmodel.search.SearchViewModel
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,6 +58,7 @@ fun SearchScreen(
     onNavigate: (Destination) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    val displayPreferences by viewModel.displayMode.collectAsState()
     val animeItems = viewModel.animeSearchResults.collectAsLazyPagingItems()
     val mangaItems = viewModel.mangaSearchResults.collectAsLazyPagingItems()
 
@@ -71,55 +73,171 @@ fun SearchScreen(
             }
         }
     }
+
+    SearchScreenContent(
+        state = state,
+        displayPreferences = displayPreferences,
+        animeItems = animeItems,
+        mangaItems = mangaItems,
+        onEvent = viewModel::onEvent
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SearchScreenContent(
     state: SearchContract.State,
+    displayPreferences: MediaDisplayPreference,
     animeItems: LazyPagingItems<Anime>,
     mangaItems: LazyPagingItems<Manga>,
     onEvent: (SearchContract.Event) -> Unit
 ) {
+    val isWideScreen = rememberPlatformConfiguration().isWideScreen
+    // Determine the layout based on available screen width
+
 
     Scaffold(
         topBar = {
             SearchTopBar(
                 query = state.query,
                 onQueryChange = { onEvent(SearchContract.Event.OnQueryChange(it)) },
-                onFilterClick = { onEvent(SearchContract.Event.SetFilterSheetVisibility(true)) },
-                activeFilterCount = getActiveFilterCount(state)
-            )
+                onFilterClick = {
+                    // Toggle sheet visibility
+                    onEvent(SearchContract.Event.SetFilterSheetVisibility(!state.isFilterSheetOpen))
+                },
+                activeFilterCount = getActiveFilterCount(state),
+                isFilterPanelOpen = state.isFilterSheetOpen,
+
+                )
         }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Render the correct PagingItems based on active MediaType
-            if (state.mediaType == MediaType.ANIME) {
-                MediaGrid(pagingItems = animeItems, onMediaClick = { id ->
-                    onEvent(SearchContract.Event.OnMediaClick(id, MediaType.ANIME))
-                })
-            } else {
-                MediaGrid(pagingItems = mangaItems, onMediaClick = { id ->
-                    onEvent(SearchContract.Event.OnMediaClick(id, MediaType.MANGA))
-                })
-            }
 
-            // Filter Bottom Sheet
-            if (state.isFilterSheetOpen) {
-                ModalBottomSheet(
-                    onDismissRequest = { onEvent(SearchContract.Event.SetFilterSheetVisibility(false)) },
-                    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-                ) {
-                    SearchFilterContent(state = state, onEvent = onEvent)
+        if (isWideScreen) {
+            // ==========================================
+            // WIDE SCREEN LAYOUT: Side Panel + Grid
+            // ==========================================
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                // Main Grid takes up remaining space
+                Box(modifier = Modifier.weight(1f)) {
+                    if (state.mediaType == MediaType.ANIME) {
+                        MediaGrid(
+                            displayPreferences = displayPreferences,
+                            pagingItems = animeItems,
+                            onMediaAction = {
+                                TODO("Not Yet Implemented")
+                            }
+                        )
+                    } else {
+                        MediaGrid(
+                            displayPreferences = displayPreferences,
+                            pagingItems = mangaItems,
+                            onMediaAction = {
+                                TODO("Not Yet Implemented")
+                            }
+                        )
+                    }
                 }
+
+                // Side Panel for Filters (Animated slide in/out)
+                AnimatedVisibility(
+                    visible = state.isFilterSheetOpen,
+                    enter = slideInHorizontally(initialOffsetX = { it }) + fadeIn(),
+                    exit = slideOutHorizontally(targetOffsetX = { it }) + fadeOut()
+                ) {
+                    Surface(
+                        modifier = Modifier
+                            .width(480.dp)
+                            .fillMaxHeight(),
+                        color = MaterialTheme.colorScheme.surface,
+                        tonalElevation = 2.dp, // Gives it a slight pop from the background
+                        shadowElevation = 4.dp
+                    ) {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            // A nice header for the side panel to close it
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                IconButton(onClick = { onEvent(SearchContract.Event.SetFilterSheetVisibility(false)) }) {
+                                    Icon(Icons.Default.Clear, contentDescription = "Close Filters")
+                                }
+                            }
+                            SearchFilterContent(
+                                state = state,
+                                displayPreference = displayPreferences,
+                                onEvent = onEvent
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
+            // ==========================================
+            // COMPACT SCREEN LAYOUT: Grid + BottomSheet
+            // ==========================================
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                if (state.mediaType == MediaType.ANIME) {
+                    MediaGrid(
+                        displayPreferences = displayPreferences,
+                        pagingItems = animeItems,
+                        onMediaAction = {
+                            TODO("Not Yet Implemented")
+                        }
+                    )
+                } else {
+                    MediaGrid(
+                        displayPreferences = displayPreferences,
+                        pagingItems = mangaItems,
+                        onMediaAction = {
+                            TODO("Not Yet Implemented")
+                        }
+                    )
+                }
+
+                // Filter Bottom Sheet
+                if (state.isFilterSheetOpen) {
+                    ModalBottomSheet(
+                        onDismissRequest = { onEvent(SearchContract.Event.SetFilterSheetVisibility(false)) },
+                        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+                    ) {
+                        SearchFilterContent(state = state, displayPreference = displayPreferences, onEvent = onEvent)
+                    }
+                }
+            }
+        }
+
+        // 👈 Bottom Sheet implementation
+        if (state.isTuneSheetOpen) {
+            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+            ModalBottomSheet(
+                onDismissRequest = { onEvent(SearchContract.Event.SetFilterSheetVisibility(false)) },
+                sheetState = sheetState,
+//                windowInsets = BottomSheetDefaults.windowInsets
+            ) {
+                DisplaySettingsPanel(
+                    displayPreferences = displayPreferences,
+                    onMediaDisplayPreferenceChange = { newMode ->
+                        onEvent(SearchContract.Event.OnMediaDisplayPreferencesChange(newMode))
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 16.dp)
+                        .padding(bottom = 32.dp) // Padding for system navigation bars
+                )
             }
         }
     }
 }
+
 
 // ========================================================================
 // TOP BAR & GRID COMPONENTS
@@ -130,7 +248,8 @@ private fun SearchTopBar(
     query: String,
     onQueryChange: (String) -> Unit,
     onFilterClick: () -> Unit,
-    activeFilterCount: Int
+    activeFilterCount: Int,
+    isFilterPanelOpen: Boolean,
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -175,9 +294,19 @@ private fun SearchTopBar(
                     onFilterClick()
                 },
                 modifier = Modifier
-                    .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                    .background(
+                        // Highlight the button when the side panel is actively open
+                        color = if (isFilterPanelOpen) MaterialTheme.colorScheme.primaryContainer
+                        else MaterialTheme.colorScheme.surfaceVariant,
+                        shape = CircleShape
+                    )
             ) {
-                Icon(Icons.Default.FilterList, contentDescription = "Filters")
+                Icon(
+                    imageVector = Icons.Default.FilterList,
+                    contentDescription = "Filters",
+                    tint = if (isFilterPanelOpen) MaterialTheme.colorScheme.onPrimaryContainer
+                    else MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             // Active Filters Badge
@@ -202,78 +331,77 @@ private fun SearchTopBar(
     }
 }
 
+// ========================================================================
+// CAPABILITY-DRIVEN FILTER SHEET
+// ========================================================================
+
+@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
-private fun <T : Media> MediaGrid(
-    pagingItems: LazyPagingItems<T>,
-    onMediaClick: (Int) -> Unit
+private fun SearchFilterContent(
+    state: SearchContract.State,
+    displayPreference: MediaDisplayPreference,
+    onEvent: (SearchContract.Event) -> Unit
 ) {
-    if (pagingItems.loadState.refresh is LoadState.Loading) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
-        return
-    }
+    val tabs = listOf("Filters", "Display")
+    val pagerState = rememberPagerState { tabs.size }
+    val coroutineScope = rememberCoroutineScope()
 
-    if (pagingItems.itemCount == 0 && pagingItems.loadState.refresh !is LoadState.Loading) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("No results found.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        return
-    }
-
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 110.dp),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.fillMaxSize()
-    ) {
-        items(
-            count = pagingItems.itemCount,
-        ) { index ->
-            val item = pagingItems[index]
-            if (item != null) {
-
-                // If you update your `toPosterUiData()` mapper to accept the `Media` interface directly,
-                // you can replace this entire when block with simply: val uiData = item.toPosterUiData()
-                val uiData = when (item) {
-                    is com.ghost.zeku.domain.model.media.Anime -> item.toPosterUiData()
-                    is com.ghost.zeku.domain.model.media.Manga -> item.toPosterUiData()
-                    else -> null // Fallback
-                }
-
-                if (uiData != null) {
-                    MediaPosterCard(
-                        data = uiData,
-                        config = PosterConfig(),
-                        onAction = { onMediaClick(item.id) }, // Safely grabs the ID directly from the Media interface!
-                        modifier = Modifier.fillMaxWidth()
+    Surface {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // --- 1. Tab Row ---
+            SecondaryTabRow(
+                selectedTabIndex = pagerState.currentPage,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = pagerState.currentPage == index,
+                        onClick = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(index)
+                            }
+                        },
+                        text = { Text(text = title, fontWeight = FontWeight.Bold) }
                     )
                 }
-            }
-        }
 
-        // Handle Append Loading
-        if (pagingItems.loadState.append is LoadState.Loading) {
-            item {
-                Box(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+            }
+
+            // --- 2. Pager Content ---
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize() // Takes up remaining space
+            ) { page ->
+                when (page) {
+                    0 -> {
+                        // Page 0: The existing Filters UI
+                        FiltersPage(state = state, onEvent = onEvent)
+                    }
+
+                    1 -> {
+                        // Page 1: The Display Settings Panel
+                        DisplaySettingsPanel(
+                            displayPreferences = displayPreference,
+                            onMediaDisplayPreferenceChange = { newMode ->
+                                onEvent(SearchContract.Event.OnMediaDisplayPreferencesChange(newMode))
+                            },
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 12.dp, vertical = 16.dp)
+                                .padding(bottom = 32.dp)
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-// ========================================================================
-// CAPABILITY-DRIVEN FILTER SHEET
-// ========================================================================
+// --- Extracted Filters Page (Your exact existing code, just moved here) ---
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun SearchFilterContent(
+private fun FiltersPage(
     state: SearchContract.State,
     onEvent: (SearchContract.Event) -> Unit
 ) {
@@ -282,9 +410,9 @@ private fun SearchFilterContent(
 
     Column(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .padding(horizontal = 24.dp)
-            .padding(bottom = 32.dp)
+            .padding(top = 16.dp, bottom = 32.dp)
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
@@ -294,7 +422,9 @@ private fun SearchFilterContent(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Filters & Discovery", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text("Filters & Discovery", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+
+            // Note: Assuming you have this helper function defined somewhere
             if (getActiveFilterCount(state) > 0) {
                 TextButton(onClick = { onEvent(SearchContract.Event.ClearAllFilters) }) {
                     Text("Clear All")
@@ -304,29 +434,25 @@ private fun SearchFilterContent(
 
         // --- Core Toggles (Always Visible) ---
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Source & Type", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-
-            // Provider Toggle
-            SegmentedControl(
-                options = ProviderType.entries.map { it.name },
-                selectedOption = state.activeProvider.name,
-                onOptionSelected = {
-                    val provider = ProviderType.valueOf(it)
-                    Napier.d(tag = "SearchUI") { "Switching to Provider: $provider" }
-                    onEvent(SearchContract.Event.ChangeProvider(provider))
-                }
-            )
+            Text("Type", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
             // Media Type Toggle
-            SegmentedControl(
-                options = listOf("ANIME", "MANGA"),
-                selectedOption = state.mediaType.name,
-                onOptionSelected = {
-                    val type = MediaType.valueOf(it)
-                    Napier.d(tag = "SearchUI") { "Switching to Type: $type" }
-                    onEvent(SearchContract.Event.ChangeMediaType(type))
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                val options = listOf("ANIME", "MANGA")
+                options.forEachIndexed { index, option ->
+                    SegmentedButton(
+                        selected = state.mediaType.name == option,
+                        onClick = {
+                            val type = MediaType.valueOf(option)
+                            Napier.d(tag = "SearchUI") { "Switching to Type: $type" }
+                            onEvent(SearchContract.Event.ChangeMediaType(type))
+                        },
+                        shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size)
+                    ) {
+                        Text(option)
+                    }
                 }
-            )
+            }
         }
 
         // --- Capability Flags UI Rendering ---
@@ -360,7 +486,6 @@ private fun SearchFilterContent(
                         FilterChip(
                             selected = state.selectedFormat == format,
                             onClick = {
-                                // Toggle behavior: if already selected, deselect it
                                 val newFormat = if (state.selectedFormat == format) null else format
                                 onEvent(SearchContract.Event.SelectFormat(newFormat))
                             },
@@ -392,7 +517,7 @@ private fun SearchFilterContent(
             }
         }
 
-        // 4. Genres (Animated because MAL might not support it in future/other endpoints, though currently it does)
+        // 4. Genres
         AnimatedVisibility(visible = caps.supportsGenres, enter = expandVertically(), exit = shrinkVertically()) {
             FilterSection("Genres") {
                 FlowRow(
@@ -410,7 +535,7 @@ private fun SearchFilterContent(
             }
         }
 
-        // 5. Tags (Animated: Disappears instantly when switching to MAL!)
+        // 5. Tags
         AnimatedVisibility(
             visible = caps.supportsTags,
             enter = expandVertically(),
@@ -434,6 +559,7 @@ private fun SearchFilterContent(
     }
 }
 
+
 // ========================================================================
 // UI HELPERS
 // ========================================================================
@@ -446,44 +572,6 @@ private fun FilterSection(title: String, content: @Composable () -> Unit) {
     }
 }
 
-/**
- * A beautiful iOS-style segmented control built purely in Compose.
- */
-@Composable
-private fun SegmentedControl(
-    options: List<String>,
-    selectedOption: String,
-    onOptionSelected: (String) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(40.dp)
-            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50))
-            .padding(4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        options.forEach { option ->
-            val isSelected = option == selectedOption
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(50))
-                    .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
-                    .clickable { onOptionSelected(option) },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = option,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
 
 // Helper to count active badges
 private fun getActiveFilterCount(state: SearchContract.State): Int {
@@ -494,12 +582,11 @@ private fun getActiveFilterCount(state: SearchContract.State): Int {
     if (state.selectedStatus != null) count++
     if (state.selectedSeason != null) count++
     if (state.selectedYear != null) count++
-    // Ignore sort in the count, since it always has a default value
     return count
 }
 
-
 @Preview
+@Preview(device = Devices.DESKTOP)
 @Composable
 private fun PreviewSearchScreen() {
     val fakeMangaList = listOf(
@@ -918,13 +1005,29 @@ private fun PreviewSearchScreen() {
 
     val mangaItems = flowOf(PagingData.from(fakeMangaList)).collectAsLazyPagingItems()
     val animeItems = flowOf(PagingData.from(emptyList<Anime>())).collectAsLazyPagingItems()
-    val state = SearchContract.State(mediaType = MediaType.MANGA, isInitializing = false, isFilterSheetOpen = true)
+    val state = SearchContract.State(
+        mediaType = MediaType.MANGA,
+        isInitializing = false,
+        capabilities = SearchCapabilities(
+            supportsGenres = true,
+            supportsTags = true,
+            supportsYear = true,
+            supportsSeason = true,
+            supportedFormats = MediaFormat.entries,
+            supportedStatus = MediaReleaseStatus.entries,
+            supportedSorts = SearchSort.entries,
+            availableGenres = listOf("Action", "Adventure", "Harem"),
+            availableTags = listOf("Murim", "Historical", "Male Mc")
+        ),
+        isFilterSheetOpen = true
+    )
 
     AppTheme {
         SearchScreenContent(
             state = state,
             mangaItems = mangaItems,
             animeItems = animeItems,
+            displayPreferences = MediaDisplayPreference(),
             onEvent = {}
         )
     }

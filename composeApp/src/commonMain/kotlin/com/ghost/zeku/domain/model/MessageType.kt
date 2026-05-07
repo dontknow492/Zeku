@@ -6,6 +6,7 @@ sealed interface MessageType {
     sealed interface Error : MessageType {
         object Network : Error
         object Database : Error
+        object UserPreference : Error
         object Unknown : Error
     }
 

@@ -12,7 +12,6 @@ import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.enum.AnimeCategory
 import com.ghost.zeku.domain.model.enum.MediaFormat
 import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
-import com.ghost.zeku.domain.model.enum.MediaStatus
 import com.ghost.zeku.domain.model.media.*
 import com.ghost.zeku.domain.model.search.AnimeSearchFilter
 import com.ghost.zeku.domain.model.search.SearchCapabilities

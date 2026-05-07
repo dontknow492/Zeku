@@ -21,10 +21,10 @@ import com.ghost.zeku.data.remote.mal.model.MalAnimeDto
 import com.ghost.zeku.data.remote.mal.model.MalMangaDto
 import com.ghost.zeku.data.remote.mal.toAnimeDetailsDomain
 import com.ghost.zeku.data.remote.mal.toMangaDetailsDomain
-import com.ghost.zeku.domain.MediaSource
 import com.ghost.zeku.domain.model.enum.*
 import com.ghost.zeku.domain.repository.AuthRepository
 import com.ghost.zeku.domain.repository.UserSettings
+import com.ghost.zeku.presentation.navigation.ZekuAppWrapper
 import com.ghost.zeku.presentation.theme.AppTheme
 import kotlinx.serialization.json.Json
 import org.koin.compose.koinInject
@@ -37,9 +37,9 @@ fun App() = AppTheme {
 //    val mediaRepository: MediaRepository = koinInject()
 
 
-//    ZekuAppWrapper()
+    ZekuAppWrapper()
 //    AnimeDetailPreview()
-    MangaDetailPreview()
+//    MangaDetailPreview()
 //    Token()
 }
 
@@ -1987,11 +1987,14 @@ fun Token() {
 //        }
 //    }
     val userSettings: UserSettings = koinInject()
-    userSettings.updatePreferences {
-        it.copy(
-            activeProvider = ProviderType.MYANIMELIST,
-            homeTimeout = TimeUnit.DAYS.toMillis(30) // TODO: fix in production
-        )
+    LaunchedEffect(Unit) {
+        userSettings.updatePreferences {
+            it.copy(
+                activeProvider = ProviderType.MYANIMELIST,
+                homeTimeout = TimeUnit.DAYS.toMillis(30) // TODO: fix in production
+            )
+        }
+
     }
 
     val authRepository: AuthRepository = koinInject()

@@ -5,7 +5,6 @@ import com.ghost.zeku.domain.model.common.MediaDate
 import com.ghost.zeku.domain.model.common.MediaTitle
 import com.ghost.zeku.domain.model.common.TrackEntry
 import com.ghost.zeku.domain.model.enum.*
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 

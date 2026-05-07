@@ -33,7 +33,7 @@ fun MediaListCard(
     onAction: OnMediaAction,
     modifier: Modifier = Modifier,
     variant: MediaListCardVariant = MediaListCardVariant.COMFORTABLE,
-    config: MediaListCardConfig = MediaListDefaults.config(variant)
+    config: ListConfig = MediaListDefaults.config(variant)
 ) {
     when (variant) {
         MediaListCardVariant.COMPACT -> CompactMediaListCard(data, onAction, modifier, config)
@@ -48,7 +48,7 @@ private fun CompactMediaListCard(
     data: MediaListUiData,
     onAction: OnMediaAction,
     modifier: Modifier,
-    config: MediaListCardConfig
+    config: ListConfig
 ) {
     Row(
         modifier = modifier
@@ -92,7 +92,7 @@ private fun ComfortableMediaListCard(
     data: MediaListUiData,
     onAction: OnMediaAction,
     modifier: Modifier,
-    config: MediaListCardConfig
+    config: ListConfig
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
@@ -137,7 +137,7 @@ private fun DetailedMediaListCard(
     data: MediaListUiData,
     onAction: OnMediaAction,
     modifier: Modifier,
-    config: MediaListCardConfig
+    config: ListConfig
 ) {
     Box(
         modifier = modifier.fillMaxWidth(),
@@ -224,7 +224,7 @@ private fun DetailedMediaListCard(
 private fun MediaListImage(
     data: MediaListUiData,
     onAction: OnMediaAction,
-    config: MediaListCardConfig
+    config: ListConfig
 ) {
     Box(
         modifier = Modifier
@@ -261,7 +261,7 @@ private fun MediaListImage(
 @Composable
 private fun MediaListContent(
     data: MediaListUiData,
-    config: MediaListCardConfig,
+    config: ListConfig,
     onAction: OnMediaAction
 ) {
     Column(

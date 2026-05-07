@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 interface UserSettings {
     val preferences: StateFlow<UserPreferences>
 
-    fun updatePreferences(transform: (UserPreferences) -> UserPreferences)
+    suspend fun updatePreferences(transform: (UserPreferences) -> UserPreferences): Result<Unit>
 
 
     /**
@@ -19,5 +19,5 @@ interface UserSettings {
      * Imports a JSON string, validates it, and overwrites the current preferences.
      * @return true if successful, false if the JSON is corrupted/invalid.
      */
-    fun importSettingsJson(jsonString: String): Boolean
+    suspend fun importSettingsJson(jsonString: String): Boolean
 }

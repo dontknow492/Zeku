@@ -3,7 +3,6 @@ package com.ghost.zeku.domain.model.search
 import com.ghost.zeku.domain.model.enum.MediaFormat
 import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
 import com.ghost.zeku.domain.model.enum.MediaSeason
-import com.ghost.zeku.domain.model.enum.MediaStatus
 
 /**
  * The "Mega Filter" object.

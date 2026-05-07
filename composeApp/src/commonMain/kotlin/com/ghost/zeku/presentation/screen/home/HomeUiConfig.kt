@@ -3,7 +3,7 @@ package com.ghost.zeku.presentation.screen.home
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Immutable
 import com.ghost.zeku.presentation.components.hero.HeroCarouselConfig
-import com.ghost.zeku.presentation.components.media.list.MediaListCardConfig
+import com.ghost.zeku.presentation.components.media.list.ListConfig
 import com.ghost.zeku.presentation.components.media.list.MediaListCardVariant
 import com.ghost.zeku.presentation.components.media.list.MediaListDefaults
 import com.ghost.zeku.presentation.components.media.poster.PosterConfig
@@ -24,7 +24,7 @@ data class HomeUiConfig(
 
     ),
     val listCardVariant: MediaListCardVariant = MediaListCardVariant.COMFORTABLE,
-    val listCardConfig: MediaListCardConfig = MediaListDefaults.config(
+    val listCardConfig: ListConfig = MediaListDefaults.config(
         MediaListCardVariant.COMFORTABLE,
     ),
     val heroCarouselConfig: HeroCarouselConfig? = null,

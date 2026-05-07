@@ -2,7 +2,9 @@ package com.ghost.zeku.presentation.components.media.poster
 
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -20,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -54,7 +57,7 @@ fun MediaPosterCard(
             isHovered && config.interaction.enableHover -> config.interaction.scaleOnHover
             else -> 1f
         },
-        animationSpec = config.interaction.animationSpec
+        animationSpec = spring(stiffness = Spring.StiffnessLow)
     )
 
     Box(
@@ -158,7 +161,9 @@ private fun OverlayPoster(
         Box(
             Modifier
                 .matchParentSize()
-                .background(config.image.scrim)
+                .background(
+                    Brush.verticalGradient(config.image.scrim)
+                )
         )
 
         Column(
