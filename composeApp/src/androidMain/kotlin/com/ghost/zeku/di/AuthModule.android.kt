@@ -7,7 +7,7 @@ import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
-actual fun getPlatformAuthModule(): Module =  module {
+actual fun getPlatformAuthModule(): Module = module {
     // Android factory doesn't need parameters here
     // (the actual implementation uses the Singleton object we created)
     single { AuthRedirectListenerFactory() }

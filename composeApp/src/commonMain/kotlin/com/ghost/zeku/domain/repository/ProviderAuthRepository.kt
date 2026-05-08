@@ -15,6 +15,8 @@ interface ProviderAuthRepository {
 
     fun isUserLoggedIn(): Boolean
 
+    fun getUserId(): Int
+
     fun getAuthorizationUrl(): String
 
     suspend fun handleAuthRedirectUri(uriString: String): ApiResult<Unit>

@@ -5,8 +5,7 @@ import androidx.room.TypeConverter
 import com.ghost.zeku.domain.model.common.MediaDate
 import com.ghost.zeku.domain.model.common.MediaTitle
 import com.ghost.zeku.domain.model.common.TrackEntry
-import com.ghost.zeku.domain.model.media.AnimeDetails
-import com.ghost.zeku.domain.model.media.MangaDetails
+import com.ghost.zeku.domain.model.media.MediaDetails
 import kotlinx.serialization.json.Json
 
 /**
@@ -67,25 +66,15 @@ class RoomConverters {
     }
 
 
-    // --- AnimeDetails ---
+    // --- Details ---
     @TypeConverter
-    fun fromAnimeDetails(value: AnimeDetails?): String? {
+    fun fromMediaDetails(value: MediaDetails?): String? {
         return value?.let { json.encodeToString(it) }
     }
 
     @TypeConverter
-    fun toAnimeDetails(value: String?): AnimeDetails? {
+    fun toMediaDetails(value: String?): MediaDetails? {
         return value?.let { json.decodeFromString(it) }
     }
 
-    // --- MangaDetails ---
-    @TypeConverter
-    fun fromMangaDetails(value: MangaDetails?): String? {
-        return value?.let { json.encodeToString(it) }
-    }
-
-    @TypeConverter
-    fun toMangaDetails(value: String?): MangaDetails? {
-        return value?.let { json.decodeFromString(it) }
-    }
 }

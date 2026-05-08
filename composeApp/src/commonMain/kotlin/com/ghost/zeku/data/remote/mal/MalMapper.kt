@@ -12,212 +12,384 @@ import com.ghost.zeku.domain.model.media.*
 // 1. ANIME MAPPERS
 // ==========================================
 
-fun MalNode<MalAnimeDto>.toAnimeDomain(): Anime? {
-    val dto = this.node ?: return null
+// ========================================================================
+// MEDIA LIST MAPPER
+// ========================================================================
 
-    return Anime(
+fun MalNode<MalMediaDto>.toMediaDomain(
+    mediaType: MediaType
+): Media? {
+
+    val dto = node ?: return null
+
+    return Media(
+        // =========================================================
+        // CORE
+        // =========================================================
+
         id = dto.id ?: 0,
+
+        mediaType = mediaType,
+
         source = ProviderType.MYANIMELIST,
+
+        format = dto.mediaType.toMediaFormat(),
+
         title = MediaTitle(
             romaji = dto.title ?: "Unknown",
             english = dto.alternativeTitles?.en,
             native = dto.alternativeTitles?.ja
         ),
-        coverImage = dto.mainPicture?.large ?: dto.mainPicture?.medium ?: "",
-        bannerImage = null, // MAL doesn't natively support banners
-        description = dto.synopsis,
-        genres = dto.genres?.mapNotNull { it.name } ?: emptyList(),
-        status = dto.status.toMediaReleaseStatus(),
-        score = dto.mean?.toFloat(),
-        startDate = dto.startDate.toMediaDate(),
-        episodes = dto.numEpisodes,
-        duration = dto.averageEpisodeDuration?.let { it / 60 }, // Convert seconds to minutes
-        studio = null,
-        trackEntry = this.listStatus?.toTrackEntryDomain(
-            mediaId = dto.id ?: 0,
-            totalProgress = dto.numEpisodes
-        )
-    )
-}
 
+        // =========================================================
+        // VISUALS
+        // =========================================================
 
-// ==========================================
-// 2. MANGA MAPPERS
-// ==========================================
+        coverImage = dto.mainPicture?.large
+            ?: dto.mainPicture?.medium
+            ?: "",
 
-fun MalNode<MalMangaDto>.toMangaDomain(): Manga? {
-    val dto = this.node ?: return null
-
-    return Manga(
-        id = dto.id ?: 0,
-        source = ProviderType.MYANIMELIST,
-        title = MediaTitle(
-            romaji = dto.title ?: "Unknown",
-            english = dto.alternativeTitles?.en,
-            native = dto.alternativeTitles?.ja
-        ),
-        coverImage = dto.mainPicture?.large ?: dto.mainPicture?.medium ?: "",
         bannerImage = null,
+
+        // =========================================================
+        // CONTENT
+        // =========================================================
+
         description = dto.synopsis,
-        genres = dto.genres?.mapNotNull { it.name } ?: emptyList(),
+
+        genres = dto.genres
+            ?.mapNotNull { it.name }
+            ?: emptyList(),
+
+        tags = emptyList(), // MAL has no tag system
+
+        // =========================================================
+        // METADATA
+        // =========================================================
+
         status = dto.status.toMediaReleaseStatus(),
+
         score = dto.mean?.toFloat(),
+
+        popularity = dto.popularity
+            ?: dto.numListUsers,
+
+        favourites = null, // MAL API doesn't expose this
+
+        rank = dto.rank,
+
         startDate = dto.startDate.toMediaDate(),
+
+        // =========================================================
+        // ANIME FIELDS
+        // =========================================================
+
+        episodes = dto.numEpisodes,
+
+        duration = dto.averageEpisodeDuration
+            ?.div(60),
+
+        studio = dto.studios
+            ?.firstOrNull()
+            ?.name,
+
+        // =========================================================
+        // MANGA FIELDS
+        // =========================================================
+
         chapters = dto.numChapters,
+
         volumes = dto.numVolumes,
-        author = null,
-        trackEntry = this.listStatus?.toTrackEntryDomain(
-            mediaId = dto.id ?: 0,
-            totalProgress = dto.numChapters
-        )
+
+        author = dto.authors
+            ?.firstOrNull()
+            ?.node
+            ?.let { author ->
+
+                listOf(
+                    author.firstName,
+                    author.lastName
+                )
+                    .filterNotNull()
+                    .joinToString(" ")
+                    .ifBlank { null }
+            },
+
+        // =========================================================
+        // TRACKING
+        // =========================================================
+
+//        trackEntry = listStatus?.toTrackEntryDomain(
+//            mediaId = dto.id ?: 0,
+//            totalProgress = when (mediaType) {
+//                MediaType.ANIME -> dto.numEpisodes
+//                MediaType.MANGA -> dto.numChapters
+//                MediaType.UNKNOWN -> null
+//            }
+//        )
     )
 }
 
-fun MalAnimeDto.toAnimeDetailsDomain(jikanCharacters: List<MediaCharacter>? = null): AnimeDetails {
-    return AnimeDetails(
-        id = this.id ?: 0,
+// ========================================================================
+// MEDIA DETAILS MAPPER
+// ========================================================================
+
+fun MalMediaDto.toMediaDetailsDomain(
+    mediaType: MediaType,
+    jikanCharacters: List<MediaCharacter>? = null
+): MediaDetails {
+
+    val mediaId = id ?: 0
+
+    return MediaDetails(
+
+        // ----------------------------------------------------------------
+        // CORE
+        // ----------------------------------------------------------------
+
+        id = mediaId,
+
+        mediaType = mediaType,
+
         source = ProviderType.MYANIMELIST,
+
         title = MediaTitle(
-            romaji = this.title,
-            english = this.alternativeTitles?.en,
-            native = this.alternativeTitles?.ja
+            romaji = title,
+            english = alternativeTitles?.en,
+            native = alternativeTitles?.ja
         ),
-        synonyms = this.alternativeTitles?.synonyms ?: emptyList(),
-        countryOfOrigin = null, // MAL doesn't natively supply this, assume JP generally
 
-        coverImage = this.mainPicture?.large ?: this.mainPicture?.medium ?: "",
-        bannerImage = null, // MAL doesn't provide banners natively
-        extraPictures = this.pictures?.mapNotNull { it.large ?: it.medium } ?: emptyList(),
-        description = this.synopsis ?: "No description available.",
-        background = this.background,
+        synonyms = alternativeTitles?.synonyms ?: emptyList(),
 
-        status = this.status.toMediaReleaseStatus(),
-        format = this.mediaType.toMediaFormat(),
-        sourceMaterial = this.source.toMediaSourceMaterial(),
-        isAdult = this.nsfw == "black" || this.rating == "rx", // 'black' usually means Hentai/Rx on MAL
-
-        startDate = this.startDate?.toFuzzyDate(),
-        endDate = this.endDate?.toFuzzyDate(),
-        season = this.startSeason?.season?.toMediaSeason(),
-        seasonYear = this.startSeason?.year,
-        broadcastString = this.broadcast?.let { "${it.dayOfTheWeek?.replaceFirstChar { c -> c.uppercase() }} at ${it.startTime}" },
-
-        genres = this.genres?.mapNotNull { it.name } ?: emptyList(),
-        tags = emptyList(), // MAL doesn't use the tag system, demographics are in genres
-
-        averageScore = this.mean?.let { it * 10 }, // Convert 8.5 to 85.0
-        meanScore = this.mean, // Keep original 10-point scale for reference
-        popularity = this.numListUsers, // numListUsers is exactly what 'Popularity' means
-        favourites = null, // MAL v2 doesn't expose favourites in the basic endpoint
-        rank = this.rank,
-
-        totalEpisodes = this.numEpisodes,
-        durationPerEpisode = this.averageEpisodeDuration?.let { it / 60 }, // Seconds to minutes
-        contentRating = this.rating?.uppercase(),
-        nextAiringEpisode = null, // Not easily available in basic MAL API
-        studios = this.studios?.map { MediaStudio(it.id ?: 0, it.name ?: "Unknown", true) } ?: emptyList(),
-
-        trailer = null, // Not provided by MAL API v2
-        externalLinks = emptyList(), // Not provided by MAL API v2
-        characters = jikanCharacters ?: emptyList(), // Injecting Jikan here!
-        relations = buildMalRelations(this.relatedAnime, MediaType.ANIME) + buildMalRelations(
-            this.relatedManga,
-            MediaType.MANGA
-        ),
-        staff = emptyList(), // Jikan enrichment would be needed for staff
-
-        trackEntry = this.myListStatus?.let { status ->
-            TrackEntry(
-                entryId = this.id ?: 0,
-                mediaId = this.id ?: 0,
-                status = status.status.toDomainTrackStatus(),
-                progress = status.numEpisodesWatched ?: 0,
-                score = status.score,
-                totalProgress = this.numEpisodes
-            )
-        },
-        createdAt = this.createdAt.toMediaDate(),
-        updatedAt = this.updatedAt.toMediaDate(),
-        watching = this.statistics?.status?.watching,
-        completed = this.statistics?.status?.completed,
-        onHold = this.statistics?.status?.onHold,
-        dropped = this.statistics?.status?.dropped,
-        planToWatch = this.statistics?.status?.planToWatch,
-    )
-}
-
-fun MalMangaDto.toMangaDetailsDomain(jikanCharacters: List<MediaCharacter>? = null): MangaDetails {
-    return MangaDetails(
-        id = this.id ?: 0,
-        source = ProviderType.MYANIMELIST,
-        title = MediaTitle(
-            romaji = this.title,
-            english = this.alternativeTitles?.en,
-            native = this.alternativeTitles?.ja
-        ),
-        synonyms = this.alternativeTitles?.synonyms ?: emptyList(),
         countryOfOrigin = null,
 
-        coverImage = this.mainPicture?.large ?: this.mainPicture?.medium ?: "",
+        // ----------------------------------------------------------------
+        // VISUALS
+        // ----------------------------------------------------------------
+
+        coverImage = mainPicture?.large
+            ?: mainPicture?.medium
+            ?: "",
+
         bannerImage = null,
-        extraPictures = this.pictures?.mapNotNull { it.large ?: it.medium } ?: emptyList(),
-        description = this.synopsis ?: "No description available.",
-        background = this.background,
 
-        status = this.status.toMediaReleaseStatus(),
+        extraPictures = pictures
+            ?.mapNotNull { it.large ?: it.medium }
+            ?: emptyList(),
+
+        description = synopsis ?: "No description available.",
+
+        background = background,
+
+        // ----------------------------------------------------------------
+        // METADATA
+        // ----------------------------------------------------------------
+
+        status = status.toMediaReleaseStatus(),
+
         format = this.mediaType.toMediaFormat(),
-        sourceMaterial = MediaSourceMaterial.MANGA, // Self-evident for manga endpoint
-        isAdult = this.nsfw == "black",
 
-        startDate = this.startDate?.toFuzzyDate(),
-        endDate = this.endDate?.toFuzzyDate(),
+        sourceMaterial = source.toMediaSourceMaterial(),
 
-        genres = this.genres?.mapNotNull { it.name } ?: emptyList(),
+        isAdult = nsfw == "black" || rating == "rx",
+
+        // ----------------------------------------------------------------
+        // DATES
+        // ----------------------------------------------------------------
+
+        startDate = startDate?.toFuzzyDate(),
+
+        endDate = endDate?.toFuzzyDate(),
+
+        createdAt = createdAt.toMediaDate(),
+
+        updatedAt = updatedAt.toMediaDate(),
+
+        season = startSeason
+            ?.season
+            ?.toMediaSeason(),
+
+        seasonYear = startSeason?.year,
+
+        broadcastString = broadcast?.let {
+            "${it.dayOfTheWeek?.replaceFirstChar(Char::uppercase)} at ${it.startTime}"
+        },
+
+        // ----------------------------------------------------------------
+        // CATEGORIZATION
+        // ----------------------------------------------------------------
+
+        genres = genres
+            ?.mapNotNull { it.name }
+            ?: emptyList(),
+
         tags = emptyList(),
 
-        averageScore = this.mean?.let { it * 10 },
-        meanScore = this.mean,
-        popularity = this.numListUsers,
+        // ----------------------------------------------------------------
+        // STATS
+        // ----------------------------------------------------------------
+
+        averageScore = mean?.let { it * 10 },
+
+        meanScore = mean,
+
+        popularity = popularity ?: numListUsers,
+
         favourites = null,
-        rank = this.rank,
 
-        totalChapters = this.numChapters,
-        totalVolumes = this.numVolumes,
-        serializations = this.serialization?.mapNotNull { it.node?.name } ?: emptyList(),
+        rank = rank,
 
-        authors = this.authors?.map { edge ->
-            val firstName = edge.node?.firstName ?: ""
-            val lastName = edge.node?.lastName ?: ""
-            val fullName = listOf(firstName, lastName).filter { it.isNotBlank() }.joinToString(" ")
-            MediaStaff(id = edge.node?.id ?: 0, name = fullName.ifBlank { "Unknown" }, role = edge.role ?: "Author")
-        } ?: emptyList(),
+        // ----------------------------------------------------------------
+        // ANIME FIELDS
+        // ----------------------------------------------------------------
+
+        totalEpisodes = numEpisodes,
+
+        durationPerEpisode = averageEpisodeDuration
+            ?.div(60),
+
+        studios = if (mediaType == MediaType.ANIME) {
+            studios?.map {
+                MediaStudio(
+                    id = it.id ?: 0,
+                    name = it.name ?: "Unknown",
+                    isAnimationStudio = true
+                )
+            } ?: emptyList()
+        } else {
+            emptyList()
+        },
+
+        nextAiringEpisode = null,
+
+        contentRating = rating?.uppercase(),
+
+        // ----------------------------------------------------------------
+        // MANGA FIELDS
+        // ----------------------------------------------------------------
+
+        totalChapters = numChapters,
+
+        totalVolumes = numVolumes,
+
+        serializations = if (mediaType == MediaType.MANGA) {
+            serialization
+                ?.mapNotNull { it.node?.name }
+                ?: emptyList()
+        } else {
+            emptyList()
+        },
+
+        authors = if (mediaType == MediaType.MANGA) {
+            authors?.map { edge ->
+
+                val fullName = listOf(
+                    edge.node?.firstName,
+                    edge.node?.lastName
+                )
+                    .filterNotNull()
+                    .joinToString(" ")
+
+                MediaStaff(
+                    id = edge.node?.id ?: 0,
+                    name = fullName.ifBlank { "Unknown" },
+                    role = edge.role ?: "Author"
+                )
+            } ?: emptyList()
+        } else {
+            emptyList()
+        },
+
+        // ----------------------------------------------------------------
+        // SHARED STAFF
+        // ----------------------------------------------------------------
+
+        staff = if (mediaType == MediaType.MANGA) {
+            authors?.map { edge ->
+
+                val fullName = listOf(
+                    edge.node?.firstName,
+                    edge.node?.lastName
+                )
+                    .filterNotNull()
+                    .joinToString(" ")
+
+                MediaStaff(
+                    id = edge.node?.id ?: 0,
+                    name = fullName.ifBlank { "Unknown" },
+                    role = edge.role ?: "Author"
+                )
+            } ?: emptyList()
+        } else {
+            emptyList()
+        },
+
+        // ----------------------------------------------------------------
+        // RELATIONS
+        // ----------------------------------------------------------------
+
+        trailer = null,
 
         externalLinks = emptyList(),
-        characters = jikanCharacters ?: emptyList(), // Injecting Jikan here!
-        relations = buildMalRelations(this.relatedAnime, MediaType.ANIME) + buildMalRelations(
-            this.relatedManga,
-            MediaType.MANGA
-        ),
 
-        trackEntry = this.myListStatus?.let { status ->
-            TrackEntry(
-                entryId = this.id ?: 0,
-                mediaId = this.id ?: 0,
-                status = status.status.toDomainTrackStatus(),
-                progress = status.numChaptersRead ?: 0,
-                score = status.score,
-                totalProgress = this.numChapters
-            )
-        },
-        createdAt = this.createdAt.toMediaDate(),
-        updatedAt = this.updatedAt.toMediaDate(),
+        characters = jikanCharacters ?: emptyList(),
 
-        // null for manga always 
-        watching = this.statistics?.status?.watching,
-        completed = this.statistics?.status?.completed,
-        onHold = this.statistics?.status?.onHold,
-        dropped = this.statistics?.status?.dropped,
-        planToWatch = this.statistics?.status?.planToWatch,
+        relations =
+            buildMalRelations(
+                relatedAnime,
+                MediaType.ANIME
+            ) +
+                    buildMalRelations(
+                        relatedManga,
+                        MediaType.MANGA
+                    ),
+
+        // ----------------------------------------------------------------
+        // USER TRACKING
+        // ----------------------------------------------------------------
+
+//        trackEntry = myListStatus?.let { status ->
+//
+//            TrackEntry(
+//                entryId = mediaId,
+//
+//                mediaId = mediaId,
+//
+//                status = status.status.toDomainTrackStatus(),
+//
+//                progress = when (mediaType) {
+//                    MediaType.ANIME ->
+//                        status.numEpisodesWatched ?: 0
+//
+//                    MediaType.MANGA ->
+//                        status.numChaptersRead ?: 0
+//
+//                    MediaType.UNKNOWN -> 0
+//                },
+//
+//                score = status.score,
+//
+//                totalProgress = when (mediaType) {
+//                    MediaType.ANIME -> numEpisodes
+//                    MediaType.MANGA -> numChapters
+//                    MediaType.UNKNOWN -> null
+//                }
+//            )
+//        },
+
+        // ----------------------------------------------------------------
+        // USER STATS
+        // ----------------------------------------------------------------
+
+        watching = statistics?.status?.watching,
+
+        completed = statistics?.status?.completed,
+
+        onHold = statistics?.status?.onHold,
+
+        dropped = statistics?.status?.dropped,
+
+        planToWatch = statistics?.status?.planToWatch,
     )
 }
 
@@ -358,17 +530,6 @@ fun TrackStatus.toMalMangaStatus(): String {
 }
 
 
-fun MangaCategory.toMalRankingType(): String? {
-    return when (this) {
-        MangaCategory.TOP_RATED -> "all"         // MAL's top manga by score
-        MangaCategory.POPULAR -> "bypopularity"  // Most members
-        MangaCategory.TRENDING -> "bypopularity" // MAL lacks 'trending', popularity is the closest proxy
-        MangaCategory.MANHWA -> "manhwa"         // MAL has a specific ranking for Manhwa
-        MangaCategory.NEWLY_ADDED -> null        // MAL ranking API does not support "Newly Added"
-    }
-}
-
-
 private fun String?.toMediaSourceMaterial(): MediaSourceMaterial {
     return when (this) {
         "original" -> MediaSourceMaterial.ORIGINAL
@@ -393,5 +554,78 @@ private fun String?.toMediaSeason(): MediaSeason {
         "summer" -> MediaSeason.SUMMER
         "fall" -> MediaSeason.FALL
         else -> MediaSeason.UNKNOWN
+    }
+}
+
+
+fun MediaCategory.toMalRankingType(
+    mediaType: MediaType
+): String? {
+
+    return when (mediaType) {
+
+        // =====================================================================================
+        // ANIME
+        // =====================================================================================
+
+        MediaType.ANIME -> when (this) {
+
+            MediaCategory.TRENDING ->
+                "all"
+
+            MediaCategory.POPULAR ->
+                "bypopularity"
+
+            MediaCategory.TOP_RATED ->
+                "all"
+
+            MediaCategory.UPCOMING ->
+                "upcoming"
+
+            MediaCategory.SEASONAL ->
+                null // handled by seasonal endpoint
+
+            MediaCategory.MOVIES ->
+                "movie"
+
+            // unsupported
+            MediaCategory.NEWLY_ADDED,
+            MediaCategory.MANHWA,
+            MediaCategory.NOVELS ->
+                null
+        }
+
+        // =====================================================================================
+        // MANGA
+        // =====================================================================================
+
+        MediaType.MANGA -> when (this) {
+
+            MediaCategory.TRENDING ->
+                "manga"
+
+            MediaCategory.POPULAR ->
+                "bypopularity"
+
+            MediaCategory.TOP_RATED ->
+                "manga"
+
+            MediaCategory.NEWLY_ADDED ->
+                "publishing"
+
+            MediaCategory.MANHWA ->
+                null // MAL has no dedicated ranking
+
+            MediaCategory.NOVELS ->
+                "novels"
+
+            // unsupported
+            MediaCategory.UPCOMING,
+            MediaCategory.SEASONAL,
+            MediaCategory.MOVIES ->
+                null
+        }
+
+        else -> null
     }
 }

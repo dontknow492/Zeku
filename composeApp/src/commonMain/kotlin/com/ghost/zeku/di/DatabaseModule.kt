@@ -22,11 +22,12 @@ val databaseModule = module {
     }
 
     // Provide DAOs for easy injection into Repositories
-    single { get<AppDatabase>().animeDao() }
-    single { get<AppDatabase>().mangaDao() }
+    single { get<AppDatabase>().mediaDao() }
     single { get<AppDatabase>().remoteKeysDao() }
     single { get<AppDatabase>().chapterDao() }
     single { get<AppDatabase>().episodeDao() }
     single { get<AppDatabase>().userDao() }
+    single { get<AppDatabase>().libraryDao() }
+    single { get<AppDatabase>().trackEntryDao() }
 
 }

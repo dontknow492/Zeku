@@ -1,5 +1,10 @@
 package com.ghost.zeku.domain.model.enum
 
+import kotlinx.serialization.Serializable
+
+
+@Serializable
+// Your fixed media type
 enum class MediaType {
     ANIME, MANGA, UNKNOWN;
 

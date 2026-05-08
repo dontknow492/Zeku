@@ -8,13 +8,14 @@ import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.provider.UserProvider
 
 class AniListUserProvider(
-    private val aniListApi: AniListApi,
+    private val api: AniListApi,
     private val parser: AniListResponseParser
 ) : UserProvider {
     override suspend fun getCurrentUser(): ApiResult<UserProfile> {
         return parser.safeApiCall(
-            apiCall = { aniListApi.getCurrentUser() },
+            apiCall = { api.getCurrentUser() },
             transform = { it.viewer.toDomain() }
         )
     }
 }
+

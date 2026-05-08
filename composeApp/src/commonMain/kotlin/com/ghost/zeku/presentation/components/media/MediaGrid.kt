@@ -27,14 +27,14 @@ import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import com.ghost.zeku.domain.model.media.Media
 import com.ghost.zeku.domain.model.settings.MediaDisplayPreference
+import com.ghost.zeku.presentation.components.media.list.ListCardConfig
 import com.ghost.zeku.presentation.components.media.list.ListCardShimmer
-import com.ghost.zeku.presentation.components.media.list.ListConfig
 import com.ghost.zeku.presentation.components.media.list.MediaListCard
 import com.ghost.zeku.presentation.components.media.list.toMediaListUiData
 import com.ghost.zeku.presentation.components.media.poster.MediaPosterCard
 import com.ghost.zeku.presentation.components.media.poster.PosterCardShimmer
 import com.ghost.zeku.presentation.components.media.poster.PosterConfig
-import com.ghost.zeku.presentation.components.media.poster.toPosterUiData
+import com.ghost.zeku.presentation.components.media.poster.toMediaPosterUiData
 import com.ghost.zeku.presentation.components.section.EmptyMediaState
 import com.ghost.zeku.presentation.components.section.FullScreenError
 import kotlinx.serialization.Serializable
@@ -74,9 +74,9 @@ enum class MediaDisplayMode {
 
 
 @Composable
-fun <T : Media> MediaGrid(
+fun MediaGrid(
     displayPreferences: MediaDisplayPreference,
-    pagingItems: LazyPagingItems<T>,
+    pagingItems: LazyPagingItems<Media>,
     onMediaAction: OnMediaAction,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
@@ -194,7 +194,8 @@ fun <T : Media> MediaGrid(
 
 
                                 MediaDisplayMode.PosterGrid -> MediaPosterCard(
-                                    data = item.toPosterUiData(),
+                                    data = item.toMediaPosterUiData(),
+                                    layout = displayPreferences.posterLayout,
                                     config = displayPreferences.posterConfig,
                                     onAction = onMediaAction,
                                     modifier = Modifier.animateItem().animateContentSize().fillMaxWidth()
@@ -202,7 +203,8 @@ fun <T : Media> MediaGrid(
 
                                 MediaDisplayMode.List -> MediaListCard(
                                     data = item.toMediaListUiData(),
-                                    variant = displayPreferences.listVariant,
+                                    layout = displayPreferences.listCardLayout,
+                                    config = displayPreferences.listConfig,
                                     onAction = onMediaAction,
                                     modifier = Modifier.animateItem().animateContentSize().fillMaxWidth()
                                 )
@@ -231,7 +233,7 @@ fun <T : Media> MediaGrid(
 @Composable
 private fun LoadingItem(
     displayMode: MediaDisplayMode,
-    listConfig: ListConfig,
+    listConfig: ListCardConfig,
     posterConfig: PosterConfig,
 ) {
     when (displayMode) {
@@ -258,7 +260,7 @@ private fun PaginationLoader() {
 }
 
 @Composable
-private fun PaginationError(
+fun PaginationError(
     error: Throwable,
     onRetry: () -> Unit
 ) {

@@ -24,34 +24,28 @@ val providerModule = module {
     // We instantiate the concrete workers directly inside the bundle to save space.
     single {
         AniListSource(
-            animeList = AniListAnimeProvider(api = get(), parser = get()),
-            mangaList = AniListMangaProvider(api = get(), parser = get()),
-            animeSearch = AniListAnimeSearchProvider(api = get(), parser = get()),
-            mangaSearch = AniListMangaSearchProvider(api = get(), parser = get()),
-            animeDetails = AniListAnimeDetailsProvider(api = get(), parser = get()),
-            mangaDetails = AniListMangaDetailsProvider(api = get(), parser = get()),
-            mediaTracker = AniListMediaTracker(aniListApi = get(), parser = get()),
-            userProfile = AniListUserProvider(aniListApi = get(), parser = get())
+            mediaList = AniListMediaProvider(
+                api = get(),
+                parser = get()
+            ),
+            mediaSearch = AniListSearchProvider(api = get(), parser = get()),
+            mediaDetails = AniListDetailsProvider(api = get(), parser = get()),
+            mediaTracker = AniListMediaTrackerV2(api = get(), parser = get(), authRepository = get()),
+            mediaContentProvider = AniListMediaContentProvider(api = get(), parser = get()),
+            userProfile = AniListUserProvider(api = get(), parser = get()),
         )
     }
 
     single {
         MalSource(
-            animeList = MalAnimeProvider(api = get(), parser = get()),
-            mangaList = MalMangaProvider(api = get(), parser = get()),
-            animeSearch = MalAnimeSearchProvider(api = get(), parser = get()),
-            mangaSearch = MalMangaSearchProvider(api = get(), parser = get()),
-            animeDetails = MalAnimeDetailsProvider(
-                parser = get(),
-                malApi = get(),
-                jikanApi = get(),
+            mediaProvider = MalMediaProvider(
+                api = get(),
+                parser = get()
             ),
-            mangaDetails = MalMangaDetailsProvider(
-                parser = get(),
-                malApi = get(),
-                jikanApi = get()
-            ),
-            mediaTracker = MalMediaTracker(api = get(), parser = get()),
+            mediaSearch = MalSearchProvider(api = get(), parser = get()),
+            mediaDetail = MalDetailsProvider(malApi = get(), parser = get(), jikanApi = get()),
+            mediaTracker = MalMediaTrackerV2(api = get(), parser = get(), authRepository = get()),
+            mediaContentProvider = MalMediaContentProvider(api = get(), parser = get(), jikanApi = get()),
             userProvider = MalUserProvider(api = get(), parser = get()),
         )
     }

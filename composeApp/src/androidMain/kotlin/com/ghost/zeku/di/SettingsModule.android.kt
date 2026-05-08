@@ -2,7 +2,6 @@ package com.ghost.zeku.di
 
 import com.ghost.zeku.data.settings.SettingsFactory
 import org.koin.android.ext.koin.androidContext
-import org.koin.core.module.Module
 import org.koin.dsl.module
 
 /**

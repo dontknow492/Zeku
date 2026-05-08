@@ -11,22 +11,18 @@ import com.ghost.zeku.domain.provider.*
  * The 'by' keyword tells Kotlin to automatically pass interface calls to these injected objects.
  */
 class AniListSource(
-    animeList: AniListAnimeProvider,
-    mangaList: AniListMangaProvider,
-    animeSearch: AniListAnimeSearchProvider,
-    mangaSearch: AniListMangaSearchProvider,
-    animeDetails: AniListAnimeDetailsProvider,
-    mangaDetails: AniListMangaDetailsProvider,
-    mediaTracker: AniListMediaTracker,
+    mediaList: AniListMediaProvider,
+    mediaSearch: AniListSearchProvider,
+    mediaDetails: AniListDetailsProvider,
+    mediaTracker: AniListMediaTrackerV2,
     userProfile: AniListUserProvider,
+    mediaContentProvider: AniListMediaContentProvider
 ) : MediaSource,
-    AnimeListProvider by animeList,
-    MangaListProvider by mangaList,
-    AnimeSearchProvider by animeSearch,
-    MangaSearchProvider by mangaSearch,
-    AnimeDetailsProvider by animeDetails,
-    MangaDetailsProvider by mangaDetails,
-    MediaTrackerProvider by mediaTracker,
+    MediaListProvider by mediaList,
+    MediaSearchProvider by mediaSearch,
+    MediaDetailsProvider by mediaDetails,
+    MediaTrackerProviderV2 by mediaTracker,
+    MediaContentProvider by mediaContentProvider,
     UserProvider by userProfile {
     override suspend fun getProviderType(): ProviderType = ProviderType.ANILIST
 }

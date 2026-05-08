@@ -14,23 +14,11 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.presentation.components.media.list.MediaListCard
-import com.ghost.zeku.presentation.components.media.list.MediaListUiData
-import com.ghost.zeku.presentation.components.media.poster.MediaPosterCard
-import com.ghost.zeku.presentation.components.media.poster.MediaPosterUiData
-import com.ghost.zeku.presentation.components.media.poster.PosterConfig
-
-// ============================================================================
-// ENUMS & CONFIGURATION
-// ============================================================================
 
 // ============================================================================
 // MAIN COMPOSABLE
@@ -138,90 +126,3 @@ fun <T> MediaSection(
     }
 }
 
-// ============================================================================
-// INTERNAL COMPONENTS
-// ============================================================================
-
-
-// ============================================================================
-// PREVIEW
-// ============================================================================
-
-@Preview(showBackground = true)
-@Composable
-private fun MediaSectionPreview() {
-    MaterialTheme {
-        Surface(color = MaterialTheme.colorScheme.background) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(vertical = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(32.dp)
-            ) {
-                // 1. Horizontal Poster Row (Trending)
-                val trendingPosters = listOf(
-                    MediaPosterUiData(1, MediaType.ANIME, "Solo Leveling", "", 8.5f, "EP 12"),
-                    MediaPosterUiData(2, MediaType.ANIME, "Frieren", "", 9.4f, "Finished"),
-                    MediaPosterUiData(3, MediaType.ANIME, "Jujutsu Kaisen", "", 8.8f, "Finished")
-                )
-
-                MediaSection(
-                    title = "Trending Now",
-                    items = trendingPosters,
-                    onViewAllClick = { /* Navigate to grid */ }) { item, modifier ->
-                    MediaPosterCard(
-                        data = item, config = PosterConfig(), onAction = {}, modifier = modifier
-                    )
-                }
-
-                // 2. Vertical List Column (Top Airing)
-                val topAiringList = listOf(
-                    MediaListUiData(
-                        1,
-                        MediaType.ANIME,
-                        "One Piece",
-                        null,
-                        "",
-                        "TV",
-                        listOf("Action"),
-                        "Releasing",
-                        8.7f,
-                        null,
-                        null,
-                        true
-                    ), MediaListUiData(
-                        2,
-                        MediaType.ANIME,
-                        "Ninja Kamui",
-                        null,
-                        "",
-                        "TV",
-                        listOf("Action"),
-                        "Releasing",
-                        8.1f,
-                        null,
-                        null,
-                        true
-                    )
-                )
-
-                MediaSection(
-                    title = "Top Airing Anime",
-                    items = topAiringList,
-                    config = MediaSectionConfig(layout = SectionLayout.VerticalList()),
-                    onViewAllClick = null // No View All button
-                ) { item, modifier ->
-                    MediaListCard(
-                        data = item, onAction = {}, modifier = modifier
-                    )
-                }
-
-                // 3. Loading State Example
-                MediaSection(
-                    title = "Recommended for You",
-                    config = MediaSectionConfig(layout = SectionLayout.HorizontalRow()),
-                    items = emptyList<Any>(),
-                    isLoading = true,
-                    onViewAllClick = {}) { _, _ -> }
-            }
-        }
-    }
-}

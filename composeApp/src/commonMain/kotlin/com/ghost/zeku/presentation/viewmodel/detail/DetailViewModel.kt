@@ -2,6 +2,7 @@ package com.ghost.zeku.presentation.viewmodel.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.ghost.zeku.data.repository.DataResult
 import com.ghost.zeku.domain.model.MessageType
@@ -10,6 +11,8 @@ import com.ghost.zeku.domain.repository.MediaRepository
 import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.components.media.ReviewAction
 import com.ghost.zeku.presentation.navigation.Destination
+import com.ghost.zeku.presentation.navigation.Destination.MediaDetail
+import com.ghost.zeku.presentation.viewmodel.detail.MediaDetailContract.Effect.Navigate
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -35,17 +38,29 @@ class MediaDetailViewModel(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val episodes = mediaId.filterNotNull().flatMapLatest {
-        repository.getAnimeEpisodes(it)
+        repository.getEpisodes(it)
     }.cachedIn(viewModelScope)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val recommendations = mediaId.filterNotNull().flatMapLatest {
-        repository.getAnimeRecommendations(it)
+    val recommendations = combine(mediaType, mediaId) { type, id ->
+        Pair(type, id)
+    }.flatMapLatest { (type, id) ->
+        if (id != null && type != null) {
+            repository.getRecommendations(mediaId = id, mediaType = type)
+        } else {
+            flowOf(PagingData.empty())
+        }
     }.cachedIn(viewModelScope)
 
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    val reviews = mediaId.filterNotNull().flatMapLatest {
-        repository.getAnimeReviews(it)
+    val reviews = combine(
+        mediaId.filterNotNull(),
+        mediaType.filterNotNull()
+    ) { id, type ->
+        Pair(id, type)
+    }.flatMapLatest { (id, type) ->
+        repository.getReviews(mediaId = id, mediaType = type)
     }.cachedIn(viewModelScope)
 
     // -------------------------
@@ -105,14 +120,14 @@ class MediaDetailViewModel(
                 // -------------------------
                 is MediaDetailContract.Event.ViewCharacter -> {
                     Napier.d(tag = "MediaDetailVM") { "🧭 Navigate → Character ID: ${event.character.id} (${event.character.name})" }
-                    emitEffect(MediaDetailContract.Effect.Navigate(Destination.CharacterDetail(event.character.id)))
+                    emitEffect(Navigate(Destination.CharacterDetail(event.character.id)))
                 }
 
                 is MediaDetailContract.Event.ViewRelation -> {
                     Napier.d(tag = "MediaDetailVM") { "🧭 Navigate → Relation ${event.relation.mediaType.name} ID: ${event.relation.id}" }
                     emitEffect(
-                        MediaDetailContract.Effect.Navigate(
-                            Destination.MediaDetail(
+                        Navigate(
+                            MediaDetail(
                                 event.relation.id,
                                 event.relation.mediaType
                             )
@@ -123,8 +138,8 @@ class MediaDetailViewModel(
                 is MediaDetailContract.Event.ViewRecommendation -> {
                     Napier.d(tag = "MediaDetailVM") { "🧭 Navigate → Recommendation ${event.media.mediaType.name} ID: ${event.media.id}" }
                     emitEffect(
-                        MediaDetailContract.Effect.Navigate(
-                            Destination.MediaDetail(
+                        Navigate(
+                            MediaDetail(
                                 event.media.id,
                                 event.media.mediaType
                             )
@@ -136,19 +151,19 @@ class MediaDetailViewModel(
                 // NAVIGATION (VIEW ALL)
                 // -------------------------
                 is MediaDetailContract.Event.ViewAllCharacters -> {
-                    emitEffect(MediaDetailContract.Effect.Navigate(Destination.AllCharacters(event.mediaId)))
+                    emitEffect(Navigate(Destination.AllCharacters(event.mediaId)))
                 }
 
                 is MediaDetailContract.Event.ViewAllRelations -> {
-                    emitEffect(MediaDetailContract.Effect.Navigate(Destination.AllRelations(event.mediaId)))
+                    emitEffect(Navigate(Destination.AllRelations(event.mediaId)))
                 }
 
                 is MediaDetailContract.Event.ViewAllReviews -> {
-                    emitEffect(MediaDetailContract.Effect.Navigate(Destination.AllReviews(event.mediaId)))
+                    emitEffect(Navigate(Destination.AllReviews(event.mediaId)))
                 }
 
                 is MediaDetailContract.Event.ViewAllRecommendations -> {
-                    emitEffect(MediaDetailContract.Effect.Navigate(Destination.AllRecommendations(event.mediaId)))
+                    emitEffect(Navigate(Destination.AllRecommendations(event.mediaId)))
                 }
 
                 // -------------------------
@@ -201,19 +216,8 @@ class MediaDetailViewModel(
     // -------------------------
 
     private fun observeDetails(id: Int, type: MediaType) {
-        when (type) {
-            MediaType.ANIME -> observeAnimeDetail(id)
-            MediaType.MANGA -> observeMangaDetail(id)
-            else -> {
-                Napier.e(tag = "MediaDetailVM") { "❌ Unsupported media type requested: $type" }
-                _state.update { MediaDetailContract.State(error = "Unsupported media type: $type") }
-            }
-        }
-    }
-
-    private fun observeAnimeDetail(id: Int) {
         viewModelScope.launch {
-            repository.getAnimeDetails(id).collect { result ->
+            repository.getMediaDetails(id, type).collect { result ->
                 when (result) {
                     is DataResult.Loading -> {
                         _state.update { it.copy(isLoading = true, error = null) }
@@ -242,37 +246,6 @@ class MediaDetailViewModel(
         }
     }
 
-    private fun observeMangaDetail(id: Int) {
-        viewModelScope.launch {
-            repository.getMangaDetails(id).collect { result ->
-                when (result) {
-                    is DataResult.Loading -> {
-                        _state.update { it.copy(isLoading = true, error = null) }
-                    }
-
-                    is DataResult.Success -> {
-                        Napier.i(tag = "MediaDetailVM") { "✅ Successfully loaded MANGA details for ID: $id" }
-                        _state.value = result.data.toState()
-                    }
-
-                    is DataResult.Error -> {
-                        Napier.e(
-                            tag = "MediaDetailVM",
-                            throwable = result.error.cause
-                        ) { "❌ Failed to load MANGA details for ID: $id" }
-                        _state.update { it.copy(isLoading = false, error = result.error.message) }
-                        emitEffect(
-                            MediaDetailContract.Effect.ShowMessage(
-                                result.error.message ?: "Unknown error",
-                                MessageType.Error.Network
-                            )
-                        )
-                    }
-                }
-            }
-        }
-    }
-
     // -------------------------
     // ACTION HANDLER
     // -------------------------
@@ -282,7 +255,7 @@ class MediaDetailViewModel(
             when (action) {
                 is MediaAction.MediaClick -> {
                     Napier.d(tag = "MediaDetailVM") { "👆 MediaCard clicked: ID ${action.id}" }
-                    emitEffect(MediaDetailContract.Effect.Navigate(Destination.MediaDetail(action.id, action.type)))
+                    emitEffect(Navigate(MediaDetail(action.id, action.type)))
                 }
 
                 is MediaAction.ToggleFavorite -> {
@@ -314,6 +287,10 @@ class MediaDetailViewModel(
 
                 is MediaAction.Custom -> {
                     Napier.w(tag = "MediaDetailVM") { "⚠️ Unhandled custom MediaAction: ${action.key}" }
+                }
+
+                is MediaAction.TrailingClick -> {
+                    Napier.w(tag = "MediaDetailVM") { " Unhandled trailing clicked for ID: ${action.id}" }
                 }
             }
         }

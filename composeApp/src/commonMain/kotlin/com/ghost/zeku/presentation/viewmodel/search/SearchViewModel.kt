@@ -2,14 +2,9 @@ package com.ghost.zeku.presentation.viewmodel.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.ghost.zeku.domain.model.MessageType
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.media.Anime
-import com.ghost.zeku.domain.model.media.Manga
-import com.ghost.zeku.domain.model.search.AnimeSearchFilter
-import com.ghost.zeku.domain.model.search.MangaSearchFilter
+import com.ghost.zeku.domain.model.search.MediaSearchFilter
 import com.ghost.zeku.domain.model.search.SearchCapabilities
 import com.ghost.zeku.domain.model.search.SearchSort
 import com.ghost.zeku.domain.model.settings.MediaDisplayPreference
@@ -51,56 +46,30 @@ class SearchViewModel(
      * It observes the state, waits 500ms for the user to stop tweaking filters/typing,
      * checks if we are searching Anime, and then triggers the Paging request.
      */
-    val animeSearchResults: Flow<PagingData<Anime>> = _state
-        .debounce(500L.milliseconds)
-        .filter { it.mediaType == MediaType.ANIME && !it.isInitializing }
+
+    val mediaSearchResults = _state
+        .debounce(500.milliseconds)
+        .filter { !it.isInitializing }
         .distinctUntilChanged { old, new ->
-            // Only trigger a new network call if actual search parameters changed
             old.query == new.query && old.activeProvider == new.activeProvider &&
                     old.selectedGenres == new.selectedGenres && old.selectedFormat == new.selectedFormat &&
-                    old.selectedSort == new.selectedSort // ... add other filters here
-        }
-        .flatMapLatest { currentState ->
-            val filter = AnimeSearchFilter(
+                    old.selectedSort == new.selectedSort
+        }.flatMapLatest { currentState ->
+            val filter = MediaSearchFilter(
+                mediaType = currentState.mediaType,
                 includedGenres = currentState.selectedGenres,
                 includedTags = currentState.selectedTags,
                 year = currentState.selectedYear,
                 season = currentState.selectedSeason,
                 format = currentState.selectedFormat,
                 status = currentState.selectedStatus,
-                sort = currentState.selectedSort
+                sort = currentState.selectedSort,
             )
-            // The unified repository internally handles the active provider, so we only pass query and filter
-            repository.searchAnime(
+            repository.searchMedia(
                 query = currentState.query,
-                filter = filter
+                filter = filter,
             )
-        }
-        .cachedIn(viewModelScope)
-
-    val mangaSearchResults: Flow<PagingData<Manga>> = _state
-        .debounce(500L.milliseconds)
-        .filter { it.mediaType == MediaType.MANGA && !it.isInitializing }
-        .distinctUntilChanged { old, new ->
-            old.query == new.query && old.activeProvider == new.activeProvider &&
-                    old.selectedGenres == new.selectedGenres && old.selectedFormat == new.selectedFormat &&
-                    old.selectedSort == new.selectedSort
-        }
-        .flatMapLatest { currentState ->
-            val filter = MangaSearchFilter(
-                includedGenres = currentState.selectedGenres,
-                includedTags = currentState.selectedTags,
-                format = currentState.selectedFormat,
-                status = currentState.selectedStatus,
-                sort = currentState.selectedSort
-            )
-            // The unified repository internally handles the active provider, so we only pass query and filter
-            repository.searchManga(
-                query = currentState.query,
-                filter = filter
-            )
-        }
-        .cachedIn(viewModelScope)
+        }.cachedIn(viewModelScope)
 
 
     // ----------------------------------------------------------------------
@@ -205,7 +174,7 @@ class SearchViewModel(
             val currentState = _state.value
             val capabilities = repository.getSearchCapabilities(
                 provider = currentState.activeProvider,
-                type = currentState.mediaType
+                mediaType = currentState.mediaType,
             )
 
             _state.update { state ->

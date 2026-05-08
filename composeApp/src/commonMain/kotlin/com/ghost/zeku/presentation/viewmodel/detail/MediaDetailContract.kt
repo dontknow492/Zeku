@@ -169,111 +169,52 @@ interface MediaDetailContract {
 /**
  * Maps Anime domain model to the universal UI State.
  */
-fun AnimeDetails.toState(): MediaDetailContract.State {
+fun MediaDetails.toState(trackEntry: TrackEntry? = null): MediaDetailContract.State {
     return MediaDetailContract.State(
         id = id,
-        type = MediaType.ANIME,
+        type = mediaType,
         source = source,
         title = title.getDisplayTitle(),
         nativeTitle = title.native,
         synonyms = synonyms,
         countryOfOrigin = countryOfOrigin,
-
         coverImage = coverImage,
         bannerImage = bannerImage,
         extraPictures = extraPictures,
         description = description,
         background = background,
-
         genres = genres,
         tags = tags,
-        status = status,
+        status = status ?: MediaReleaseStatus.UNKNOWN,
         format = format ?: MediaFormat.UNKNOWN,
         sourceMaterial = sourceMaterial,
         isAdult = isAdult,
-
         startDate = startDate,
         endDate = endDate,
         season = season,
         seasonYear = seasonYear,
         broadcastString = broadcastString,
-
         averageScore = averageScore,
         meanScore = meanScore,
         popularity = popularity,
         favourites = favourites,
         rank = rank,
-
         totalEpisodes = totalEpisodes,
         durationPerEpisode = durationPerEpisode,
         contentRating = contentRating,
         nextAiringEpisode = nextAiringEpisode,
         studios = studios,
-
+        totalChapters = totalChapters,
+        totalVolumes = totalVolumes,
+        serializations = serializations,
         trailer = trailer,
         externalLinks = externalLinks,
         characters = characters,
         relations = relations,
         staff = staff,
-
         trackEntry = trackEntry,
-
         isLoading = false,
         error = null
     )
 }
 
-/**
- * Maps Manga domain model to the universal UI State.
- */
-fun MangaDetails.toState(): MediaDetailContract.State {
-    return MediaDetailContract.State(
-        id = id,
-        type = MediaType.MANGA,
-        source = source,
-        title = title.getDisplayTitle(),
-        nativeTitle = title.native,
-        synonyms = synonyms,
-        countryOfOrigin = countryOfOrigin,
-
-        coverImage = coverImage,
-        bannerImage = bannerImage,
-        extraPictures = extraPictures,
-        description = description,
-        background = background,
-
-        genres = genres,
-        tags = tags,
-        status = status,
-        format = format ?: MediaFormat.UNKNOWN,
-        sourceMaterial = sourceMaterial,
-        isAdult = isAdult,
-
-        startDate = startDate,
-        endDate = endDate,
-        season = null, // Manga doesn't have broadcast seasons
-        seasonYear = null,
-        broadcastString = null,
-
-        averageScore = averageScore,
-        meanScore = meanScore,
-        popularity = popularity,
-        favourites = favourites,
-        rank = rank,
-
-        totalChapters = totalChapters,
-        totalVolumes = totalVolumes,
-        serializations = serializations,
-
-        trailer = null, // Manga usually lacks trailers
-        externalLinks = externalLinks,
-        characters = characters,
-        relations = relations,
-        staff = authors, // Map the authors list directly to the universal staff field!
-
-        trackEntry = trackEntry,
-
-        isLoading = false,
-        error = null
-    )
-}

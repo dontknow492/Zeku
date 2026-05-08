@@ -3,17 +3,17 @@ package com.ghost.zeku.presentation.viewmodel.category
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
-import androidx.paging.map
 import com.ghost.zeku.domain.model.MessageType
-import com.ghost.zeku.domain.model.enum.AnimeCategory
-import com.ghost.zeku.domain.model.enum.MangaCategory
+import com.ghost.zeku.domain.model.enum.MediaCategory
 import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.media.Media
 import com.ghost.zeku.domain.model.settings.MediaDisplayPreference
 import com.ghost.zeku.domain.repository.MediaRepository
 import com.ghost.zeku.domain.repository.UserSettings
 import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.navigation.Destination
+import com.ghost.zeku.presentation.navigation.Destination.MediaDetail
+import com.ghost.zeku.presentation.viewmodel.category.CategoryContract.Effect.Navigate
+import com.ghost.zeku.presentation.viewmodel.category.CategoryContract.Effect.ShowMessage
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -53,7 +53,7 @@ class CategoryViewModel(
             }
 
             is CategoryContract.Event.OnBack -> {
-                sendEffect(CategoryContract.Effect.Navigate(Destination.Back)) // Adjust as needed
+                sendEffect(Navigate(Destination.Back)) // Adjust as needed
             }
 
             is CategoryContract.Event.OnMediaDisplayPreferencesChange -> {
@@ -79,7 +79,7 @@ class CategoryViewModel(
                 true -> MessageType.Error.UserPreference
                 false -> MessageType.Success
             }
-            _effects.emit(CategoryContract.Effect.ShowMessage(result.getOrThrow().toString(), type))
+            _effects.emit(ShowMessage(result.getOrThrow().toString(), type))
         }
     }
 
@@ -99,19 +99,15 @@ class CategoryViewModel(
 
         // 2. Fetch PagingData based on Media Type
         val pagingDataFlow = try {
-            if (mediaType == MediaType.ANIME) {
-                val categoryEnum = AnimeCategory.valueOf(categoryId)
-                Napier.e { "Category: $categoryEnum, ID: $categoryId" }
-                repository.getAnimeList(categoryEnum, perPage = 20)
-                    .map { pagingData -> pagingData.map { it as Media } }
-            } else {
-                val categoryEnum = MangaCategory.valueOf(categoryId)
-                repository.getMangaList(categoryEnum, perPage = 20)
-                    .map { pagingData -> pagingData.map { it as Media } }
-            }
+            val categoryEnum: MediaCategory = MediaCategory.valueOf(categoryId)
+            repository.getMediaList(
+                mediaType = mediaType,
+                category = categoryEnum,
+                perPage = 20
+            )
         } catch (e: IllegalArgumentException) {
             Napier.e(e) { "Invalid category ID passed: $categoryId" }
-            sendEffect(CategoryContract.Effect.ShowMessage("Invalid Category", MessageType.Error.Unknown))
+            sendEffect(ShowMessage("Invalid Category", MessageType.Error.Unknown))
             _state.update { it.copy(error = "Invalid Category", isLoading = false) }
             emptyFlow()
         }
@@ -131,13 +127,13 @@ class CategoryViewModel(
         viewModelScope.launch {
             when (action) {
                 is MediaAction.MediaClick -> {
-                    sendEffect(CategoryContract.Effect.Navigate(Destination.MediaDetail(action.id, action.type)))
+                    sendEffect(Navigate(MediaDetail(action.id, action.type)))
                 }
 
                 is MediaAction.ToggleFavorite -> Napier.d { "Toggle favorite: ${action.id}" }
                 is MediaAction.AddToList -> Napier.d { "Add to list: ${action.id}" }
                 is MediaAction.Share -> sendEffect(
-                    CategoryContract.Effect.ShowMessage(
+                    ShowMessage(
                         "Share not implemented yet",
                         MessageType.Info
                     )
@@ -147,6 +143,7 @@ class CategoryViewModel(
                 is MediaAction.LongClick -> Napier.d { "Long click: ${action.id}" }
                 is MediaAction.Custom -> Napier.w { "Unhandled custom action: ${action.key}" }
                 is MediaAction.GenreClick -> Napier.d { "Genre clicked: ${action.genre}" }
+                is MediaAction.TrailingClick -> Napier.d { "Trailing clicked: ${action.id}" }
             }
         }
     }

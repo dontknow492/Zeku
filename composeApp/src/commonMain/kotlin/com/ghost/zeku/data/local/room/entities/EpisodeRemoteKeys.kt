@@ -5,11 +5,11 @@ import com.ghost.zeku.domain.model.enum.ProviderType
 
 @Entity(
     tableName = "episode_remote_keys",
-    primaryKeys = ["id", "source"]
+    primaryKeys = ["id", "provider"]
 )
 data class EpisodeRemoteKeys(
     val id: String,
-    val source: ProviderType,
+    val provider: ProviderType,
     val mediaId: Int, // Helpful for clearing keys for a specific anime
     val prevPage: Int?,
     val nextPage: Int?,

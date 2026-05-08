@@ -3,10 +3,10 @@ package com.ghost.zeku.data.local.room.dao
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
-import com.ghost.zeku.data.local.room.entities.AnimeRemoteKeys
 import com.ghost.zeku.data.local.room.entities.ChapterRemoteKeys
 import com.ghost.zeku.data.local.room.entities.EpisodeRemoteKeys
-import com.ghost.zeku.data.local.room.entities.MangaRemoteKeys
+import com.ghost.zeku.data.local.room.entities.MediaRemoteKeys
+import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.domain.model.enum.ProviderType
 
 /**
@@ -16,53 +16,160 @@ import com.ghost.zeku.domain.model.enum.ProviderType
 @Dao
 interface RemoteKeysDao {
 
-    // --- ANIME KEYS ---
+    // =========================================================
+    // MEDIA KEYS
+    // =========================================================
+
     @Upsert
-    suspend fun upsertAnimeKeys(keys: List<AnimeRemoteKeys>)
+    suspend fun upsertMediaKeys(
+        keys: List<MediaRemoteKeys>
+    )
 
-    @Query("SELECT * FROM anime_remote_keys WHERE id = :id AND source = :source AND category = :category")
-    suspend fun getAnimeRemoteKey(id: Int, source: ProviderType, category: String): AnimeRemoteKeys?
+    @Query(
+        """
+        SELECT * FROM media_remote_keys
+        
+        WHERE mediaId = :id
+        AND provider = :provider
+        AND mediaType = :mediaType
+        AND category = :category
+        """
+    )
+    suspend fun getMediaRemoteKey(
+        id: Int,
+        provider: ProviderType,
+        mediaType: MediaType,
+        category: String
+    ): MediaRemoteKeys?
 
-    @Query("DELETE FROM anime_remote_keys WHERE source = :source AND category = :category")
-    suspend fun clearAnimeKeys(source: ProviderType, category: String)
+    @Query(
+        """
+        DELETE FROM media_remote_keys
+        
+        WHERE provider = :provider
+        AND mediaType = :mediaType
+        AND category = :category
+        """
+    )
+    suspend fun clearMediaKeys(
+        provider: ProviderType,
+        mediaType: MediaType,
+        category: String
+    )
 
+    @Query(
+        """
+        SELECT lastUpdated
+        
+        FROM media_remote_keys
+        
+        WHERE provider = :provider
+        AND mediaType = :mediaType
+        AND category = :category
+        
+        LIMIT 1
+        """
+    )
+    suspend fun getMediaLastUpdated(
+        provider: ProviderType,
+        mediaType: MediaType,
+        category: String
+    ): Long?
 
-    // --- MANGA KEYS ---
+    // =========================================================
+    // EPISODE KEYS
+    // =========================================================
+
     @Upsert
-    suspend fun upsertMangaKeys(keys: List<MangaRemoteKeys>)
+    suspend fun upsertEpisodeKeys(
+        keys: List<EpisodeRemoteKeys>
+    )
 
-    @Query("SELECT * FROM manga_remote_keys WHERE id = :id AND source = :source AND category = :category")
-    suspend fun getMangaRemoteKey(id: Int, source: ProviderType, category: String): MangaRemoteKeys?
+    @Query(
+        """
+        SELECT * FROM episode_remote_keys
+        
+        WHERE id = :id
+        AND provider = :source
+        """
+    )
+    suspend fun getEpisodeRemoteKey(
+        id: String,
+        source: ProviderType
+    ): EpisodeRemoteKeys?
 
-    @Query("DELETE FROM manga_remote_keys WHERE source = :source AND category = :category")
-    suspend fun clearMangaKeys(source: ProviderType, category: String)
+    @Query(
+        """
+        DELETE FROM episode_remote_keys
+        
+        WHERE mediaId = :mediaId
+        AND provider = :source
+        """
+    )
+    suspend fun clearEpisodeKeysByMedia(
+        mediaId: Int,
+        source: ProviderType
+    )
 
+    // =========================================================
+    // CHAPTER KEYS
+    // =========================================================
 
-    // --- EPISODE KEYS ---
     @Upsert
-    suspend fun upsertEpisodeKeys(keys: List<EpisodeRemoteKeys>)
+    suspend fun upsertChapterKeys(
+        keys: List<ChapterRemoteKeys>
+    )
 
-    @Query("SELECT * FROM episode_remote_keys WHERE id = :id AND source = :source")
-    suspend fun getEpisodeRemoteKey(id: String, source: ProviderType): EpisodeRemoteKeys?
+    @Query(
+        """
+        SELECT * FROM chapter_remote_keys
+        
+        WHERE id = :id
+        AND provider = :source
+        """
+    )
+    suspend fun getChapterRemoteKey(
+        id: String,
+        source: ProviderType
+    ): ChapterRemoteKeys?
 
-    @Query("DELETE FROM episode_remote_keys WHERE mediaId = :mediaId AND source = :source")
-    suspend fun clearEpisodeKeysByMedia(mediaId: Int, source: ProviderType)
+    @Query(
+        """
+        DELETE FROM chapter_remote_keys
+        
+        WHERE mediaId = :mediaId
+        AND provider = :source
+        """
+    )
+    suspend fun clearChapterKeysByMedia(
+        mediaId: Int,
+        source: ProviderType
+    )
 
-    // --- CHAPTER KEYS ---
-    @Upsert
-    suspend fun upsertChapterKeys(keys: List<ChapterRemoteKeys>)
+    // =========================================================
+    // GLOBAL CLEANUP
+    // =========================================================
 
-    @Query("SELECT * FROM chapter_remote_keys WHERE id = :id AND source = :source")
-    suspend fun getChapterRemoteKey(id: String, source: ProviderType): ChapterRemoteKeys?
+    @Query(
+        """
+        DELETE FROM media_remote_keys
+        WHERE provider = :provider
+        """
+    )
+    suspend fun clearAllMediaKeysByProvider(
+        provider: ProviderType
+    )
 
-    @Query("DELETE FROM chapter_remote_keys WHERE mediaId = :mediaId AND source = :source")
-    suspend fun clearChapterKeysByMedia(mediaId: Int, source: ProviderType)
-
-
-    @Query("SELECT lastUpdated FROM anime_remote_keys WHERE source = :source AND category = :category LIMIT 1")
-    suspend fun getAnimeLastUpdated(source: ProviderType, category: String): Long?
-
-    @Query("SELECT lastUpdated FROM manga_remote_keys WHERE source = :source AND category = :category LIMIT 1")
-    suspend fun getMangaLastUpdated(source: ProviderType, category: String): Long?
-
+    @Query(
+        """
+        DELETE FROM media_remote_keys
+        
+        WHERE provider = :provider
+        AND mediaType = :mediaType
+        """
+    )
+    suspend fun clearMediaKeysByType(
+        provider: ProviderType,
+        mediaType: MediaType
+    )
 }

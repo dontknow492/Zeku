@@ -9,28 +9,32 @@ import kotlinx.coroutines.Dispatchers
 @Database(
     entities = [
         UserEntity::class,
-        AnimeEntity::class,
-        MangaEntity::class,
+        MediaEntity::class,
+
         EpisodeEntity::class,
         ChapterEntity::class,
-        AnimeDetailsEntity::class,
-        MangaDetailsEntity::class,
-        MangaRemoteKeys::class,
-        AnimeRemoteKeys::class,
+
+        MediaRemoteKeys::class,
+        MediaDetailsEntity::class,
+
         EpisodeRemoteKeys::class,
         ChapterRemoteKeys::class,
+        LibraryEntity::class,
+        TrackEntryEntity::class
     ],
     version = 1
 )
 @TypeConverters(RoomConverters::class)
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun animeDao(): AnimeDao
-    abstract fun mangaDao(): MangaDao
+    abstract fun mediaDao(): MediaDao
+
     abstract fun remoteKeysDao(): RemoteKeysDao
     abstract fun chapterDao(): ChapterDao
     abstract fun episodeDao(): EpisodeDao
     abstract fun userDao(): UserDao
+    abstract fun libraryDao(): LibraryDao
+    abstract fun trackEntryDao(): TrackEntryDao
 }
 
 

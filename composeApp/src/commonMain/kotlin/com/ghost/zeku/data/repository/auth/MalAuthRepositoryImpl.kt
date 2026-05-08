@@ -10,6 +10,7 @@ import com.russhwolf.settings.Settings
 import io.github.aakira.napier.Napier
 import io.ktor.client.*
 import io.ktor.client.call.*
+import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import zeku.composeApp.BuildConfig
 
 @Serializable
 private data class MalTokenResponse(
@@ -40,6 +42,8 @@ class MalAuthRepositoryImpl(
         private const val KEY_ACCESS_TOKEN = "auth_token_mal_access"
         private const val KEY_REFRESH_TOKEN = "auth_token_mal_refresh"
         private const val KEY_CODE_VERIFIER = "auth_mal_code_verifier"
+        private const val KEY_USER_NAME = "auth_user_name_mal" // Add this
+        private const val KEY_USER_ID = "auth_user_id_mal" // Add this
     }
 
     private val _authState = MutableStateFlow<AuthState>(
@@ -63,6 +67,19 @@ class MalAuthRepositoryImpl(
         val loggedIn = _authState.value == AuthState.LoggedIn
         Napier.v { "MAL isUserLoggedIn: $loggedIn" }
         return loggedIn
+    }
+
+    override fun getUserId(): Int {
+        val id = settings.getInt(KEY_USER_ID, 0)
+        if (id == 0 && isUserLoggedIn()) {
+            Napier.w { "AniList: User is logged in but UserID is 0. Repository sync might fail." }
+        }
+        return id
+    }
+
+    // Added this to help with MAL-specific library calls
+    fun getUserName(): String {
+        return settings.getString(KEY_USER_NAME, "")
     }
 
     override fun getAuthorizationUrl(): String {
@@ -129,6 +146,15 @@ class MalAuthRepositoryImpl(
                         "accessToken=${response.accessToken.take(4)}****, " +
                         "refreshToken=${response.refreshToken.take(4)}****"
             }
+
+            Napier.i { "MAL login successful, now fetching user profile..." }
+
+            try {
+                fetchAndSaveMalProfile(response.accessToken)
+            } catch (e: Exception) {
+                Napier.e(e) { "Failed to fetch MAL user profile after login" }
+            }
+
             ApiResult.Success(Unit)
 
         } catch (e: Exception) {
@@ -175,4 +201,28 @@ class MalAuthRepositoryImpl(
         val allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
         return (1..128).map { allowedChars.random() }.joinToString("")
     }
+
+
+    private suspend fun fetchAndSaveMalProfile(accessToken: String) {
+        val url = BuildConfig.MAL_BASE_URL + "/users/@me"
+        val response = httpClient.get(url) {
+            header("Authorization", "Bearer $accessToken")
+        }
+
+        if (response.status.isSuccess()) {
+            val profile = response.body<MalProfileResponse>()
+            settings.putString(KEY_USER_NAME, profile.name)
+            settings.putInt(KEY_USER_ID, profile.id)
+            Napier.d { "MAL Profile saved: ${profile.name} (ID: ${profile.id})" }
+        } else {
+            Napier.w { "Failed to fetch MAL profile: ${response.status}" }
+        }
+    }
+
+    @Serializable
+    data class MalProfileResponse(
+        val id: Int,
+        val name: String,
+        val picture: String? = null
+    )
 }

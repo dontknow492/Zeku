@@ -1,12 +1,19 @@
 package com.ghost.zeku.presentation.components.media.list
 
-import androidx.compose.animation.core.animateDpAsState
+
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -14,390 +21,505 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.presentation.common.MediaImage
-import com.ghost.zeku.presentation.common.chips.GenreChip
-import com.ghost.zeku.presentation.common.chips.ScoreChip
-import com.ghost.zeku.presentation.common.chips.StatusChip
+import com.ghost.zeku.presentation.common.MediaAsyncImage
 import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.components.media.OnMediaAction
-
+import com.ghost.zeku.presentation.theme.AppTheme
 
 @Composable
 fun MediaListCard(
     data: MediaListUiData,
+    layout: ListCardLayout = ListCardLayout.Modern,
+    config: ListCardConfig = ListCardDefaults.forLayout(layout),
     onAction: OnMediaAction,
-    modifier: Modifier = Modifier,
-    variant: MediaListCardVariant = MediaListCardVariant.COMFORTABLE,
-    config: ListConfig = MediaListDefaults.config(variant)
-) {
-    when (variant) {
-        MediaListCardVariant.COMPACT -> CompactMediaListCard(data, onAction, modifier, config)
-        MediaListCardVariant.COMFORTABLE -> ComfortableMediaListCard(data, onAction, modifier, config)
-        MediaListCardVariant.DETAILED -> DetailedMediaListCard(data, onAction, modifier, config)
-    }
-}
-
-
-@Composable
-private fun CompactMediaListCard(
-    data: MediaListUiData,
-    onAction: OnMediaAction,
-    modifier: Modifier,
-    config: ListConfig
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onAction(MediaAction.MediaClick(data.id, data.mediaType)) }
-            .padding(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        MediaListImage(data, onAction, config)
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = data.title,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Text(
-                text = data.subTitle,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        data.score?.let {
-            Text(
-                text = "%.1f".format(it),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-    }
-}
-
-
-@Composable
-private fun ComfortableMediaListCard(
-    data: MediaListUiData,
-    onAction: OnMediaAction,
-    modifier: Modifier,
-    config: ListConfig
+    modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val isHovered by interactionSource.collectIsHoveredAsState()
 
-    val elevation by animateDpAsState(
-        if (isHovered) config.interaction.hoveredElevation else config.interaction.normalElevation
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val scale by animateFloatAsState(
+        targetValue = when {
+            isPressed && config.enablePress -> config.scaleOnPress
+            isHovered && config.enableHover -> config.scaleOnHover
+            else -> 1f
+        },
+        animationSpec = spring(stiffness = Spring.StiffnessLow)
     )
 
-
-    Box(
-        modifier = modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
-    ) {
-        Card(
-            modifier = Modifier
-                .widthIn(max = config.ui.maxWidth)
-                .fillMaxWidth()
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null
-                ) { onAction(MediaAction.MediaClick(data.id, data.mediaType)) },
-            shape = RoundedCornerShape(config.ui.cornerRadius),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = elevation
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(config.ui.spacing),
-                horizontalArrangement = Arrangement.spacedBy(config.ui.spacing)
-            ) {
-                MediaListImage(data, onAction, config)
-                MediaListContent(data, config, onAction)
+    Card(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
             }
-        }
-    }
-}
-
-@Composable
-private fun DetailedMediaListCard(
-    data: MediaListUiData,
-    onAction: OnMediaAction,
-    modifier: Modifier,
-    config: ListConfig
-) {
-    Box(
-        modifier = modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
-    ) {
-        Card(
-            modifier = Modifier
-                .widthIn(max = config.ui.maxWidth)
-                .fillMaxWidth()
-                .clickable { onAction(MediaAction.MediaClick(data.id, data.mediaType)) },
-            shape = RoundedCornerShape(config.ui.cornerRadius)
-        ) {
-            Row(
-                modifier = Modifier.padding(20.dp),
-                horizontalArrangement = Arrangement.spacedBy(20.dp)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
             ) {
-
-                // Bigger image
-                MediaListImage(data, onAction, config)
-
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-
-                    // Title + Score
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = data.title,
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        data.score?.let { ScoreChip(it) }
-                    }
-
-                    // Subtitle
-                    Text(
-                        text = data.subTitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
-                    // Genres (more space)
-                    if (data.genres.isNotEmpty()) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            data.genres.take(5).forEach {
-                                GenreChip(onClick = { onAction(MediaAction.GenreClick(it)) }, it)
-                            }
-                        }
-                    }
-
-                    // Status
-                    data.status?.let {
-                        StatusChip(it)
-                    }
-
-                    // Progress
-                    data.progress?.let {
-                        LinearProgressIndicator(
-                            progress = { it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(8.dp)
-                                .clip(RoundedCornerShape(4.dp))
-                        )
-                    }
-
-                    data.progressText?.let {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.labelMedium,
-                            modifier = Modifier.align(Alignment.End)
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun MediaListImage(
-    data: MediaListUiData,
-    onAction: OnMediaAction,
-    config: ListConfig
-) {
-    Box(
-        modifier = Modifier
-            .width(config.ui.imageWidth)
-            .aspectRatio(2f / 3f)
-            .clip(RoundedCornerShape(12.dp))
-    ) {
-        MediaImage(
-            imageUrl = data.coverImageUrl,
-            title = data.title,
-            isNsfw = data.isNsfw,
-            isRevealed = data.isNsfwRevealed,
-            onReveal = {
-                onAction(MediaAction.RevealNsfw(data.id))
+                onAction(MediaAction.MediaClick(data.id, data.mediaType))
             },
-            nsfwConfig = config.nsfw,
-            mediaImageConfig = config.image,
-            badge = null
-        )
-
-        if (data.isAiring) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(6.dp)
-                    .size(10.dp)
-                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(50))
-            )
+        shape = RoundedCornerShape(config.cornerRadius),
+        elevation = if (config.enableShadow)
+            CardDefaults.cardElevation(config.elevation)
+        else CardDefaults.cardElevation(0.dp)
+    ) {
+        when (layout) {
+            ListCardLayout.Minimal -> MinimalListCard(data, config, onAction)
+            ListCardLayout.Compact -> CompactListCard(data, config, onAction)
+            ListCardLayout.Modern -> ModernListCard(data, config, onAction)
+            ListCardLayout.Detailed -> DetailedListCard(data, config, onAction)
         }
     }
 }
 
 
+/**
+ * Minimal list card: image + title (optional subtitle) + trailing icon.
+ */
 @Composable
-private fun MediaListContent(
+private fun MinimalListCard(
     data: MediaListUiData,
-    config: ListConfig,
+    config: ListCardConfig,
     onAction: OnMediaAction
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        // Poster image
+        MediaAsyncImage(
+            url = data.getDisplayImageUrl(),
+            contentDescription = data.title,
+            modifier = Modifier
+                .width(config.imageWidth)
+                .aspectRatio(config.aspectRatio)
+                .clip(RoundedCornerShape(config.cornerRadius)),
+            contentScale = ContentScale.Crop
+        )
 
-        // TITLE + SCORE
-        Row(
-            verticalAlignment = Alignment.CenterVertically
+        Spacer(modifier = Modifier.width(12.dp))
+
+        // Text content
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = data.title,
-                modifier = Modifier.weight(1f),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = config.maxTitleLines,
+                overflow = TextOverflow.Ellipsis
             )
 
-            if (config.content.showScore && data.score != null) {
-                ScoreChip(data.score)
+            if (config.showSubtitle && !data.subtitle.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = data.subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = config.maxSubtitleLines,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
 
-        // GENRES
-        if (config.content.showGenres && data.genres.isNotEmpty()) {
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                data.genres.take(3).forEach {
-                    GenreChip(onClick = { onAction(MediaAction.GenreClick(it)) }, it)
-                }
-            }
-        }
-
-        // META
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = data.subTitle,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            data.status?.let {
-                StatusChip(it)
-            }
-        }
-
-        // Description
-        if (config.content.showDescription && data.description != null) {
-            Text(
-                text = data.description,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = config.content.descriptionMaxLines,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        // PROGRESS
-        if (config.content.showProgress && (data.progress != null || data.progressText != null)) {
-            Column {
-                data.progressText?.let {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.align(Alignment.End)
-                    )
-                }
-
-                data.progress?.let {
-                    LinearProgressIndicator(
-                        progress = { it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp))
-                    )
-                }
+        // Trailing action icon
+        if (config.showTrailingIcon) {
+            IconButton(
+                onClick = { onAction(MediaAction.TrailingClick(data.id, data.mediaType)) },
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Add,
+                    contentDescription = "Action",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
 }
 
 
-// ----------------------------------------------------------------------------
-// Preview (shows both desktop & mobile)
-// ----------------------------------------------------------------------------
-@Preview(name = "Mobile", widthDp = 400, heightDp = 800)
-@Preview(name = "Desktop", widthDp = 900, heightDp = 600)
+/**
+ * Compact list card: adds progress indicator and score badge to the Minimal variant.
+ */
 @Composable
-private fun MediaListCardPreview() {
-    val sampleData = MediaListUiData(
-        id = 1,
-        description = "An elf mage begins a journey to understand humanity after the death of her long-time companions." +
-                " A slow, emotional, and beautifully written story about time, memory, and connection.",
-        title = "Frieren: Beyond Journey's End",
-        coverImageUrl = "",
-        subTitle = "TV • 2023",
-        genres = listOf("Adventure", "Drama", "Fantasy"),
-        status = "Finished",
-        score = 9.4f,
-        progress = 0.75f,
-        progressText = "22 / 28 EPs",
-        isAiring = false,
-        mediaType = MediaType.ANIME
-    )
+private fun CompactListCard(
+    data: MediaListUiData,
+    config: ListCardConfig,
+    onAction: OnMediaAction
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Poster image
+        MediaAsyncImage(
+            url = data.getDisplayImageUrl(),
+            contentDescription = data.title,
+            modifier = Modifier
+                .width(config.imageWidth)
+                .aspectRatio(config.aspectRatio)
+                .clip(RoundedCornerShape(config.cornerRadius)),
+            contentScale = ContentScale.Crop
+        )
 
-    MaterialTheme {
-        Surface(color = MaterialTheme.colorScheme.background) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                MediaListCard(sampleData, onAction = {})
-                MediaListCard(
-                    sampleData.copy(
-                        title = "Solo Leveling",
-                        score = 7.5f,
-                        status = "Releasing",
-                        isAiring = true,
-                        progress = 0.66f,
-                        progressText = "8 / 12 EPs"
-                    ),
-                    onAction = {}
-                )
-                MediaListCard(
-                    sampleData.copy(
-                        title = "Some Isekai Anime That Has a Very Long Title That Wraps",
-                        score = 4.2f,
-                        status = "Publishing",
-                        progress = null,
-                        progressText = null
-                    ),
-                    onAction = {}
+        Spacer(modifier = Modifier.width(12.dp))
+
+        // Text content + extras
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = data.title,
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = config.maxTitleLines,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            if (config.showSubtitle && !data.subtitle.isNullOrBlank()) {
+                Text(
+                    text = data.subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = config.maxSubtitleLines,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
+
+            // Progress bar
+            if (config.showProgress && data.progress != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                LinearProgressIndicator(
+                    progress = { data.progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp)),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+            }
+
+            // Score badge
+            if (config.showScore && data.score != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Rounded.Star,
+                        contentDescription = "Score",
+                        tint = Color(0xFFFFD700),
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = String.format("%.1f", data.score),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        // Trailing action icon
+        if (config.showTrailingIcon) {
+            IconButton(
+                onClick = { onAction(MediaAction.TrailingClick(data.id, data.mediaType)) },
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Add,
+                    contentDescription = "Action",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+
+/**
+ * Modern list card: uses a gradient background, genre chips, and a prominent score bubble.
+ */
+@Composable
+private fun ModernListCard(
+    data: MediaListUiData,
+    config: ListCardConfig,
+    onAction: OnMediaAction
+) {
+    val shape = RoundedCornerShape(config.cornerRadius)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .clip(shape)
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        MaterialTheme.colorScheme.surface
+                    )
+                )
+            )
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Poster image
+        MediaAsyncImage(
+            url = data.getDisplayImageUrl(),
+            contentDescription = data.title,
+            modifier = Modifier
+                .width(config.imageWidth)
+                .aspectRatio(config.aspectRatio)
+                .clip(shape),
+            contentScale = ContentScale.Crop
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = data.title,
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = config.maxTitleLines,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            if (config.showSubtitle && !data.subtitle.isNullOrBlank()) {
+                Text(
+                    text = data.subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = config.maxSubtitleLines,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            // Genres row
+            if (config.showGenres && !data.genres.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    data.genres.take(3).forEach { genre ->
+                        SuggestionChip(
+                            onClick = { },
+                            label = {
+                                Text(
+                                    text = genre,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            },
+                            modifier = Modifier.height(24.dp)
+                        )
+                    }
+                }
+            }
+
+            // Progress bar
+            if (config.showProgress && data.progress != null) {
+                Spacer(modifier = Modifier.height(6.dp))
+                LinearProgressIndicator(
+                    progress = { data.progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+            }
+        }
+
+        // Score bubble
+        if (config.showScore && data.score != null) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Rounded.Star,
+                        contentDescription = null,
+                        tint = Color(0xFFFFD700),
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        text = String.format("%.1f", data.score),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+
+        // Trailing action icon
+        if (config.showTrailingIcon) {
+            IconButton(
+                onClick = { onAction(MediaAction.TrailingClick(data.id, data.mediaType)) },
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Add,
+                    contentDescription = "Action",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+
+/**
+ * Detailed list card: shows all available details – description, progress, score, genres, etc.
+ */
+@Composable
+private fun DetailedListCard(
+    data: MediaListUiData,
+    config: ListCardConfig,
+    onAction: OnMediaAction
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        // Poster image
+        MediaAsyncImage(
+            url = data.getDisplayImageUrl(),
+            contentDescription = data.title,
+            modifier = Modifier
+                .width(config.imageWidth)
+                .aspectRatio(config.aspectRatio)
+                .clip(RoundedCornerShape(config.cornerRadius)),
+            contentScale = ContentScale.Crop
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = data.title,
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = config.maxTitleLines,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            if (config.showSubtitle && !data.subtitle.isNullOrBlank()) {
+                Text(
+                    text = data.subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = config.maxSubtitleLines,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            // Score + genres row
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (config.showScore && data.score != null) {
+                    Icon(
+                        imageVector = Icons.Rounded.Star,
+                        contentDescription = null,
+                        tint = Color(0xFFFFD700),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = String.format("%.1f", data.score),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                if (config.showGenres && !data.genres.isNullOrEmpty()) {
+                    Text(
+                        text = data.genres.joinToString(" • "),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            // Description
+            if (config.showDescription && !data.description.isNullOrBlank()) {
+                Text(
+                    text = data.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = config.maxDescriptionLines,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            // Progress bar
+            if (config.showProgress && data.progress != null) {
+                LinearProgressIndicator(
+                    progress = { data.progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp)),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+            }
+        }
+
+        // Trailing action icon (always top-aligned due to parent's Alignment.Top)
+        if (config.showTrailingIcon) {
+            IconButton(
+                onClick = { onAction(MediaAction.TrailingClick(data.id, data.mediaType)) },
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Add,
+                    contentDescription = "Action",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+
+@Preview
+@Composable
+private fun PreviewListCard() {
+    AppTheme {
+        Column {
+
         }
     }
 }

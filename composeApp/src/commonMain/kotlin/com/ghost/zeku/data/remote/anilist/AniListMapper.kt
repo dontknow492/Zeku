@@ -14,179 +14,279 @@ import java.util.*
 // =========================================================================================
 // MAIN MAPPERS
 // =========================================================================================
+fun AniListMedia.toMediaDomain(): Media {
+    return Media(
 
-fun AniListMedia.toAnimeDomain(): Anime {
-    return Anime(
-        id = this.id,
-        source = ProviderType.ANILIST, // Explicitly declare source
-        format = this.format.toMediaFormat(),
-        title = this.title.toDomain(),
-        coverImage = this.coverImage?.large ?: "",
-        bannerImage = this.bannerImage,
-        description = this.description,
-        genres = this.genres ?: emptyList(),
-        status = mapToMediaReleaseStatus(this.status),
-        score = this.averageScore?.toFloat(),
-        startDate = this.startDate.toDomain(),
-        episodes = this.episodes,
-        duration = this.duration,
-        studio = null, // Add to GraphQL query later if needed
-        trackEntry = this.mediaListEntry?.toTrackEntry(
-            mediaId = this.id,
-            totalProgress = this.episodes // We pass total episodes to calculate the progress bar!
-        )
-    )
-}
+        // --------------------------------------------------------------------
+        // Identity
+        // --------------------------------------------------------------------
 
-fun AniListMedia.toMangaDomain(): Manga {
-    return Manga(
-        id = this.id,
+        id = id,
+
         source = ProviderType.ANILIST,
-        format = this.format.toMediaFormat(),
-        title = this.title.toDomain(),
-        coverImage = this.coverImage?.large ?: "",
-        bannerImage = this.bannerImage,
-        description = this.description,
-        genres = this.genres ?: emptyList(),
-        status = mapToMediaReleaseStatus(this.status),
-        score = this.averageScore?.toFloat(),
-        startDate = this.startDate.toDomain(),
-        chapters = this.chapters,
-        volumes = this.volumes,
-        author = null,
-        trackEntry = this.mediaListEntry?.toTrackEntry(
-            mediaId = this.id,
-            totalProgress = this.chapters // Pass total chapters for progress bar
-        )
+
+        mediaType = MediaType.fromString(type),
+
+        // --------------------------------------------------------------------
+        // Core
+        // --------------------------------------------------------------------
+
+        format = format.toMediaFormat(),
+
+        title = title.toDomain(),
+
+        coverImage = coverImage?.large.orEmpty(),
+
+        bannerImage = bannerImage,
+
+        description = description,
+
+        genres = genres ?: emptyList(),
+
+        status = mapToMediaReleaseStatus(status),
+
+        score = averageScore?.toFloat(),
+
+        startDate = startDate?.toMediaDate(),
+
+        // --------------------------------------------------------------------
+        // Extended
+        // --------------------------------------------------------------------
+
+        tags = tags
+            ?.map { it.name }
+            ?: emptyList(),
+
+        popularity = popularity,
+
+        favourites = favourites,
+
+        rank = null,
+
+        // --------------------------------------------------------------------
+        // Anime
+        // --------------------------------------------------------------------
+
+        episodes = episodes,
+
+        duration = duration,
+
+        studio = studios
+            ?.edges
+            ?.firstOrNull { it.isMain == true }
+            ?.node
+            ?.name,
+
+        // --------------------------------------------------------------------
+        // Manga
+        // --------------------------------------------------------------------
+
+        chapters = chapters,
+
+        volumes = volumes,
+
+        author = staff
+            ?.edges
+            ?.firstOrNull()
+            ?.node
+            ?.name
+            ?.userPreferred
     )
 }
+
 
 // =========================================================================================
 // DETAILS MAPPERS (If you still wish to keep DetailedMedia.kt)
 // =========================================================================================
 
-fun AniListMedia.toAnimeDetailsDomain(): AnimeDetails {
-    return AnimeDetails(
-        id = this.id,
+fun AniListMedia.toMediaDetailsDomain(): MediaDetails {
+    return MediaDetails(
+
+        // --------------------------------------------------------------------
+        // Identity
+        // --------------------------------------------------------------------
+
+        id = id,
+
         source = ProviderType.ANILIST,
-        title = this.title?.toDomain() ?: MediaTitle(),
-        synonyms = this.synonyms ?: emptyList(),
-        countryOfOrigin = this.countryOfOrigin,
 
-        coverImage = this.coverImage?.extraLarge ?: this.coverImage?.large ?: "",
-        bannerImage = this.bannerImage,
-        extraPictures = emptyList(), // AniList doesn't supply an array of extra pictures directly
-        description = this.description,
-        background = null, // AniList descriptions contain the background context
+        mediaType = MediaType.fromString(type),
 
-        status = mapToMediaReleaseStatus(this.status),
-        format = runCatching { MediaFormat.valueOf(this.format ?: "") }.getOrNull(),
-        sourceMaterial = this.source?.toSourceMaterial(),
-        isAdult = this.isAdult ?: false,
+        // --------------------------------------------------------------------
+        // Core
+        // --------------------------------------------------------------------
 
-        startDate = this.startDate?.toMediaDate(),
-        endDate = this.endDate?.toMediaDate(),
-        season = runCatching { MediaSeason.valueOf(this.season ?: "") }.getOrNull(),
-        seasonYear = this.seasonYear,
-        broadcastString = null, // AniList uses AiringSchedule instead of a string
+        title = title?.toDomain() ?: MediaTitle(),
 
-        genres = this.genres ?: emptyList(),
-        tags = this.tags?.map { it.toDomain() } ?: emptyList(),
+        synonyms = synonyms ?: emptyList(),
 
-        averageScore = this.averageScore?.toDouble(),
-        meanScore = this.meanScore?.toDouble(),
-        popularity = this.popularity,
-        favourites = this.favourites,
-        rank = null, // Can be mapped later if ranking node is queried
+        countryOfOrigin = countryOfOrigin,
 
-        totalEpisodes = this.episodes,
-        durationPerEpisode = this.duration,
-        contentRating = if (this.isAdult == true) "18+" else null,
-        nextAiringEpisode = this.nextAiringEpisode?.let { AiringSchedule(it.episode, it.timeUntilAiring) },
-        studios = this.studios?.edges?.mapNotNull { it.node?.toDomain() } ?: emptyList(),
+        // --------------------------------------------------------------------
+        // Visuals
+        // --------------------------------------------------------------------
 
-        trailer = this.trailer?.let {
+        coverImage = coverImage?.extraLarge
+            ?: coverImage?.large
+            ?: "",
+
+        bannerImage = bannerImage,
+
+        extraPictures = emptyList(),
+
+        description = description,
+
+        background = null,
+
+        // --------------------------------------------------------------------
+        // Metadata
+        // --------------------------------------------------------------------
+
+        status = mapToMediaReleaseStatus(status),
+
+        format = format.toMediaFormat(),
+
+        sourceMaterial = source?.toSourceMaterial(),
+
+        isAdult = isAdult ?: false,
+
+        // --------------------------------------------------------------------
+        // Dates
+        // --------------------------------------------------------------------
+
+        startDate = startDate?.toMediaDate(),
+
+        endDate = endDate?.toMediaDate(),
+
+        createdAt = null,
+
+        updatedAt = null,
+
+        // --------------------------------------------------------------------
+        // Seasonal
+        // --------------------------------------------------------------------
+
+        season = season?.toMediaSeason(),
+
+        seasonYear = seasonYear,
+
+        broadcastString = null,
+
+        // --------------------------------------------------------------------
+        // Categorization
+        // --------------------------------------------------------------------
+
+        genres = genres ?: emptyList(),
+
+        tags = tags
+            ?.map { it.toDomain() }
+            ?: emptyList(),
+
+        // --------------------------------------------------------------------
+        // Statistics
+        // --------------------------------------------------------------------
+
+        averageScore = averageScore?.toDouble(),
+
+        meanScore = meanScore?.toDouble(),
+
+        popularity = popularity,
+
+        favourites = favourites,
+
+        rank = null,
+
+        // --------------------------------------------------------------------
+        // Anime
+        // --------------------------------------------------------------------
+
+        totalEpisodes = episodes,
+
+        durationPerEpisode = duration,
+
+        contentRating = if (isAdult == true) "18+" else null,
+
+        nextAiringEpisode = nextAiringEpisode?.let {
+            AiringSchedule(
+                episode = it.episode,
+                timeUntilAiring = it.timeUntilAiring
+            )
+        },
+
+        studios = studios
+            ?.edges
+            ?.mapNotNull { it.node?.toDomain() }
+            ?: emptyList(),
+
+        // --------------------------------------------------------------------
+        // Manga
+        // --------------------------------------------------------------------
+
+        totalChapters = chapters,
+
+        totalVolumes = volumes,
+
+        serializations = emptyList(),
+
+        authors = staff
+            ?.edges
+            ?.mapNotNull { it.toDomain() }
+            ?: emptyList(),
+
+        // --------------------------------------------------------------------
+        // Relations
+        // --------------------------------------------------------------------
+
+        trailer = trailer?.let {
             MediaTrailer(
                 title = null,
-                id = it.id ?: "",
-                site = it.site ?: "",
+                id = it.id.orEmpty(),
+                site = it.site.orEmpty(),
                 thumbnail = it.thumbnail
             )
         },
-        externalLinks = this.externalLinks?.map { ExternalLink(it.url, it.site, it.icon) } ?: emptyList(),
-        characters = this.characters?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
-        relations = this.relations?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
-        staff = this.staff?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
 
-        trackEntry = this.mediaListEntry?.toTrackEntry(
-            this.id,
-            totalProgress = null
-        ), // Map your mediaListEntry if needed
+        externalLinks = externalLinks
+            ?.map {
+                ExternalLink(
+                    url = it.url,
+                    site = it.site,
+                    iconUrl = it.icon
+                )
+            }
+            ?: emptyList(),
 
+        characters = characters
+            ?.edges
+            ?.mapNotNull { it.toDomain() }
+            ?: emptyList(),
 
-        //not provided by anilist
-        createdAt = null,
-        updatedAt = null,
+        relations = relations
+            ?.edges
+            ?.mapNotNull { it.toDomain() }
+            ?: emptyList(),
+
+        staff = staff
+            ?.edges
+            ?.mapNotNull { it.toDomain() }
+            ?: emptyList(),
+
+        // --------------------------------------------------------------------
+        // Stats
+        // --------------------------------------------------------------------
+
         watching = null,
+
         completed = null,
+
         onHold = null,
+
         dropped = null,
-        planToWatch = null,
+
+        planToWatch = null
     )
 }
 
-fun AniListMedia.toMangaDetailsDomain(): MangaDetails {
-    return MangaDetails(
-        id = this.id,
-        source = ProviderType.ANILIST,
-        title = this.title?.toDomain() ?: MediaTitle(),
-        synonyms = this.synonyms ?: emptyList(),
-        countryOfOrigin = this.countryOfOrigin,
-
-        coverImage = this.coverImage?.extraLarge ?: this.coverImage?.large ?: "",
-        bannerImage = this.bannerImage,
-        extraPictures = emptyList(),
-        description = this.description,
-        background = null,
-
-        status = mapToMediaReleaseStatus(this.status),
-        format = runCatching { MediaFormat.valueOf(this.format ?: "") }.getOrNull(),
-        sourceMaterial = this.source?.toSourceMaterial(),
-        isAdult = this.isAdult ?: false,
-
-        startDate = this.startDate?.toMediaDate(),
-        endDate = this.endDate?.toMediaDate(),
-
-        genres = this.genres ?: emptyList(),
-        tags = this.tags?.map { it.toDomain() } ?: emptyList(),
-
-        averageScore = this.averageScore?.toDouble(),
-        meanScore = this.meanScore?.toDouble(),
-        popularity = this.popularity,
-        favourites = this.favourites,
-        rank = null,
-
-        totalChapters = this.chapters,
-        totalVolumes = this.volumes,
-        serializations = emptyList(), // External linking is best for this in AniList
-
-        authors = this.staff?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
-        externalLinks = this.externalLinks?.map { ExternalLink(it.url, it.site, it.icon) } ?: emptyList(),
-        characters = this.characters?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
-        relations = this.relations?.edges?.mapNotNull { it.toDomain() } ?: emptyList(),
-
-        trackEntry = this.mediaListEntry?.toTrackEntry(this.id, totalProgress = null),
-
-        //not provided by anilist
-        createdAt = null,
-        updatedAt = null,
-        watching = null,
-        completed = null,
-        onHold = null,
-        dropped = null,
-        planToWatch = null,
-    )
-}
 
 fun AniListDate.toMediaDate() = MediaDate(year = this.year, month = this.month, day = this.day)
 
@@ -305,29 +405,6 @@ fun Viewer.toDomain(): UserProfile = UserProfile(
 // USER LIST MAPPERS (The Bridge)
 // =========================================================================================
 
-/**
- * Maps a User List Entry to an Anime domain model.
- * It combines the entry data with the media data before passing it to the main mapper.
- */
-fun AniListMediaListEntry.toAnimeDomain(): Anime? {
-    // If for some reason the media is null, we can't show it.
-    val actualMedia = this.media ?: return null
-
-    // Inject this entry into the media object so our existing mapper handles everything
-    val combinedMedia = actualMedia.copy(mediaListEntry = this)
-
-    return combinedMedia.toAnimeDomain()
-}
-
-/**
- * Maps a User List Entry to a Manga domain model.
- */
-fun AniListMediaListEntry.toMangaDomain(): Manga? {
-    val actualMedia = this.media ?: return null
-    val combinedMedia = actualMedia.copy(mediaListEntry = this)
-    return combinedMedia.toMangaDomain()
-}
-
 
 // =========================================================================================
 // ENUM MAPPERS
@@ -375,62 +452,121 @@ private fun mapToMediaReleaseStatus(statusStr: String?): MediaReleaseStatus {
 }
 
 
-fun MangaCategory.toAniListSort(): List<String> {
+fun MediaCategory.toAniListVariables(
+    mediaType: MediaType,
+    page: Int,
+    perPage: Int
+): Variables {
+
     return when (this) {
-        MangaCategory.TRENDING -> listOf("TRENDING_DESC", "POPULARITY_DESC")
-        MangaCategory.POPULAR -> listOf("POPULARITY_DESC")
-        MangaCategory.TOP_RATED -> listOf("SCORE_DESC")
-        MangaCategory.NEWLY_ADDED -> listOf("START_DATE_DESC")
-        MangaCategory.MANHWA -> listOf("TRENDING_DESC") // You can also add 'countryOfOrigin: "KR"' variables later
-    }
-}
 
-
-fun AnimeCategory.toAniListVariables(page: Int, perPage: Int): Variables {
-    return when (this) {
-        AnimeCategory.TRENDING -> Variables(
-            page = page,
-            perPage = perPage,
-            sort = listOf("TRENDING_DESC", "POPULARITY_DESC")
-        )
-
-        AnimeCategory.TOP_RATED -> Variables(
-            page = page,
-            perPage = perPage,
-            sort = listOf("SCORE_DESC")
-        )
-
-        AnimeCategory.UPCOMING -> Variables(
-            page = page,
-            perPage = perPage,
-            status = "NOT_YET_RELEASED",
-            sort = listOf("POPULARITY_DESC")
-        )
-
-        AnimeCategory.MOVIE -> Variables(
-            page = page,
-            perPage = perPage,
-            format = "MOVIE",
-            type = "ANIME", // You'd add 'format: MOVIE' to query if needed
-            sort = listOf("POPULARITY_DESC")
-        )
-
-        AnimeCategory.SEASONAL -> {
-            val (season, year) = getCurrentSeasonAndYear()
+        MediaCategory.TRENDING -> {
             Variables(
                 page = page,
                 perPage = perPage,
-                season = season,
-                seasonYear = year,
+                type = mediaType.name,
+                sort = listOf(
+                    "TRENDING_DESC",
+                    "POPULARITY_DESC"
+                )
+            )
+        }
+
+        MediaCategory.POPULAR -> {
+            Variables(
+                page = page,
+                perPage = perPage,
+                type = mediaType.name,
                 sort = listOf("POPULARITY_DESC")
             )
         }
 
-        AnimeCategory.POPULAR -> {
-            Variables(page = page, perPage = perPage, sort = listOf("POPULARITY_DESC"))
+        MediaCategory.TOP_RATED -> {
+            Variables(
+                page = page,
+                perPage = perPage,
+                type = mediaType.name,
+                sort = listOf("SCORE_DESC")
+            )
+        }
+
+        MediaCategory.UPCOMING -> {
+            Variables(
+                page = page,
+                perPage = perPage,
+                type = mediaType.name,
+                status = "NOT_YET_RELEASED",
+                sort = listOf("POPULARITY_DESC")
+            )
+        }
+
+        MediaCategory.SEASONAL -> {
+
+            val (season, year) = getCurrentSeasonAndYear()
+
+            Variables(
+                page = page,
+                perPage = perPage,
+                type = mediaType.name,
+                season = season,
+                seasonYear = year,
+                sort = listOf(
+                    "POPULARITY_DESC",
+                    "TRENDING_DESC"
+                )
+            )
+        }
+
+        MediaCategory.NEWLY_ADDED -> {
+            Variables(
+                page = page,
+                perPage = perPage,
+                type = mediaType.name,
+                sort = listOf("START_DATE_DESC")
+            )
+        }
+
+        MediaCategory.MOVIES -> {
+            Variables(
+                page = page,
+                perPage = perPage,
+                type = MediaType.ANIME.name,
+                format = "MOVIE",
+                sort = listOf(
+                    "POPULARITY_DESC",
+                    "SCORE_DESC"
+                )
+            )
+        }
+
+        MediaCategory.MANHWA -> {
+            Variables(
+                page = page,
+                perPage = perPage,
+                type = MediaType.MANGA.name,
+                countryOfOrigin = "KR",
+                sort = listOf(
+                    "TRENDING_DESC",
+                    "POPULARITY_DESC"
+                )
+            )
+        }
+
+        MediaCategory.NOVELS -> {
+            Variables(
+                page = page,
+                perPage = perPage,
+                type = MediaType.MANGA.name,
+                format = "NOVEL",
+                sort = listOf(
+                    "POPULARITY_DESC",
+                    "SCORE_DESC"
+                )
+            )
         }
     }
 }
+
 
 fun SearchSort.toAniListSort(): String {
     return when (this) {
@@ -476,4 +612,14 @@ fun getCurrentSeasonAndYear(): Pair<String, Int> {
 
 private fun String.toSourceMaterial(): MediaSourceMaterial {
     return runCatching { MediaSourceMaterial.valueOf(this) }.getOrDefault(MediaSourceMaterial.UNKNOWN)
+}
+
+private fun String?.toMediaSeason(): MediaSeason {
+    return when (this?.uppercase()) {
+        "WINTER" -> MediaSeason.WINTER
+        "SUMMER" -> MediaSeason.SUMMER
+        "SPRING" -> MediaSeason.SPRING
+        "FALL" -> MediaSeason.FALL
+        else -> MediaSeason.UNKNOWN
+    }
 }

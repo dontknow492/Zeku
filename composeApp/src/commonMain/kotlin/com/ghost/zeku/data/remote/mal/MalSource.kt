@@ -6,22 +6,18 @@ import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.provider.*
 
 class MalSource(
-    animeList: MalAnimeProvider,
-    mangaList: MalMangaProvider,
-    animeSearch: MalAnimeSearchProvider,
-    mangaSearch: MalMangaSearchProvider,
-    animeDetails: MalAnimeDetailsProvider,
-    mangaDetails: MalMangaDetailsProvider,
-    mediaTracker: MalMediaTracker,
+    mediaProvider: MalMediaProvider,
+    mediaSearch: MalSearchProvider,
+    mediaDetail: MalDetailsProvider,
+    mediaTracker: MalMediaTrackerV2,
+    mediaContentProvider: MalMediaContentProvider,
     userProvider: MalUserProvider,
 ) : MediaSource,
-    AnimeListProvider by animeList,
-    MangaListProvider by mangaList,
-    AnimeSearchProvider by animeSearch,
-    MangaSearchProvider by mangaSearch,
-    AnimeDetailsProvider by animeDetails,
-    MangaDetailsProvider by mangaDetails,
-    MediaTrackerProvider by mediaTracker,
+    MediaListProvider by mediaProvider,
+    MediaSearchProvider by mediaSearch,
+    MediaDetailsProvider by mediaDetail,
+    MediaTrackerProviderV2 by mediaTracker,
+    MediaContentProvider by mediaContentProvider,
     UserProvider by userProvider {
     override suspend fun getProviderType(): ProviderType = ProviderType.MYANIMELIST
 }

@@ -7,7 +7,7 @@ import com.ghost.zeku.data.local.room.entities.EpisodeRemoteKeys
 import com.ghost.zeku.domain.model.enum.DownloadState
 import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.model.media.Episode
-import com.ghost.zeku.domain.provider.AnimeDetailsProvider
+import com.ghost.zeku.domain.provider.MediaContentProvider
 import io.github.aakira.napier.Napier
 
 /**
@@ -19,7 +19,7 @@ import io.github.aakira.napier.Napier
 class EpisodeRemoteMediator(
     mediaId: Int,
     currentProviderType: ProviderType,
-    private val provider: AnimeDetailsProvider,
+    private val provider: MediaContentProvider,
     database: AppDatabase,
     cacheTimeoutMillis: Long
 ) : BaseMediaItemRemoteMediator<Episode, EpisodeEntity, EpisodeRemoteKeys>(
@@ -36,7 +36,7 @@ class EpisodeRemoteMediator(
     }
 
     override suspend fun fetchFromNetwork(page: Int, pageSize: Int) =
-        provider.getAnimeEpisodes(mediaId, page, pageSize).also { result ->
+        provider.getEpisodes(mediaId, page, pageSize).also { result ->
             when (result) {
                 is com.ghost.zeku.domain.model.api.ApiResult.Success -> {
                     val episodes = result.data.items
@@ -180,7 +180,7 @@ class EpisodeRemoteMediator(
             EpisodeEntity(
                 id = ep.id,
                 mediaId = mediaId,
-                source = currentProviderType,
+                provider = currentProviderType,
                 number = ep.number.toFloat(),
                 title = ep.title,
                 description = ep.description,
@@ -197,7 +197,7 @@ class EpisodeRemoteMediator(
         val keys = items.map { episode ->
             EpisodeRemoteKeys(
                 id = episode.id,
-                source = currentProviderType,
+                provider = currentProviderType,
                 mediaId = mediaId,
                 prevPage = prevKey,
                 nextPage = nextKey,

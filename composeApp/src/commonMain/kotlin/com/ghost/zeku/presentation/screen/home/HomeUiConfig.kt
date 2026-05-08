@@ -3,10 +3,11 @@ package com.ghost.zeku.presentation.screen.home
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Immutable
 import com.ghost.zeku.presentation.components.hero.HeroCarouselConfig
-import com.ghost.zeku.presentation.components.media.list.ListConfig
-import com.ghost.zeku.presentation.components.media.list.MediaListCardVariant
-import com.ghost.zeku.presentation.components.media.list.MediaListDefaults
+import com.ghost.zeku.presentation.components.media.list.ListCardConfig
+import com.ghost.zeku.presentation.components.media.list.ListCardDefaults
+import com.ghost.zeku.presentation.components.media.list.ListCardLayout
 import com.ghost.zeku.presentation.components.media.poster.PosterConfig
+import com.ghost.zeku.presentation.components.media.poster.PosterDefaults
 import com.ghost.zeku.presentation.components.media.poster.PosterLayout
 import com.ghost.zeku.presentation.components.section.MediaSectionConfig
 import com.ghost.zeku.presentation.components.section.SectionLayout
@@ -19,14 +20,11 @@ data class HomeUiConfig(
             contentPadding = PaddingValues(horizontal = Dimens.paddingMedium)
         )
     ),
-    val posterConfig: PosterConfig = PosterConfig(
-        layout = PosterLayout.Modern
+    val posterLayout: PosterLayout = PosterLayout.Modern,
+    val posterConfig: PosterConfig = PosterDefaults.forLayout(posterLayout),
 
-    ),
-    val listCardVariant: MediaListCardVariant = MediaListCardVariant.COMFORTABLE,
-    val listCardConfig: ListConfig = MediaListDefaults.config(
-        MediaListCardVariant.COMFORTABLE,
-    ),
+    val listCardVariant: ListCardLayout = ListCardLayout.Modern,
+    val listCardConfig: ListCardConfig = ListCardDefaults.forLayout(listCardVariant),
     val heroCarouselConfig: HeroCarouselConfig? = null,
 )
 

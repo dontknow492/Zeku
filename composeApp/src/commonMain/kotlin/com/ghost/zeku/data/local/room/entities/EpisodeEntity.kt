@@ -7,17 +7,17 @@ import com.ghost.zeku.domain.model.enum.ProviderType
 
 @Entity(
     tableName = "episodes",
-    primaryKeys = ["id", "source"],
+    primaryKeys = ["id", "provider"],
     indices = [
         // Crucial: Makes loading all episodes for a specific anime lightning fast
-        Index(value = ["mediaId", "source"]),
+        Index(value = ["mediaId", "provider"]),
         Index(value = ["number"])
     ]
 )
 data class EpisodeEntity(
     val id: String, // String because scraper APIs sometimes use hashes or strings
     val mediaId: Int, // The ID of the parent Anime
-    val source: ProviderType,
+    val provider: ProviderType,
 
     // Core Network Data
     val number: Float, // Float because some episodes are 10.5 (recaps/specials)

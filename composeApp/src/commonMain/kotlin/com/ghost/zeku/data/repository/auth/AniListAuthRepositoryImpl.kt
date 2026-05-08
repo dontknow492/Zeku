@@ -10,6 +10,7 @@ import com.russhwolf.settings.Settings
 import io.github.aakira.napier.Napier
 import io.ktor.client.*
 import io.ktor.client.call.*
+import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import zeku.composeApp.BuildConfig
 
 @Serializable
 private data class AniListTokenResponse(
@@ -42,6 +44,7 @@ class AniListAuthRepositoryImpl(
         private const val KEY_ACCESS_TOKEN = "auth_token_anilist"
         private const val KEY_REFRESH_TOKEN = "auth_token_anilist_refresh"
         private const val KEY_TOKEN_DATE = "auth_token_anilist_date"
+        private const val KEY_USER_ID = "auth_user_id_anilist" // Add this
     }
 
     private val _authState = MutableStateFlow<AuthState>(
@@ -63,6 +66,14 @@ class AniListAuthRepositoryImpl(
         val loggedIn = _authState.value == AuthState.LoggedIn
         Napier.v { "AniList isUserLoggedIn: $loggedIn" }
         return loggedIn
+    }
+
+    override fun getUserId(): Int {
+        val id = settings.getInt(KEY_USER_ID, 0)
+        if (id == 0 && isUserLoggedIn()) {
+            Napier.w { "AniList: User is logged in but UserID is 0. Repository sync might fail." }
+        }
+        return id
     }
 
     override fun getAuthorizationUrl(): String {
@@ -127,6 +138,17 @@ class AniListAuthRepositoryImpl(
                 Napier.d { "AniList token appears to be JWT format (${tokenResponse.accessToken.length} chars)" }
             } else {
                 Napier.d { "AniList token format: ${tokenResponse.accessToken.length} characters" }
+            }
+
+
+            // 2. NEW: Fetch the User ID immediately while we have the fresh token
+            try {
+                val userId = fetchAndSaveUserId(tokenResponse.accessToken)
+                Napier.i { "AniList user ID fetched and saved: $userId" }
+            } catch (e: Exception) {
+                Napier.e(e) { "Failed to fetch AniList user ID after login" }
+                // Note: Don't necessarily fail the whole login if just the ID fetch fails,
+                // but it's better to have it.
             }
 
             ApiResult.Success(Unit)
@@ -231,5 +253,35 @@ class AniListAuthRepositoryImpl(
             Napier.v { "AniList access token requested but not found" }
         }
         return token
+    }
+
+
+    private suspend fun fetchAndSaveUserId(token: String): Int {
+        val query = """{"query":"query { Viewer { id } }"}"""
+
+        val response = httpClient.post(BuildConfig.ANILIST_BASE_URL) {
+            header("Authorization", "Bearer $token")
+            header("Content-Type", "application/json")
+            header("Accept", "application/json")
+            setBody(query)
+        }
+
+        // Define a tiny local DTO or use Json.decodeFromString
+        val body = response.bodyAsText()
+        // Simplified parsing (or use your AniListResponse models if available)
+        val id = extractIdFromJson(body)
+
+        if (id != null) {
+            settings.putInt(KEY_USER_ID, id)
+            return id
+        }
+        throw IllegalStateException("Could not parse User ID from AniList")
+    }
+
+    private fun extractIdFromJson(json: String): Int? {
+        // You can use Json.decodeFromString here with your DTOs
+        // or a simple regex if you don't want to define more classes
+        val regex = """"id":\s*(\d+)""".toRegex()
+        return regex.find(json)?.groupValues?.get(1)?.toIntOrNull()
     }
 }

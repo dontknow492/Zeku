@@ -6,13 +6,14 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import androidx.paging.map
 import com.ghost.zeku.domain.model.MessageType
-import com.ghost.zeku.domain.model.enum.AnimeCategory
-import com.ghost.zeku.domain.model.enum.MangaCategory
+import com.ghost.zeku.domain.model.enum.MediaCategory
 import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.domain.model.media.Media
 import com.ghost.zeku.domain.repository.MediaRepository
 import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.navigation.Destination
+import com.ghost.zeku.presentation.navigation.Destination.MediaDetail
+import com.ghost.zeku.presentation.viewmodel.home.HomeContract.Effect.Navigate
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -38,7 +39,7 @@ class HomeViewModel(
             is HomeContract.Event.OnViewAllClick -> {
                 Napier.d("View all click: ${event.categoryId}, title: ${event.title}, mediaType: ${state.value.mediaType}")
                 sendEffect(
-                    HomeContract.Effect.Navigate(
+                    Navigate(
                         Destination.ViewAllCategories(
                             categoryId = event.categoryId,
                             title = event.title,
@@ -64,14 +65,8 @@ class HomeViewModel(
 
         // 2. Load Categories Dynamically based on what the active provider supports
         viewModelScope.launch {
-            if (mediaType == MediaType.ANIME) {
-                repository.getAvailableAnimeCategories().collectLatest { categories ->
-                    buildAnimeSections(categories)
-                }
-            } else {
-                repository.getAvailableMangaCategories().collectLatest { categories ->
-                    buildMangaSections(categories)
-                }
+            repository.getAvailableCategories(mediaType).collectLatest { categories ->
+                buildMediaSections(mediaType, categories)
             }
         }
     }
@@ -90,9 +85,10 @@ class HomeViewModel(
         }
     }
 
-    private fun buildAnimeSections(categories: List<AnimeCategory>) {
+
+    private fun buildMediaSections(mediaType: MediaType, categories: List<MediaCategory>) {
         // Define which category should be the massive vertical list at the bottom
-        val verticalCategoryEnum = AnimeCategory.SEASONAL
+        val verticalCategoryEnum = categories.last()
 
         val horizontalSections = mutableListOf<HomeContract.MediaSection>()
         var verticalSection: HomeContract.MediaSection? = null
@@ -102,7 +98,11 @@ class HomeViewModel(
             val title = category.name.lowercase().split("_").joinToString(" ") { it.replaceFirstChar(Char::uppercase) }
 
             // Fetch PagingData and cache it to the ViewModel scope to survive config changes
-            val pagingDataFlow = repository.getAnimeList(category, perPage = 20)
+            val pagingDataFlow = repository.getMediaList(
+                mediaType = mediaType,
+                category = category,
+                perPage = 20
+            )
                 .map { pagingData -> pagingData.map { it as Media } } // Cast to generic Media interface
                 .cachedIn(viewModelScope)
 
@@ -133,45 +133,6 @@ class HomeViewModel(
     }
 
 
-    private fun buildMangaSections(categories: List<MangaCategory>) {
-        // Define which category should be the massive vertical list at the bottom for Manga
-        val verticalCategoryEnum = MangaCategory.NEWLY_ADDED
-
-        val horizontalSections = mutableListOf<HomeContract.MediaSection>()
-        var verticalSection: HomeContract.MediaSection? = null
-
-        categories.forEach { category ->
-            val title = category.name.lowercase().split("_").joinToString(" ") { it.replaceFirstChar(Char::uppercase) }
-
-            val pagingDataFlow = repository.getMangaList(category, perPage = 20)
-                .map { pagingData -> pagingData.map { it as Media } }
-                .cachedIn(viewModelScope)
-
-            val section = HomeContract.MediaSection(
-                title = title,
-                categoryId = category.name,
-                data = pagingDataFlow
-            )
-
-            if (category == verticalCategoryEnum) {
-                verticalSection = section
-            } else {
-                horizontalSections.add(section)
-            }
-        }
-
-        if (verticalSection == null && horizontalSections.isNotEmpty()) {
-            verticalSection = horizontalSections.removeAt(horizontalSections.lastIndex)
-        }
-
-        _state.update {
-            it.copy(
-                horizontalSections = horizontalSections,
-                verticalSection = verticalSection
-            )
-        }
-    }
-
     private fun sendEffect(effect: HomeContract.Effect) {
         viewModelScope.launch {
             _effects.emit(effect)
@@ -186,8 +147,8 @@ class HomeViewModel(
 
                 is MediaAction.MediaClick -> {
                     emitEffect(
-                        HomeContract.Effect.Navigate(
-                            Destination.MediaDetail(action.id, action.type)
+                        Navigate(
+                            MediaDetail(action.id, action.type)
                         )
                     )
                 }
@@ -220,6 +181,8 @@ class HomeViewModel(
 
                 is MediaAction.GenreClick ->
                     Napier.d { "Genre clicked: ${action.genre}" }
+
+                is MediaAction.TrailingClick -> Napier.d { "Trailing clicked: ${action.id}" }
             }
         }
     }

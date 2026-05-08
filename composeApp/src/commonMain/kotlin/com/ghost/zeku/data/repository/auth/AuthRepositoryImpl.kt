@@ -70,6 +70,14 @@ class AuthRepositoryImpl(
         return loggedIn
     }
 
+    override fun getUserId(provider: ProviderType): Int? {
+        val loggedIn = providerMap[provider]?.isUserLoggedIn() ?: false
+        if (!loggedIn) return 0
+        val id = providerMap[provider]?.getUserId()
+        Napier.v { "User ID for $provider: $id" }
+        return id
+    }
+
     override fun getAuthorizationUrl(provider: ProviderType): String {
         Napier.d { "Generating authorization URL for $provider" }
         val url = getRepoOrThrow(provider).getAuthorizationUrl()

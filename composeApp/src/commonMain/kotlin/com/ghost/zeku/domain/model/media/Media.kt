@@ -1,105 +1,84 @@
 package com.ghost.zeku.domain.model.media
 
+import androidx.compose.ui.util.fastAny
 import com.ghost.zeku.domain.model.common.MediaDate
 import com.ghost.zeku.domain.model.common.MediaTitle
-import com.ghost.zeku.domain.model.common.TrackEntry
 import com.ghost.zeku.domain.model.enum.MediaFormat
 import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
 import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.domain.model.enum.ProviderType
 import kotlinx.serialization.Serializable
 
-interface Media {
-    val id: Int
-    val mediaType: MediaType
-    val source: ProviderType
-
-    val format: MediaFormat
-
-    val title: MediaTitle
-
-    val coverImage: String
-    val bannerImage: String?
-
-    val description: String?
-    val genres: List<String>
-
-    val status: MediaReleaseStatus?
-
-    val score: Float?
-
-    val startDate: MediaDate?
-
-    val trackEntry: TrackEntry?
-}
-
-
-fun Media.calculateProgress(): Float? {
-    return if (trackEntry != null && trackEntry?.totalProgress != null) {
-        val current = trackEntry?.progress?.toFloat() ?: 0f
-        val total = trackEntry?.totalProgress?.toFloat() ?: 1f
-        if (total > 0f) (current / total).coerceIn(0f, 1f) else null
-    } else null
-}
 
 @Serializable
-data class Manga(
-    override val id: Int,
-    override val source: ProviderType,
+data class Media(
 
-    override val title: MediaTitle,
+    // ------------------------------------------------------------------------
+    // Identity
+    // ------------------------------------------------------------------------
 
-    override val format: MediaFormat = MediaFormat.UNKNOWN,
+    val id: Int,
 
-    override val coverImage: String,
-    override val bannerImage: String? = null,
+    val source: ProviderType,
 
-    override val description: String? = null,
-    override val genres: List<String> = emptyList(),
+    val mediaType: MediaType,
 
-    override val status: MediaReleaseStatus? = null,
+    // ------------------------------------------------------------------------
+    // Core Metadata
+    // ------------------------------------------------------------------------
 
-    override val score: Float? = null,
+    val format: MediaFormat = MediaFormat.UNKNOWN,
 
-    override val startDate: MediaDate? = null,
+    val title: MediaTitle,
 
-    // Manga-specific
-    val chapters: Int? = null,
-    val volumes: Int? = null,
+    val coverImage: String,
 
-    // optional extras
-    val author: String? = null,
+    val bannerImage: String? = null,
 
-    override val trackEntry: TrackEntry? = null,
-    override val mediaType: MediaType = MediaType.MANGA,
-) : Media
+    val description: String? = null,
 
-@Serializable
-data class Anime(
-    override val id: Int,
-    override val source: ProviderType,
+    val genres: List<String> = emptyList(),
 
-    override val title: MediaTitle,
+    val status: MediaReleaseStatus? = null,
 
-    override val format: MediaFormat = MediaFormat.UNKNOWN,
+    val score: Float? = null,
 
-    override val coverImage: String,
-    override val bannerImage: String? = null,
+    val startDate: MediaDate? = null,
 
-    override val description: String? = null,
-    override val genres: List<String> = emptyList(),
+    // ------------------------------------------------------------------------
+    // Shared Extended Metadata
+    // ------------------------------------------------------------------------
 
-    override val status: MediaReleaseStatus? = null,
+    val tags: List<String> = emptyList(),
 
-    override val score: Float? = null,
+    val popularity: Int? = null,
 
-    override val startDate: MediaDate? = null,
+    val favourites: Int? = null,
 
-    // Anime-specific
+    val rank: Int? = null,
+
+    // ------------------------------------------------------------------------
+    // Anime Fields
+    // ------------------------------------------------------------------------
+
     val episodes: Int? = null,
-    val duration: Int? = null, // per episode (minutes)
+
+    val duration: Int? = null,
+
     val studio: String? = null,
 
-    override val trackEntry: TrackEntry? = null,
-    override val mediaType: MediaType = MediaType.ANIME,
-) : Media
+    // ------------------------------------------------------------------------
+    // Manga / Novel Fields
+    // ------------------------------------------------------------------------
+
+    val chapters: Int? = null,
+
+    val volumes: Int? = null,
+
+    val author: String? = null
+) {
+    fun isAdult(): Boolean {
+        val adultGenre = listOf<String>("Hentai", "Adult", "Mature", "Gore")
+        return genres.fastAny { adultGenre.contains(it) } || title.getDisplayTitle().contains("(18+)")
+    }
+}

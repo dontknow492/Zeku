@@ -3,15 +3,33 @@ package com.ghost.zeku.data.local.room
 
 import com.ghost.zeku.data.local.room.entities.*
 import com.ghost.zeku.domain.model.UserProfile
-import com.ghost.zeku.domain.model.media.*
+import com.ghost.zeku.domain.model.enum.MediaFormat
+import com.ghost.zeku.domain.model.media.Chapter
+import com.ghost.zeku.domain.model.media.Episode
+import com.ghost.zeku.domain.model.media.Media
+import com.ghost.zeku.domain.model.media.MediaDetails
 
 /**
  * Converts a Room AnimeEntity to the Anime Domain Model.
  */
-fun AnimeEntity.toDomain(): Anime {
-    return Anime(
+
+fun MediaEntity.toDomain(): Media {
+    return Media(
         id = this.id,
-        source = this.source,
+        source = this.provider,
+        mediaType = this.mediaType,
+
+        // Safely parse the format String into the Enum. Fallback to UNKNOWN if it fails.
+        format = try {
+            if (!this.format.isNullOrBlank()) {
+                MediaFormat.valueOf(this.format.uppercase())
+            } else {
+                MediaFormat.UNKNOWN
+            }
+        } catch (e: IllegalArgumentException) {
+            MediaFormat.UNKNOWN
+        },
+
         title = this.title,
         coverImage = this.coverImage,
         bannerImage = this.bannerImage,
@@ -20,160 +38,126 @@ fun AnimeEntity.toDomain(): Anime {
         status = this.status,
         score = this.score,
         startDate = this.startDate,
+        tags = this.tags,
+        popularity = this.popularity,
+
+        // These fields are in Media but not in MediaEntity.
+        // We set them to null as they aren't cached locally.
+        favourites = null,
+        rank = null,
+
         episodes = this.episodes,
         duration = this.duration,
         studio = this.studio,
-        trackEntry = this.trackEntry
+
+        chapters = this.chapters,
+        volumes = this.volumes,
+        author = this.author
     )
 }
 
-/**
- * Converts an Anime Domain Model to the Room AnimeEntity.
- */
-fun Anime.toEntity(): AnimeEntity {
-    return AnimeEntity(
+fun Media.toEntity(): MediaEntity {
+    return MediaEntity(
         id = this.id,
-        source = this.source,
+        provider = this.source,
+        mediaType = this.mediaType,
         title = this.title,
         coverImage = this.coverImage,
         bannerImage = this.bannerImage,
         description = this.description,
         genres = this.genres,
+        tags = this.tags,
         status = this.status,
         score = this.score,
+        popularity = this.popularity,
         startDate = this.startDate,
+
+        // Convert Enum back to String for the database
+        format = this.format.name,
+
+        // These fields exist in MediaEntity but not in the Media domain model.
+        // We set them to null.
+        endDate = null,
+        season = null,
+        seasonYear = null,
+        countryOfOrigin = null,
+        sourceMaterial = null,
+        siteUrl = null,
+        nextEpisodeAt = null,
+
         episodes = this.episodes,
         duration = this.duration,
         studio = this.studio,
-        trackEntry = this.trackEntry
-    )
-}
 
-/**
- * Converts a Room MangaEntity to the Manga Domain Model.
- */
-fun MangaEntity.toDomain(): Manga {
-    return Manga(
-        id = this.id,
-        source = this.source,
-        title = this.title,
-        coverImage = this.coverImage,
-        bannerImage = this.bannerImage,
-        description = this.description,
-        genres = this.genres,
-        status = this.status,
-        score = this.score,
-        startDate = this.startDate,
         chapters = this.chapters,
         volumes = this.volumes,
-        author = this.author,
-        trackEntry = this.trackEntry
-    )
-}
+        author = this.author
 
-/**
- * Converts a Manga Domain Model to the Room MangaEntity.
- */
-fun Manga.toEntity(): MangaEntity {
-    return MangaEntity(
-        id = this.id,
-        source = this.source,
-        title = this.title,
-        coverImage = this.coverImage,
-        bannerImage = this.bannerImage,
-        description = this.description,
-        genres = this.genres,
-        status = this.status,
-        score = this.score,
-        startDate = this.startDate,
-        chapters = this.chapters,
-        volumes = this.volumes,
-        author = this.author,
-        trackEntry = this.trackEntry
+        // Note: createdAt and updatedAt are omitted here so they automatically
+        // use the default System.currentTimeMillis() defined in the Entity constructor.
     )
 }
 
 
-fun AnimeDetailsEntity.toDomain(): AnimeDetails {
-    // Since we used the JSON converter, the details object is completely intact!
+fun MediaDetailsEntity.toDomain(): MediaDetails {
     return this.details
 }
 
-fun AnimeDetails.toEntity(): AnimeDetailsEntity {
-    return AnimeDetailsEntity(
+fun MediaDetails.toEntity(): MediaDetailsEntity {
+    return MediaDetailsEntity(
         id = this.id,
-        source = this.source,
-        details = this, // The Room JSON converter handles this automatically
-        updatedAt = System.currentTimeMillis()
-    )
-}
-
-fun MangaDetailsEntity.toDomain(): MangaDetails {
-    return this.details
-}
-
-fun MangaDetails.toEntity(): MangaDetailsEntity {
-    return MangaDetailsEntity(
-        id = this.id,
-        source = this.source,
+        provider = this.source,
+        mediaType = this.mediaType,
         details = this,
-        updatedAt = System.currentTimeMillis()
     )
 }
 
 
-// ========================================================================
-// DETAILS -> BASE_ENTITY (To keep Home Screen lists fresh)
-// ========================================================================
-
-/**
- * Converts the rich Details object back into a lightweight List Entity.
- * Use this to update the Home Screen cache after fetching details!
- */
-fun AnimeDetails.toBaseEntity(): AnimeEntity {
-    return AnimeEntity(
+fun MediaDetails.toBaseEntity(): MediaEntity {
+    return MediaEntity(
         id = this.id,
-        source = this.source,
+        provider = this.source,
+        mediaType = this.mediaType,
         title = this.title,
         coverImage = this.coverImage,
         bannerImage = this.bannerImage,
         description = this.description,
         genres = this.genres,
+        tags = this.tags.map { it.name }, // Extracting just the string names from MediaTag
         status = this.status,
-        score = this.averageScore?.toFloat(),
 
-        // These fields aren't in the Details view right now, so they default to null.
-        // Room will just ignore them or overwrite them with null, which is perfectly safe.
-        startDate = null,
-        duration = null,
-        studio = null,
+        // Use averageScore as the primary score. Fallback to meanScore.
+        // Convert Double to Float as required by MediaEntity.
+        score = this.averageScore?.toFloat() ?: this.meanScore?.toFloat(),
+        popularity = this.popularity,
+        startDate = this.startDate,
+        endDate = this.endDate,
 
-        trackEntry = this.trackEntry,
+        // Convert Enum to String. Fallback to UNKNOWN if null.
+        format = this.format?.name ?: MediaFormat.UNKNOWN.name,
+
+        season = this.season?.name,
+        seasonYear = this.seasonYear,
+        countryOfOrigin = this.countryOfOrigin,
+        sourceMaterial = this.sourceMaterial,
+
+        // We take the first external link URL if it exists
+        siteUrl = this.externalLinks.firstOrNull()?.url,
+
         episodes = this.totalEpisodes,
+        duration = this.durationPerEpisode,
 
-        updatedAt = System.currentTimeMillis()
-    )
-}
+        // We take the first studio name if it exists (usually the main animation studio)
+        studio = this.studios.firstOrNull()?.name,
 
-fun MangaDetails.toBaseEntity(): MangaEntity {
-    return MangaEntity(
-        id = this.id,
-        source = this.source,
-        title = this.title,
-        coverImage = this.coverImage,
-        bannerImage = this.bannerImage,
-        description = this.description,
-        genres = this.genres,
-        status = this.status,
-        score = this.averageScore?.toFloat(),
-        startDate = null,
-        author = null,
+        // Extract the airing time timestamp if it exists
+        nextEpisodeAt = this.nextAiringEpisode?.timeUntilAiring,
 
-        trackEntry = this.trackEntry,
         chapters = this.totalChapters,
         volumes = this.totalVolumes,
 
-        updatedAt = System.currentTimeMillis()
+        // We take the first author's name if it exists
+        author = this.authors.firstOrNull()?.name
     )
 }
 

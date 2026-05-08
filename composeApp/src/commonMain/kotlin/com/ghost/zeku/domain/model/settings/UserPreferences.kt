@@ -8,9 +8,12 @@ import com.ghost.zeku.domain.model.enum.ThemeMode
 import com.ghost.zeku.domain.model.enum.TitleLanguage
 import com.ghost.zeku.presentation.components.media.GridStyle
 import com.ghost.zeku.presentation.components.media.MediaDisplayMode
-import com.ghost.zeku.presentation.components.media.list.ListConfig
-import com.ghost.zeku.presentation.components.media.list.MediaListCardVariant
+import com.ghost.zeku.presentation.components.media.list.ListCardConfig
+import com.ghost.zeku.presentation.components.media.list.ListCardDefaults
+import com.ghost.zeku.presentation.components.media.list.ListCardLayout
 import com.ghost.zeku.presentation.components.media.poster.PosterConfig
+import com.ghost.zeku.presentation.components.media.poster.PosterDefaults
+import com.ghost.zeku.presentation.components.media.poster.PosterLayout
 import com.ghost.zeku.presentation.theme.Primary
 import com.ghost.zeku.utils.serializer.ColorSerializer
 import com.ghost.zeku.utils.serializer.DpSerializer
@@ -47,11 +50,8 @@ data class UserPreferences(
     @Serializable(with = ColorSerializer::class)
     val accentColor: Color = Primary,
 
-
     val displayPreferences: DisplayPreferences = DisplayPreferences(),
-
-
-    )
+)
 
 @Serializable
 data class DisplayPreferences(
@@ -62,8 +62,9 @@ data class DisplayPreferences(
 @Serializable
 data class MediaDisplayPreference(
     val mode: MediaDisplayMode = MediaDisplayMode.PosterGrid,
-    val posterConfig: PosterConfig = PosterConfig(),
-    val listConfig: ListConfig = ListConfig(),
+    val posterLayout: PosterLayout = PosterLayout.Modern,
+    val posterConfig: PosterConfig = PosterDefaults.forLayout(posterLayout),
+
     val gridStyle: GridStyle = GridStyle.Adaptive,
     @Serializable(with = DpSerializer::class)
     val gridSpacing: Dp = 8.dp,
@@ -71,7 +72,8 @@ data class MediaDisplayPreference(
     val gridMinSize: Dp = 140.dp,
     val gridCount: Int = 4,
     // 3. The saved List settings
-    val listVariant: MediaListCardVariant = MediaListCardVariant.COMFORTABLE,
+    val listCardLayout: ListCardLayout = ListCardLayout.Modern,
+    val listConfig: ListCardConfig = ListCardDefaults.forLayout(listCardLayout),
     @Serializable(with = DpSerializer::class)
     val listSpacing: Dp = 12.dp
 )

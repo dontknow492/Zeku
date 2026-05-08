@@ -3,8 +3,12 @@ package com.ghost.zeku.data.remote.jikan
 import com.ghost.zeku.domain.model.common.MediaTitle
 import com.ghost.zeku.domain.model.enum.CharacterRole
 import com.ghost.zeku.domain.model.enum.MediaFormat
+import com.ghost.zeku.domain.model.enum.MediaType
 import com.ghost.zeku.domain.model.enum.ProviderType
-import com.ghost.zeku.domain.model.media.*
+import com.ghost.zeku.domain.model.media.Episode
+import com.ghost.zeku.domain.model.media.Media
+import com.ghost.zeku.domain.model.media.MediaCharacter
+import com.ghost.zeku.domain.model.media.Review
 
 // --- Jikan Mappers ---
 
@@ -43,28 +47,17 @@ fun JikanReview.toDomain(): Review {
     )
 }
 
-fun JikanRecommendationEdge.toAnimeDomain(): Anime? {
+
+fun JikanRecommendationEdge.toMediaDomain(mediaType: MediaType): Media? {
     val entry = this.entry ?: return null
-    return Anime(
+    return Media(
         id = entry.mal_id ?: return null,
         source = ProviderType.MYANIMELIST,
         title = MediaTitle(romaji = entry.title, english = null, native = null),
         coverImage = entry.images?.jpg?.large_image_url ?: entry.images?.jpg?.image_url ?: "",
         format = MediaFormat.UNKNOWN, // Jikan doesn't return format in the basic recommendation node
         genres = emptyList(),
-        score = null
-    )
-}
-
-fun JikanRecommendationEdge.toMangaDomain(): Manga? {
-    val entry = this.entry ?: return null
-    return Manga(
-        id = entry.mal_id ?: return null,
-        source = ProviderType.MYANIMELIST,
-        title = MediaTitle(romaji = entry.title, english = null, native = null),
-        coverImage = entry.images?.jpg?.large_image_url ?: entry.images?.jpg?.image_url ?: "",
-        format = MediaFormat.UNKNOWN,
-        genres = emptyList(),
-        score = null
+        score = null,
+        mediaType = mediaType
     )
 }

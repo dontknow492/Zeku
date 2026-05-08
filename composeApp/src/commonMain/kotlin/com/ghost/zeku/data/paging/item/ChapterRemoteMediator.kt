@@ -7,7 +7,7 @@ import com.ghost.zeku.data.local.room.entities.ChapterRemoteKeys
 import com.ghost.zeku.domain.model.enum.DownloadState
 import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.model.media.Chapter
-import com.ghost.zeku.domain.provider.MangaDetailsProvider
+import com.ghost.zeku.domain.provider.MediaContentProvider
 import io.github.aakira.napier.Napier
 
 /**
@@ -19,7 +19,7 @@ import io.github.aakira.napier.Napier
 class ChapterRemoteMediator(
     mediaId: Int,
     currentProviderType: ProviderType,
-    private val provider: MangaDetailsProvider,
+    private val provider: MediaContentProvider,
     database: AppDatabase,
     cacheTimeoutMillis: Long
 ) : BaseMediaItemRemoteMediator<Chapter, ChapterEntity, ChapterRemoteKeys>(
@@ -36,7 +36,7 @@ class ChapterRemoteMediator(
     }
 
     override suspend fun fetchFromNetwork(page: Int, pageSize: Int) =
-        provider.getMangaChapters(mediaId, page, pageSize).also { result ->
+        provider.getChapters(mediaId, page, pageSize).also { result ->
             when (result) {
                 is com.ghost.zeku.domain.model.api.ApiResult.Success -> {
                     Napier.v {
@@ -146,7 +146,7 @@ class ChapterRemoteMediator(
             ChapterEntity(
                 id = ch.id,
                 mediaId = mediaId,
-                source = currentProviderType,
+                provider = currentProviderType,
                 number = ch.number,
                 title = ch.title,
                 volume = ch.volume,
@@ -161,7 +161,7 @@ class ChapterRemoteMediator(
         val keys = items.map { chapter ->
             ChapterRemoteKeys(
                 id = chapter.id,
-                source = currentProviderType,
+                provider = currentProviderType,
                 mediaId = mediaId,
                 prevPage = prevKey,
                 nextPage = nextKey,

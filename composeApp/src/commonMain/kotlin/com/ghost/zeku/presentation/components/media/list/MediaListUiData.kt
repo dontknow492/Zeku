@@ -1,71 +1,107 @@
 package com.ghost.zeku.presentation.components.media.list
 
+import androidx.compose.runtime.Immutable
+import com.ghost.zeku.domain.model.enum.MediaFormat
 import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
 import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.media.Anime
-import com.ghost.zeku.domain.model.media.Manga
 import com.ghost.zeku.domain.model.media.Media
-import com.ghost.zeku.domain.model.media.calculateProgress
 
+@Immutable
 data class MediaListUiData(
     val id: Int,
-    val mediaType: MediaType,
     val title: String,
-    val description: String?,
-    val coverImageUrl: String,
-    val subTitle: String, // e.g., "TV • 2024"
-    val genres: List<String> = emptyList(), // e.g., ["Action", "Fantasy"]
-    val status: String? = null, // e.g., "Releasing" or "Finished"
-    val score: Float?,         // e.g., 8.5f (Out of 10 scale)
-    val progress: Float?,      // 0.0f to 1.0f (for the progress bar)
-    val progressText: String?, // e.g., "12 / 24 EPs" or "Ch. 105"
-    val isAiring: Boolean = false,
-    val isNsfw: Boolean = false,
-    val isNsfwRevealed: Boolean = false
-)
-
+    val subtitle: String? = null,
+    val description: String? = null,
+    val imageUrl: String,
+    // Optional wide-card/banner support
+    val bannerImageUrl: String? = null,
+    val mediaType: MediaType,
+    val progress: Float? = null, // 0f to 1f
+    val score: Float? = null, // e.g., 8.5
+    val genres: List<String>? = null,
+    val isWatched: Boolean = false,
+    val currentEpisode: Int? = null,
+    val totalEpisodes: Int? = null,
+    val releaseYear: Int? = null,
+    val ageRating: String? = null,
+    val isAdult: Boolean = false,
+    val isHidden: Boolean = false,
+    val tags: List<String>? = null
+) {
+    fun getDisplayImageUrl(): String {
+        if (imageUrl.isEmpty()) {
+            return bannerImageUrl ?: ""
+        }
+        return imageUrl
+    }
+}
 
 fun Media.toMediaListUiData(): MediaListUiData {
-
-    val calculatedProgress = this.calculateProgress()
-
-
-    // 2. Format Type and Year (e.g., "ANIME • 2024")
-    val yearStr = this.startDate?.year?.toString()
-    val typeStr = when (this) {
-        is Anime -> "ANIME"
-        is Manga -> "MANGA"
-        else -> "MEDIA"
-    }
-    val formatAndYearStr = if (!yearStr.isNullOrBlank()) "$typeStr • $yearStr" else typeStr
-
-    // 3. Format Progress Text (e.g., "12 / 24 EPs" vs "Ch. 105")
-    val progText = if (trackEntry != null) {
-        when (this) {
-            is Anime -> "${trackEntry?.progress ?: 0} / ${this.episodes ?: "?"} EPs"
-            is Manga -> {
-                val totalStr = if (this.chapters != null) " / ${this.chapters}" else ""
-                "Ch. ${trackEntry?.progress ?: 0}$totalStr"
-            }
-
-            else -> null
-        }
-    } else null
-
-    // 4. Return the mapped UI Data
     return MediaListUiData(
-        id = this.id,
-        mediaType = this.mediaType,
-        description = this.description,
-        title = this.title.getDisplayTitle(),
-        coverImageUrl = this.coverImage,
-        subTitle = formatAndYearStr,
-        genres = this.genres,
-        // Capitalizes the first letter of the status (e.g., "RELEASING" -> "Releasing")
-        status = this.status?.name?.lowercase()?.replaceFirstChar { it.uppercase() },
-        score = this.score,
-        progress = calculatedProgress,
-        progressText = progText,
-        isAiring = this.status == MediaReleaseStatus.RELEASING
+        id = id,
+        title = title.getDisplayTitle(),
+        subtitle = buildSubtitle(),
+        description = description,
+        imageUrl = coverImage,
+        bannerImageUrl = bannerImage,
+        mediaType = mediaType,
+        progress = null, // Progress is usually tracked separately (user-specific)
+        score = score,
+        genres = genres.ifEmpty { null },
+        isWatched = false, // User-specific, set elsewhere
+        currentEpisode = null, // User-specific, set elsewhere
+        totalEpisodes = episodes,
+        releaseYear = startDate?.year,
+        ageRating = null, // Not directly available in Media, could be derived
+        isAdult = this.isAdult(),
+        isHidden = false, // User-specific, set elsewhere
+        tags = tags.ifEmpty { null }
     )
+}
+
+/**
+ * Builds a formatted subtitle from available metadata.
+ * Examples:
+ * - "TV • 12 eps • Studio Name"
+ * - "Movie • 2024"
+ * - "Manga • Publishing • Author Name"
+ */
+private fun Media.buildSubtitle(): String? {
+    val parts = mutableListOf<String>()
+
+    // Format/Type
+    when {
+        format != MediaFormat.UNKNOWN -> parts.add(
+            format.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() })
+    }
+
+    // Episode/Chapter count
+    when (mediaType) {
+        MediaType.ANIME -> {
+            if (episodes != null && episodes > 0) parts.add("$episodes eps")
+        }
+
+        MediaType.MANGA -> {
+            if (chapters != null && chapters > 0) parts.add("$chapters ch")
+        }
+
+        MediaType.UNKNOWN -> null
+    }
+
+    // Release year
+    startDate?.year?.let { parts.add(it.toString()) }
+
+    // Status
+    if (status != null && status != MediaReleaseStatus.UNKNOWN) {
+        parts.add(status.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() })
+    }
+
+    // Studio/Author
+    when (mediaType) {
+        MediaType.ANIME -> studio?.let { parts.add(it) }
+        MediaType.MANGA -> author?.let { parts.add(it) }
+        MediaType.UNKNOWN -> null
+    }
+
+    return parts.joinToString(" • ").ifEmpty { null }
 }

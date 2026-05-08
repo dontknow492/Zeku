@@ -1,10 +1,10 @@
 package com.ghost.zeku.data.repository.auth
 
 import io.github.aakira.napier.Napier
-import io.ktor.http.ContentType
+import io.ktor.http.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import io.ktor.server.request.httpMethod
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.CompletableDeferred
@@ -36,10 +36,10 @@ class DesktopRedirectHandler {
                     Napier.i { "DesktopRedirectHandler: Redirect received!" }
                     Napier.d {
                         "DesktopRedirectHandler request details:\n" +
-                        "  Method: $method\n" +
-                        "  Remote Host: $remoteHost\n" +
-                        "  Full URI: $fullUrl\n" +
-                        "  Query Params Count: ${queryParams.names().size}"
+                                "  Method: $method\n" +
+                                "  Remote Host: $remoteHost\n" +
+                                "  Full URI: $fullUrl\n" +
+                                "  Query Params Count: ${queryParams.names().size}"
                     }
 
                     // Log each query parameter individually for debugging
@@ -48,10 +48,11 @@ class DesktopRedirectHandler {
                         // Security: mask tokens but show structure
                         val displayValue = when {
                             name.contains("token", ignoreCase = true) ||
-                            name.contains("code", ignoreCase = true) ||
-                            name.contains("secret", ignoreCase = true) ||
-                            name.contains("auth", ignoreCase = true) ->
+                                    name.contains("code", ignoreCase = true) ||
+                                    name.contains("secret", ignoreCase = true) ||
+                                    name.contains("auth", ignoreCase = true) ->
                                 value.take(6) + "****" + value.takeLast(4)
+
                             else -> value
                         }
                         Napier.v { "  Query Param '$name': $displayValue" }
@@ -166,28 +167,30 @@ class DesktopRedirectHandler {
                                             <span class="debug-value">${queryParams.names().size}</span>
                                         </div>
                                         ${
-                                            queryParams.names().joinToString("") { name ->
-                                                val value = queryParams[name] ?: "null"
-                                                val displayValue = when {
-                                                    name.contains("token", ignoreCase = true) ||
-                                                    name.contains("code", ignoreCase = true) ||
-                                                    name.contains("secret", ignoreCase = true) ||
-                                                    name.contains("auth", ignoreCase = true) ->
-                                                        value.take(8) + "..." + value.takeLast(4)
-                                                    else -> value
-                                                }
-                                                val valueClass = if (name.contains("token", ignoreCase = true) ||
-                                                    name.contains("code", ignoreCase = true) ||
-                                                    name.contains("secret", ignoreCase = true) ||
-                                                    name.contains("auth", ignoreCase = true)) "token" else ""
-                                                """
+                        queryParams.names().joinToString("") { name ->
+                            val value = queryParams[name] ?: "null"
+                            val displayValue = when {
+                                name.contains("token", ignoreCase = true) ||
+                                        name.contains("code", ignoreCase = true) ||
+                                        name.contains("secret", ignoreCase = true) ||
+                                        name.contains("auth", ignoreCase = true) ->
+                                    value.take(8) + "..." + value.takeLast(4)
+
+                                else -> value
+                            }
+                            val valueClass = if (name.contains("token", ignoreCase = true) ||
+                                name.contains("code", ignoreCase = true) ||
+                                name.contains("secret", ignoreCase = true) ||
+                                name.contains("auth", ignoreCase = true)
+                            ) "token" else ""
+                            """
                                                 <div class="debug-item">
                                                     <span class="debug-label">$name:</span> 
                                                     <span class="debug-value $valueClass">$displayValue</span>
                                                 </div>
                                                 """
-                                            }
-                                        }
+                        }
+                    }
                                         <div class="debug-item">
                                             <span class="debug-label">User-Agent:</span> 
                                             <span class="debug-value">$userAgent</span>

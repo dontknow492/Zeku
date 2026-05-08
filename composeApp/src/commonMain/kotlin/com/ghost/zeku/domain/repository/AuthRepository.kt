@@ -21,6 +21,11 @@ interface AuthRepository {
     fun isUserLoggedIn(provider: ProviderType): Boolean
 
     /**
+     * Return the userId of current user
+     */
+    fun getUserId(provider: ProviderType): Int?
+
+    /**
      * 1. Generate the URL to open in the external browser.
      * The repository handles creating the MAL PKCE challenges or AniList Client IDs under the hood.
      */

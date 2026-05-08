@@ -7,16 +7,16 @@ import com.ghost.zeku.domain.model.enum.ProviderType
 
 @Entity(
     tableName = "chapters",
-    primaryKeys = ["id", "source"],
+    primaryKeys = ["id", "provider"],
     indices = [
-        Index(value = ["mediaId", "source"]),
+        Index(value = ["mediaId", "provider"]),
         Index(value = ["number"])
     ]
 )
 data class ChapterEntity(
     val id: String,
     val mediaId: Int,
-    val source: ProviderType,
+    val provider: ProviderType,
 
     val number: Float,
     val title: String?,

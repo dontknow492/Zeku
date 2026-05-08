@@ -5,11 +5,11 @@ import com.ghost.zeku.domain.model.enum.ProviderType
 
 @Entity(
     tableName = "chapter_remote_keys",
-    primaryKeys = ["id", "source"]
+    primaryKeys = ["id", "provider"]
 )
 data class ChapterRemoteKeys(
     val id: String,
-    val source: ProviderType,
+    val provider: ProviderType,
     val mediaId: Int,
     val prevPage: Int?,
     val nextPage: Int?,

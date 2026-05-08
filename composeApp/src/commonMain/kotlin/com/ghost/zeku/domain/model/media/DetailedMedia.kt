@@ -3,173 +3,155 @@ package com.ghost.zeku.domain.model.media
 
 import com.ghost.zeku.domain.model.common.MediaDate
 import com.ghost.zeku.domain.model.common.MediaTitle
-import com.ghost.zeku.domain.model.common.TrackEntry
 import com.ghost.zeku.domain.model.enum.*
 import kotlinx.serialization.Serializable
 
-
 @Serializable
-data class AnimeDetails(
-    // -------------------------
-    // CORE IDENTITY
-    // -------------------------
+data class MediaDetails(
+
+    // ------------------------------------------------------------------------
+    // Identity
+    // ------------------------------------------------------------------------
+
     val id: Int,
+
     val source: ProviderType,
+
+    val mediaType: MediaType,
+
+    // ------------------------------------------------------------------------
+    // Core
+    // ------------------------------------------------------------------------
+
     val title: MediaTitle,
+
     val synonyms: List<String> = emptyList(),
-    val countryOfOrigin: String?, // e.g., "JP", "KR", "CN"
 
-    // -------------------------
-    // VISUALS & TEXT
-    // -------------------------
+    val countryOfOrigin: String? = null,
+
+    // ------------------------------------------------------------------------
+    // Visuals
+    // ------------------------------------------------------------------------
+
     val coverImage: String,
-    val bannerImage: String?,
-    val extraPictures: List<String> = emptyList(), // MAL 'pictures' array
-    val description: String?,
-    val background: String?, // MAL production notes / AniList raw background
 
-    // -------------------------
-    // METADATA
-    // -------------------------
-    val status: MediaReleaseStatus,
-    val format: MediaFormat?,
-    val sourceMaterial: MediaSourceMaterial?, // e.g., MANGA, ORIGINAL, LIGHT_NOVEL
-    val isAdult: Boolean = false,
+    val bannerImage: String? = null,
 
-    // -------------------------
-    // DATES & SCHEDULES
-    // -------------------------
-    val startDate: MediaDate?,
-    val endDate: MediaDate?,
-    val createdAt: MediaDate?,
-    val updatedAt: MediaDate?,
-    val season: MediaSeason?, // WINTER, SPRING, SUMMER, FALL
-    val seasonYear: Int?,
-    val broadcastString: String?, // e.g., "Tuesdays at 22:30 (JST)"
-
-    // -------------------------
-    // CATEGORIZATION
-    // -------------------------
-    val genres: List<String>,
-    val tags: List<MediaTag>, // AniList Tags / MAL Themes & Demographics
-
-    // -------------------------
-    // STATISTICS & RANKINGS
-    // -------------------------
-    val averageScore: Double?,
-    val meanScore: Double?,
-    val popularity: Int?, // Number of users with this in their list
-    val favourites: Int?,
-    val rank: Int?,
-
-    // -------------------------
-    // ANIME SPECIFICS
-    // -------------------------
-    val totalEpisodes: Int?,
-    val durationPerEpisode: Int?, // In minutes
-    val contentRating: String?, // e.g., "R - 17+ (violence & profanity)", "PG-13"
-    val nextAiringEpisode: AiringSchedule?,
-    val studios: List<MediaStudio>,
-
-    // -------------------------
-    // RELATIONAL DATA (Eagerly Loaded)
-    // -------------------------
-    val trailer: MediaTrailer?,
-    val externalLinks: List<ExternalLink>,
-    val characters: List<MediaCharacter>,
-    val relations: List<MediaRelation>,
-    val staff: List<MediaStaff>, // Directors, Composers, etc.
-
-    //stats
-    val watching: String?,
-    val completed: String?,
-    val onHold: String?,
-    val dropped: String?,
-    val planToWatch: String?,
-
-    // -------------------------
-    // USER TRACKING
-    // -------------------------
-    val trackEntry: TrackEntry? = null
-)
-
-@Serializable
-data class MangaDetails(
-    // -------------------------
-    // CORE IDENTITY
-    // -------------------------
-    val id: Int,
-    val source: ProviderType,
-    val title: MediaTitle,
-    val synonyms: List<String> = emptyList(),
-    val countryOfOrigin: String?,
-
-    // -------------------------
-    // VISUALS & TEXT
-    // -------------------------
-    val coverImage: String,
-    val bannerImage: String?,
     val extraPictures: List<String> = emptyList(),
-    val description: String?,
-    val background: String?,
 
-    // -------------------------
-    // METADATA
-    // -------------------------
-    val status: MediaReleaseStatus,
-    val format: MediaFormat?,
-    val sourceMaterial: MediaSourceMaterial?,
+    val description: String? = null,
+
+    val background: String? = null,
+
+    // ------------------------------------------------------------------------
+    // Metadata
+    // ------------------------------------------------------------------------
+
+    val status: MediaReleaseStatus? = null,
+
+    val format: MediaFormat? = null,
+
+    val sourceMaterial: MediaSourceMaterial? = null,
+
     val isAdult: Boolean = false,
 
-    // -------------------------
-    // DATES
-    // -------------------------
-    val startDate: MediaDate?,
-    val endDate: MediaDate?,
-    val createdAt: MediaDate?,
-    val updatedAt: MediaDate?,
+    // ------------------------------------------------------------------------
+    // Dates
+    // ------------------------------------------------------------------------
 
-    // -------------------------
-    // CATEGORIZATION
-    // -------------------------
-    val genres: List<String>,
-    val tags: List<MediaTag>,
+    val startDate: MediaDate? = null,
 
-    // -------------------------
-    // STATISTICS & RANKINGS
-    // -------------------------
-    val averageScore: Double?,
-    val meanScore: Double?,
-    val popularity: Int?,
-    val favourites: Int?,
-    val rank: Int?,
+    val endDate: MediaDate? = null,
 
-    // -------------------------
-    // MANGA SPECIFICS
-    // -------------------------
-    val totalChapters: Int?,
-    val totalVolumes: Int?,
-    val serializations: List<String>, // Magazines e.g., "Weekly Shonen Jump"
+    val createdAt: MediaDate? = null,
 
-    // -------------------------
-    // RELATIONAL DATA (Eagerly Loaded)
-    // -------------------------
-    val authors: List<MediaStaff>, // Writers & Artists
-    val externalLinks: List<ExternalLink>,
-    val characters: List<MediaCharacter>,
-    val relations: List<MediaRelation>,
+    val updatedAt: MediaDate? = null,
 
-    //stats
-    val watching: String?,
-    val completed: String?,
-    val onHold: String?,
-    val dropped: String?,
-    val planToWatch: String?,
+    // ------------------------------------------------------------------------
+    // Seasonal
+    // ------------------------------------------------------------------------
 
-    // -------------------------
-    // USER TRACKING
-    // -------------------------
-    val trackEntry: TrackEntry? = null
+    val season: MediaSeason? = null,
+
+    val seasonYear: Int? = null,
+
+    val broadcastString: String? = null,
+
+    // ------------------------------------------------------------------------
+    // Categorization
+    // ------------------------------------------------------------------------
+
+    val genres: List<String> = emptyList(),
+
+    val tags: List<MediaTag> = emptyList(),
+
+    // ------------------------------------------------------------------------
+    // Statistics
+    // ------------------------------------------------------------------------
+
+    val averageScore: Double? = null,
+
+    val meanScore: Double? = null,
+
+    val popularity: Int? = null,
+
+    val favourites: Int? = null,
+
+    val rank: Int? = null,
+
+    // ------------------------------------------------------------------------
+    // Anime Fields
+    // ------------------------------------------------------------------------
+
+    val totalEpisodes: Int? = null,
+
+    val durationPerEpisode: Int? = null,
+
+    val contentRating: String? = null,
+
+    val nextAiringEpisode: AiringSchedule? = null,
+
+    val studios: List<MediaStudio> = emptyList(),
+
+    // ------------------------------------------------------------------------
+    // Manga Fields
+    // ------------------------------------------------------------------------
+
+    val totalChapters: Int? = null,
+
+    val totalVolumes: Int? = null,
+
+    val serializations: List<String> = emptyList(),
+
+    val authors: List<MediaStaff> = emptyList(),
+
+    // ------------------------------------------------------------------------
+    // Relations
+    // ------------------------------------------------------------------------
+
+    val trailer: MediaTrailer? = null,
+
+    val externalLinks: List<ExternalLink> = emptyList(),
+
+    val characters: List<MediaCharacter> = emptyList(),
+
+    val relations: List<MediaRelation> = emptyList(),
+
+    val staff: List<MediaStaff> = emptyList(),
+
+    // ------------------------------------------------------------------------
+    // Stats
+    // ------------------------------------------------------------------------
+
+    val watching: String? = null,
+
+    val completed: String? = null,
+
+    val onHold: String? = null,
+
+    val dropped: String? = null,
+
+    val planToWatch: String? = null
 )
 
 

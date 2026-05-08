@@ -2,11 +2,11 @@ package com.ghost.zeku.data.settings
 
 import com.russhwolf.settings.PreferencesSettings
 import com.russhwolf.settings.Settings
+import java.security.MessageDigest
+import java.util.*
 import java.util.prefs.Preferences
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
-import java.security.MessageDigest
-import java.util.Base64
 
 /**
  * Desktop (JVM) implementation.
@@ -40,8 +40,8 @@ private class DesktopEncryptedSettings(
         // Generate a stable key based on the machine's hardware environment.
         // This ensures the tokens can only be decrypted on THIS exact computer.
         val machineIdentifier = (System.getenv("COMPUTERNAME") ?: "Unknown") +
-                              (System.getProperty("user.name") ?: "User") +
-                              System.getProperty("os.name")
+                (System.getProperty("user.name") ?: "User") +
+                System.getProperty("os.name")
 
         val digest = MessageDigest.getInstance("SHA-256")
         val keyBytes = digest.digest(machineIdentifier.toByteArray(Charsets.UTF_8))

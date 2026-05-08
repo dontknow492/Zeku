@@ -15,16 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.ghost.zeku.data.remote.anilist.AniListApi
 import com.ghost.zeku.data.remote.anilist.model.*
-import com.ghost.zeku.data.remote.anilist.toAnimeDetailsDomain
+import com.ghost.zeku.data.remote.anilist.toMediaDetailsDomain
 import com.ghost.zeku.data.remote.mal.MalApi
-import com.ghost.zeku.data.remote.mal.model.MalAnimeDto
-import com.ghost.zeku.data.remote.mal.model.MalMangaDto
-import com.ghost.zeku.data.remote.mal.toAnimeDetailsDomain
-import com.ghost.zeku.data.remote.mal.toMangaDetailsDomain
+import com.ghost.zeku.data.remote.mal.model.MalMediaDto
+import com.ghost.zeku.data.remote.mal.toMediaDetailsDomain
 import com.ghost.zeku.domain.model.enum.*
 import com.ghost.zeku.domain.repository.AuthRepository
 import com.ghost.zeku.domain.repository.UserSettings
-import com.ghost.zeku.presentation.navigation.ZekuAppWrapper
 import com.ghost.zeku.presentation.theme.AppTheme
 import kotlinx.serialization.json.Json
 import org.koin.compose.koinInject
@@ -33,7 +30,7 @@ import java.util.concurrent.TimeUnit
 
 @Composable
 fun App() = AppTheme {
-    ZekuAppWrapper()
+//    ZekuAppWrapper()
 }
 
 @Composable
@@ -1443,7 +1440,7 @@ fun AnimeDetailPreview() {
         isLenient = true         // allows relaxed JSON
     }
 
-    val cachedMalAnimeDetails = json.decodeFromString<MalAnimeDto>(rawJsonMal)
+    val cachedMalAnimeDetails = json.decodeFromString<MalMediaDto>(rawJsonMal)
 
 
     val aniListAnimeId: Int = 113415 // Jujustu kaisen
@@ -1452,7 +1449,7 @@ fun AnimeDetailPreview() {
     val malApi: MalApi = koinInject()
 
     var aniListAnimeDetails: AniListMedia? by remember { mutableStateOf(null) }
-    var malAnimeDetails: MalAnimeDto? by remember { mutableStateOf(null) }
+    var malAnimeDetails: MalMediaDto? by remember { mutableStateOf(null) }
 //    malAnimeDetails = user
 //    var mangaDetails: MangaDetails? by remember { mutableStateOf(null) }
 
@@ -1460,7 +1457,7 @@ fun AnimeDetailPreview() {
         if (cachedAniListAnimeDetails != null) {
             aniListAnimeDetails = cachedAniListAnimeDetails
         } else {
-            val media = aniListApi.getAnimeDetails(aniListAnimeId).data?.media
+            val media = aniListApi.getMediaDetails(aniListAnimeId, MediaType.ANIME).data?.media
             aniListAnimeDetails = media
         }
 
@@ -1470,7 +1467,7 @@ fun AnimeDetailPreview() {
         if (rawJsonMal != null) {
             malAnimeDetails = cachedMalAnimeDetails
         } else {
-            val media = malApi.getAnimeDetails(malAnimeId)
+            val media = malApi.getMediaDetails(MediaType.MANGA, malAnimeId)
             malAnimeDetails = media
         }
 
@@ -1482,12 +1479,15 @@ fun AnimeDetailPreview() {
             HorizontalDivider(modifier = Modifier.fillMaxWidth())
             Text(text = "AniList Anime Details:", style = MaterialTheme.typography.titleLarge)
             Text(
-                text = aniListAnimeDetails?.toAnimeDetailsDomain().toString(),
+                text = aniListAnimeDetails?.toMediaDetailsDomain().toString(),
                 style = MaterialTheme.typography.bodyLarge
             )
             HorizontalDivider(modifier = Modifier.fillMaxWidth().height(5.dp))
             Text(text = "Mal Anime Details", style = MaterialTheme.typography.titleLarge)
-            Text(text = malAnimeDetails?.toAnimeDetailsDomain().toString(), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = malAnimeDetails?.toMediaDetailsDomain(mediaType = MediaType.ANIME).toString(),
+                style = MaterialTheme.typography.bodyLarge
+            )
         }
     }
 }
@@ -1914,7 +1914,7 @@ fun MangaDetailPreview() {
         isLenient = true         // allows relaxed JSON
     }
 
-    val cachedMalMangaDetails = json.decodeFromString<MalMangaDto>(rawJsonMal)
+    val cachedMalMangaDetails = json.decodeFromString<MalMediaDto>(rawJsonMal)
 
 
     val aniListMangaId: Int = 138222 // Leveling up with gods
@@ -1923,7 +1923,7 @@ fun MangaDetailPreview() {
     val malApi: MalApi = koinInject()
 
     var aniListMangaDetails: AniListMedia? by remember { mutableStateOf(null) }
-    var malMangaDetails: MalMangaDto? by remember { mutableStateOf(null) }
+    var malMangaDetails: MalMediaDto? by remember { mutableStateOf(null) }
 //    malMangaDetails = user
 //    var mangaDetails: MangaDetails? by remember { mutableStateOf(null) }
 
@@ -1931,7 +1931,7 @@ fun MangaDetailPreview() {
         if (cachedAniListMangaDetails != null) {
             aniListMangaDetails = cachedAniListMangaDetails
         } else {
-            val media = aniListApi.getMangaDetails(aniListMangaId).data?.media
+            val media = aniListApi.getMediaDetails(aniListMangaId, MediaType.MANGA).data?.media
             aniListMangaDetails = media
         }
 
@@ -1941,7 +1941,7 @@ fun MangaDetailPreview() {
         if (rawJsonMal != null) {
             malMangaDetails = cachedMalMangaDetails
         } else {
-            val media = malApi.getMangaDetails(malMangaId)
+            val media = malApi.getMediaDetails(MediaType.MANGA, malMangaId)
             malMangaDetails = media
         }
 
@@ -1958,7 +1958,10 @@ fun MangaDetailPreview() {
             )
             HorizontalDivider(modifier = Modifier.fillMaxWidth().height(5.dp))
             Text(text = "Mal Manga Details", style = MaterialTheme.typography.titleLarge)
-            Text(text = malMangaDetails?.toMangaDetailsDomain().toString(), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = malMangaDetails?.toMediaDetailsDomain(MediaType.MANGA).toString(),
+                style = MaterialTheme.typography.bodyLarge
+            )
         }
     }
 }

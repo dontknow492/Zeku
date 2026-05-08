@@ -41,3 +41,28 @@ data class AniListErrorLocation(
     val line: Int,
     val column: Int
 )
+
+
+// Response for the user's library (MediaListCollection)
+@Serializable
+data class AniListLibraryData(
+    @SerialName("MediaListCollection") val collection: AniListCollection?
+)
+
+// ==========================================
+// 3. The "Nesting Doll" Library Models
+// ==========================================
+
+@Serializable
+data class AniListCollection(
+    val lists: List<AniListListGroup>
+)
+
+@Serializable
+data class AniListListGroup(
+    val name: String? = null, // e.g., "Watching", "Completed"
+    val isCustomList: Boolean? = null,
+    val entries: List<AniListMediaListEntry>
+)
+
+

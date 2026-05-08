@@ -27,7 +27,7 @@ sealed interface MediaAction {
 
     data class GenreClick(val genre: String) : MediaAction
 
-    data class LongClick(val id: Int) : MediaAction
+    data class LongClick(val id: Int, val type: MediaType) : MediaAction
 
     data class ToggleFavorite(val id: Int, val isFavorite: Boolean) : MediaAction
 
@@ -36,6 +36,8 @@ sealed interface MediaAction {
     data class Share(val id: Int) : MediaAction
 
     data class RevealNsfw(val id: Int) : MediaAction
+
+    data class TrailingClick(val id: Int, val type: MediaType) : MediaAction
 
     // future-safe
     data class Custom(val key: String, val payload: Any? = null) : MediaAction

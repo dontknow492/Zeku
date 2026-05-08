@@ -3,11 +3,11 @@ package com.ghost.zeku.domain.repository
 import androidx.paging.PagingData
 import com.ghost.zeku.data.repository.DataResult
 import com.ghost.zeku.domain.model.api.ApiResult
-import com.ghost.zeku.domain.model.common.TrackEntry
-import com.ghost.zeku.domain.model.enum.*
+import com.ghost.zeku.domain.model.enum.MediaCategory
+import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.enum.ProviderType
 import com.ghost.zeku.domain.model.media.*
-import com.ghost.zeku.domain.model.search.AnimeSearchFilter
-import com.ghost.zeku.domain.model.search.MangaSearchFilter
+import com.ghost.zeku.domain.model.search.MediaSearchFilter
 import com.ghost.zeku.domain.model.search.SearchCapabilities
 import kotlinx.coroutines.flow.Flow
 
@@ -18,113 +18,109 @@ import kotlinx.coroutines.flow.Flow
  */
 interface MediaRepository {
 
-    /** * Expose this so your UI/ViewModels can reactively know which provider is active.
-     * Useful for showing the correct logo or settings state.
+    /**
+     * Current active provider selected by the user.
      */
     val activeProviderFlow: Flow<ProviderType>
 
     // ========================================================================
-    // HOME SCREEN HELPERS (The Secret Sauce)
+    // HOME / DISCOVERY
     // ========================================================================
 
     /**
-     * Call this in your HomeViewModel!
-     * It returns a list of ONLY the categories the active provider supports.
-     * You can then loop through this list to generate your UI Rows.
+     * Returns only categories supported by the active provider.
+     *
+     * Example:
+     * - MAL may not support NOVELS
+     * - Some scraper may only support TRENDING + POPULAR
      */
-    fun getAvailableAnimeCategories(): Flow<List<AnimeCategory>>
+    fun getAvailableCategories(
+        mediaType: MediaType
+    ): Flow<List<MediaCategory>>
 
-    fun getAvailableMangaCategories(): Flow<List<MangaCategory>>
+    /**
+     * Paginated discovery feed.
+     */
+    fun getMediaList(
+        mediaType: MediaType,
+        category: MediaCategory,
+        perPage: Int = 20
+    ): Flow<PagingData<Media>>
+
+    /**
+     * Large featured banner carousel.
+     */
+    fun getHeroBanner(
+        mediaType: MediaType,
+        limit: Int = 10
+    ): Flow<List<Media>>
 
     // ========================================================================
-    // DISCOVERY & SEARCH
+    // SEARCH
     // ========================================================================
 
-    fun getAnimeList(category: AnimeCategory, perPage: Int = 20): Flow<PagingData<Anime>>
-
-    fun getMangaList(category: MangaCategory, perPage: Int = 20): Flow<PagingData<Manga>>
-
-    fun searchAnime(
+    fun searchMedia(
         query: String?,
         perPage: Int = 20,
-        filter: AnimeSearchFilter
-    ): Flow<PagingData<Anime>>
-
-    fun searchManga(
-        query: String?,
-        perPage: Int = 20,
-        filter: MangaSearchFilter
-    ): Flow<PagingData<Manga>>
+        filter: MediaSearchFilter
+    ): Flow<PagingData<Media>>
 
     suspend fun getSearchCapabilities(
         provider: ProviderType,
-        type: MediaType
+        mediaType: MediaType
     ): SearchCapabilities
 
-
     // ========================================================================
-    // USER TRACKING / LISTS
-    // ========================================================================
-
-    suspend fun getUserAnimeList(
-        userId: Int,
-        status: TrackStatus,
-        page: Int,
-        perPage: Int = 20,
-        accessToken: String
-    ): ApiResult<PageResult<Anime>>
-
-    suspend fun getUserMangaList(
-        userId: Int,
-        status: TrackStatus,
-        page: Int,
-        perPage: Int = 20,
-        accessToken: String
-    ): ApiResult<PageResult<Manga>>
-
-    suspend fun updateMediaListEntry(
-        accessToken: String,
-        mediaId: Int,
-        progress: Int?,
-        status: TrackStatus?,
-        score: Double?
-    ): ApiResult<TrackEntry>
-
-    suspend fun deleteMediaListEntry(accessToken: String, entryId: Int): Boolean
-
-
-    // ========================================================================
-    // EAGER DETAILS (Offline-First Flow)
+    // DETAILS (Offline First)
     // ========================================================================
 
     /**
-     * Returns a stream that first emits cached data, then fetches fresh data
-     * from the network, updates the cache, and emits the fresh data.
+     * Emits:
+     * 1. Cached data
+     * 2. Fresh network data
      */
-    fun getAnimeDetails(id: Int): Flow<DataResult<AnimeDetails>>
+    fun getMediaDetails(
+        mediaId: Int,
+        mediaType: MediaType
+    ): Flow<DataResult<MediaDetails>>
 
-    fun getMangaDetails(id: Int): Flow<DataResult<MangaDetails>>
-
-    // NEW: Manual force refresh
-    suspend fun refreshAnimeDetails(id: Int): ApiResult<Unit>
-    suspend fun refreshMangaDetails(id: Int): ApiResult<Unit>
+    /**
+     * Force refresh details.
+     */
+    suspend fun refreshMediaDetails(
+        mediaId: Int,
+        mediaType: MediaType
+    ): ApiResult<Unit>
 
     // ========================================================================
-    // LAZY DETAILS (Paginated Online-Only Flow)
+    // PAGINATED DETAIL CONTENT
     // ========================================================================
 
-    fun getHeroBanner(mediaType: MediaType, limit: Int = 10): Flow<List<Media>>
+    fun getRecommendations(
+        mediaId: Int,
+        mediaType: MediaType
+    ): Flow<PagingData<Media>>
 
-    fun getAnimeEpisodes(id: Int): Flow<PagingData<Episode>>
+    fun getReviews(
+        mediaId: Int,
+        mediaType: MediaType
+    ): Flow<PagingData<Review>>
 
-    fun getAnimeRecommendations(id: Int): Flow<PagingData<Anime>>
+    /**
+     * Anime only.
+     */
+    fun getEpisodes(
+        mediaId: Int
+    ): Flow<PagingData<Episode>>
 
-    fun getAnimeReviews(id: Int): Flow<PagingData<Review>>
-
-    fun getMangaChapters(id: Int): Flow<PagingData<Chapter>>
-
-    fun getMangaRecommendations(id: Int): Flow<PagingData<Manga>>
-
-    fun getMangaReviews(id: Int): Flow<PagingData<Review>>
-
+    /**
+     * Manga only.
+     */
+    fun getChapters(
+        mediaId: Int
+    ): Flow<PagingData<Chapter>>
 }
+
+
+
+
