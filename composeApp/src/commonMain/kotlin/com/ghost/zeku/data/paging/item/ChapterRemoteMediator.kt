@@ -4,8 +4,8 @@ import androidx.paging.ExperimentalPagingApi
 import com.ghost.zeku.data.local.room.AppDatabase
 import com.ghost.zeku.data.local.room.entities.ChapterEntity
 import com.ghost.zeku.data.local.room.entities.ChapterRemoteKeys
-import com.ghost.zeku.domain.model.enum.DownloadState
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.media.DownloadState
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.model.media.Chapter
 import com.ghost.zeku.domain.provider.MediaContentProvider
 import io.github.aakira.napier.Napier

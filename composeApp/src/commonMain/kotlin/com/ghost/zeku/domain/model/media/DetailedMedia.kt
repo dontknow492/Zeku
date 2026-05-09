@@ -1,9 +1,7 @@
 package com.ghost.zeku.domain.model.media
 
 
-import com.ghost.zeku.domain.model.common.MediaDate
-import com.ghost.zeku.domain.model.common.MediaTitle
-import com.ghost.zeku.domain.model.enum.*
+import com.ghost.zeku.domain.model.ProviderType
 import kotlinx.serialization.Serializable
 
 @Serializable

@@ -1,8 +1,8 @@
 package com.ghost.zeku.data.remote.anilist
 
 import com.ghost.zeku.data.remote.anilist.model.*
-import com.ghost.zeku.domain.model.enum.MediaCategory
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.media.MediaCategory
+import com.ghost.zeku.domain.model.media.MediaType
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*

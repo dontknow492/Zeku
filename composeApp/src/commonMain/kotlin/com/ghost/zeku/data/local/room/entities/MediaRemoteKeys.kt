@@ -2,8 +2,8 @@ package com.ghost.zeku.data.local.room.entities
 
 import androidx.room.Entity
 import androidx.room.Index
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.media.MediaType
+import com.ghost.zeku.domain.model.ProviderType
 
 /**
  * Stores paging/category mapping for media lists.

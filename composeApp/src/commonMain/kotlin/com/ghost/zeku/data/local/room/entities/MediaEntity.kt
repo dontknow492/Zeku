@@ -2,12 +2,12 @@ package com.ghost.zeku.data.local.room.entities
 
 import androidx.room.Entity
 import androidx.room.Index
-import com.ghost.zeku.domain.model.common.MediaDate
-import com.ghost.zeku.domain.model.common.MediaTitle
-import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
-import com.ghost.zeku.domain.model.enum.MediaSourceMaterial
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.media.MediaDate
+import com.ghost.zeku.domain.model.media.MediaTitle
+import com.ghost.zeku.domain.model.media.MediaReleaseStatus
+import com.ghost.zeku.domain.model.media.MediaSourceMaterial
+import com.ghost.zeku.domain.model.media.MediaType
+import com.ghost.zeku.domain.model.ProviderType
 
 /**
  * Unified media table for all media types.
@@ -140,3 +140,8 @@ data class MediaEntity(
      */
     val updatedAt: Long = System.currentTimeMillis()
 )
+
+
+
+
+

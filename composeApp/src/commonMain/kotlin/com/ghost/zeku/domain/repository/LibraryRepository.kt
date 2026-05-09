@@ -1,103 +1,47 @@
 package com.ghost.zeku.domain.repository
 
+
+import androidx.paging.PagingSource
+import androidx.room.RoomRawQuery
 import com.ghost.zeku.data.local.room.entities.LibraryEntity
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.data.local.room.view.MediaLibraryView
+import com.ghost.zeku.domain.model.media.MediaType
 import kotlinx.coroutines.flow.Flow
 
 interface LibraryRepository {
 
-    // ------------------------------------------------------------------------
-    // Observers
-    // ------------------------------------------------------------------------
+    // ── Paging (dynamic filter/sort) ──────────────
+    fun getPagingSource(query: RoomRawQuery): PagingSource<Int, MediaLibraryView>
 
+    // ── Reactive streams ──────────────────────────
     fun observeLibrary(): Flow<List<LibraryEntity>>
-
-    fun observeLibraryByType(
-        mediaType: MediaType
-    ): Flow<List<LibraryEntity>>
-
-    fun observeLibraryByCategory(
-        category: String
-    ): Flow<List<LibraryEntity>>
-
+    fun observeByMediaType(mediaType: MediaType): Flow<List<LibraryEntity>>
+    fun observeByCategory(categoryId: Long): Flow<List<LibraryEntity>>
     fun observeFavorites(): Flow<List<LibraryEntity>>
+    fun observeDownloaded(): Flow<List<LibraryEntity>>
+    fun observePinned(): Flow<List<LibraryEntity>>
+    fun observeFiltered(categoryId: Long?, isFavorite: Boolean?): Flow<List<LibraryEntity>>
 
-    fun observeVisibleLibrary(): Flow<List<LibraryEntity>>
+    // ── One‑shot lookups ──────────────────────────
+    suspend fun getLibraryEntry(mediaId: Int, mediaType: MediaType): LibraryEntity?
+    suspend fun exists(mediaId: Int, mediaType: MediaType): Boolean
 
-    // ------------------------------------------------------------------------
-    // Single Entry
-    // ------------------------------------------------------------------------
+    // ── Write ─────────────────────────────────────
+    suspend fun upsert(entry: LibraryEntity)
+    suspend fun delete(mediaId: Int, mediaType: MediaType)
 
-    suspend fun getLibraryEntry(
-        mediaId: Int,
-        mediaType: MediaType
-    ): LibraryEntity?
-
-    suspend fun exists(
-        mediaId: Int,
-        mediaType: MediaType
-    ): Boolean
-
-    // ------------------------------------------------------------------------
-    // Mutations
-    // ------------------------------------------------------------------------
-
-    suspend fun addToLibrary(
-        mediaId: Int,
-        mediaType: MediaType,
-        category: String = DEFAULT_CATEGORY
-    )
-
-    suspend fun removeFromLibrary(
-        mediaId: Int,
-        mediaType: MediaType
-    )
-
-    suspend fun updateCategory(
-        mediaId: Int,
-        mediaType: MediaType,
-        category: String
-    )
-
-    suspend fun setFavorite(
-        mediaId: Int,
-        mediaType: MediaType,
-        favorite: Boolean
-    )
-
-    suspend fun setPinned(
-        mediaId: Int,
-        mediaType: MediaType,
-        pinned: Boolean
-    )
-
-    suspend fun setHidden(
-        mediaId: Int,
-        mediaType: MediaType,
-        hidden: Boolean
-    )
-
-    suspend fun setDownloaded(
-        mediaId: Int,
-        mediaType: MediaType,
-        downloaded: Boolean
-    )
-
-    suspend fun updateNotes(
-        mediaId: Int,
-        mediaType: MediaType,
-        notes: String?
-    )
-
-    suspend fun updateCustomTitle(
-        mediaId: Int,
-        mediaType: MediaType,
-        title: String?
-    )
-
-    suspend fun clear()
-
-    companion object {
-        const val DEFAULT_CATEGORY = "default"
-    }
+    // ── Convenience partial updates ───────────────
+    suspend fun toggleFavorite(mediaId: Int, mediaType: MediaType)
+    suspend fun togglePinned(mediaId: Int, mediaType: MediaType)
+    suspend fun setCategory(mediaId: Int, mediaType: MediaType, categoryId: Long)
+    suspend fun markDownloaded(mediaId: Int, mediaType: MediaType, downloadPath: String?)
 }
+
+
+
+
+
+
+
+
+

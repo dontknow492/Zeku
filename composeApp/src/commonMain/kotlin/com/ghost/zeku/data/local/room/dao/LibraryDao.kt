@@ -5,16 +5,16 @@ import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Upsert
 import com.ghost.zeku.data.local.room.entities.LibraryEntity
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.media.MediaType
 import kotlinx.coroutines.flow.Flow
 
 
 @Dao
 interface LibraryDao {
 
-    // ------------------------------------------------------------------------
-    // Observers
-    // ------------------------------------------------------------------------
+    // ────────────────────────────────────────────
+    // OBSERVE
+    // ────────────────────────────────────────────
 
     @Query(
         """
@@ -22,7 +22,7 @@ interface LibraryDao {
         ORDER BY pinned DESC, updatedAt DESC
     """
     )
-    fun observeLibrary(): Flow<List<LibraryEntity>>
+    fun observeAll(): Flow<List<LibraryEntity>>
 
     @Query(
         """
@@ -31,20 +31,17 @@ interface LibraryDao {
         ORDER BY pinned DESC, updatedAt DESC
     """
     )
-    fun observeLibraryByType(
-        mediaType: MediaType
-    ): Flow<List<LibraryEntity>>
+    fun observeByMediaType(mediaType: MediaType): Flow<List<LibraryEntity>>
 
+    // By categoryId
     @Query(
         """
         SELECT * FROM library
-        WHERE category = :category
+        WHERE categoryId = :categoryId
         ORDER BY pinned DESC, updatedAt DESC
     """
     )
-    fun observeLibraryByCategory(
-        category: String
-    ): Flow<List<LibraryEntity>>
+    fun observeByCategory(categoryId: Long): Flow<List<LibraryEntity>>
 
     @Query(
         """
@@ -62,42 +59,66 @@ interface LibraryDao {
         ORDER BY pinned DESC, updatedAt DESC
     """
     )
-    fun observeVisibleLibrary(): Flow<List<LibraryEntity>>
-
-    // ------------------------------------------------------------------------
-    // Single Entry
-    // ------------------------------------------------------------------------
+    fun observeVisible(): Flow<List<LibraryEntity>>
 
     @Query(
         """
         SELECT * FROM library
-        WHERE mediaId = :mediaId
-        AND mediaType = :mediaType
+        WHERE downloaded = 1
+        ORDER BY updatedAt DESC
+    """
+    )
+    fun observeDownloaded(): Flow<List<LibraryEntity>>
+
+    @Query(
+        """
+        SELECT * FROM library
+        WHERE pinned = 1
+        ORDER BY updatedAt DESC
+    """
+    )
+    fun observePinned(): Flow<List<LibraryEntity>>
+
+    // Combined filters (example)
+    @Query(
+        """
+        SELECT * FROM library
+        WHERE (categoryId = :categoryId OR :categoryId IS NULL)
+        AND (favorite = :favorite OR :favorite IS NULL)
+        ORDER BY pinned DESC, updatedAt DESC
+    """
+    )
+    fun observeFiltered(
+        categoryId: Long?,
+        favorite: Boolean?
+    ): Flow<List<LibraryEntity>>
+
+    // ────────────────────────────────────────────
+    // SINGLE ENTRY
+    // ────────────────────────────────────────────
+
+    @Query(
+        """
+        SELECT * FROM library
+        WHERE mediaId = :mediaId AND mediaType = :mediaType
         LIMIT 1
     """
     )
-    suspend fun getLibraryEntry(
-        mediaId: Int,
-        mediaType: MediaType
-    ): LibraryEntity?
+    suspend fun getEntry(mediaId: Int, mediaType: MediaType): LibraryEntity?
 
     @Query(
         """
         SELECT EXISTS(
             SELECT 1 FROM library
-            WHERE mediaId = :mediaId
-            AND mediaType = :mediaType
+            WHERE mediaId = :mediaId AND mediaType = :mediaType
         )
     """
     )
-    suspend fun exists(
-        mediaId: Int,
-        mediaType: MediaType
-    ): Boolean
+    suspend fun exists(mediaId: Int, mediaType: MediaType): Boolean
 
-    // ------------------------------------------------------------------------
-    // Writes
-    // ------------------------------------------------------------------------
+    // ────────────────────────────────────────────
+    // WRITE
+    // ────────────────────────────────────────────
 
     @Upsert
     suspend fun upsert(entry: LibraryEntity)
@@ -108,17 +129,67 @@ interface LibraryDao {
     @Query(
         """
         DELETE FROM library
-        WHERE mediaId = :mediaId
-        AND mediaType = :mediaType
+        WHERE mediaId = :mediaId AND mediaType = :mediaType
     """
     )
-    suspend fun deleteByMedia(
-        mediaId: Int,
-        mediaType: MediaType
-    )
+    suspend fun deleteByMedia(mediaId: Int, mediaType: MediaType)
 
     @Query("DELETE FROM library")
     suspend fun clear()
+
+    // ────────────────────────────────────────────
+    // PARTIAL UPDATES (convenience)
+    // ────────────────────────────────────────────
+
+    @Query(
+        """
+        UPDATE library SET favorite = :favorite, updatedAt = :now
+        WHERE mediaId = :mediaId AND mediaType = :mediaType
+    """
+    )
+    suspend fun setFavorite(
+        mediaId: Int,
+        mediaType: MediaType,
+        favorite: Boolean,
+        now: Long = System.currentTimeMillis()
+    )
+
+    @Query(
+        """
+        UPDATE library SET pinned = :pinned, updatedAt = :now
+        WHERE mediaId = :mediaId AND mediaType = :mediaType
+    """
+    )
+    suspend fun setPinned(mediaId: Int, mediaType: MediaType, pinned: Boolean, now: Long = System.currentTimeMillis())
+
+    @Query(
+        """
+        UPDATE library SET categoryId = :categoryId, updatedAt = :now
+        WHERE mediaId = :mediaId AND mediaType = :mediaType
+    """
+    )
+    suspend fun setCategory(
+        mediaId: Int,
+        mediaType: MediaType,
+        categoryId: Long,
+        now: Long = System.currentTimeMillis()
+    )
+
+
+    // Inside LibraryDao
+    @Query(
+        """
+    UPDATE library 
+    SET downloaded = 1, downloadPath = :path, updatedAt = :now
+    WHERE mediaId = :mediaId AND mediaType = :mediaType
+"""
+    )
+    suspend fun markDownloaded(
+        mediaId: Int,
+        mediaType: MediaType,
+        path: String?,
+        now: Long = System.currentTimeMillis()
+    )
 }
 
 

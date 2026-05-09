@@ -1,7 +1,6 @@
 package com.ghost.zeku.domain.model.media.track
 
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.enum.TrackStatus
+import com.ghost.zeku.domain.model.media.MediaType
 
 
 // Represents the show/manga itself on the provider's platform

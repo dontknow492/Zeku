@@ -1,4 +1,4 @@
-package com.ghost.zeku.domain.model.enum
+package com.ghost.zeku.domain.model.media.track
 
 import androidx.compose.ui.graphics.Color
 

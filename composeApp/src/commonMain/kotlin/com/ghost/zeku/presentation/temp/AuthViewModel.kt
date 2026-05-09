@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ghost.zeku.data.repository.auth.AuthRedirectListener
 import com.ghost.zeku.domain.model.api.ApiResult
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.repository.AuthRepository
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow

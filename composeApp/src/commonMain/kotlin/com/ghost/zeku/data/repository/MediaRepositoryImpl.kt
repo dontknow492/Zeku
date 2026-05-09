@@ -14,12 +14,12 @@ import com.ghost.zeku.data.paging.item.EpisodeRemoteMediator
 import com.ghost.zeku.domain.MediaSource
 import com.ghost.zeku.domain.model.api.ApiError
 import com.ghost.zeku.domain.model.api.ApiResult
-import com.ghost.zeku.domain.model.enum.MediaCategory
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.media.MediaCategory
+import com.ghost.zeku.domain.model.media.MediaType
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.model.media.*
-import com.ghost.zeku.domain.model.search.MediaSearchFilter
-import com.ghost.zeku.domain.model.search.SearchCapabilities
+import com.ghost.zeku.domain.model.filter.search.MediaSearchFilter
+import com.ghost.zeku.domain.model.filter.search.SearchCapabilities
 import com.ghost.zeku.domain.repository.MediaRepository
 import com.ghost.zeku.domain.repository.UserSettings
 import kotlinx.coroutines.ExperimentalCoroutinesApi

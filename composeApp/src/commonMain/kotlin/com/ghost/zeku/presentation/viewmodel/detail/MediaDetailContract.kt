@@ -1,9 +1,9 @@
 package com.ghost.zeku.presentation.viewmodel.detail
 
 import com.ghost.zeku.domain.model.MessageType
-import com.ghost.zeku.domain.model.common.MediaDate
-import com.ghost.zeku.domain.model.common.TrackEntry
-import com.ghost.zeku.domain.model.enum.*
+import com.ghost.zeku.domain.model.ProviderType
+import com.ghost.zeku.domain.model.media.MediaDate
+import com.ghost.zeku.domain.model.media.track.TrackEntry
 import com.ghost.zeku.domain.model.media.*
 import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.components.media.ReviewAction

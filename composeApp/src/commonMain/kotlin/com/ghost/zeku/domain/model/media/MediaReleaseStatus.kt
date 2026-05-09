@@ -1,4 +1,4 @@
-package com.ghost.zeku.domain.model.enum
+package com.ghost.zeku.domain.model.media
 
 enum class MediaReleaseStatus {
     RELEASING,
@@ -11,7 +11,7 @@ enum class MediaReleaseStatus {
     companion object {
         fun fromString(value: String?): MediaReleaseStatus {
             if (value.isNullOrBlank()) return UNKNOWN
-            return MediaReleaseStatus.entries.find { it.name.equals(value, ignoreCase = true) }
+            return entries.find { it.name.equals(value, ignoreCase = true) }
                 ?: UNKNOWN
         }
     }

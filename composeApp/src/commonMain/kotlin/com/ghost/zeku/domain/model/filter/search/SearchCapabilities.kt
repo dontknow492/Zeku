@@ -1,8 +1,8 @@
-package com.ghost.zeku.domain.model.search
+package com.ghost.zeku.domain.model.filter.search
 
-import com.ghost.zeku.domain.model.enum.MediaFormat
-import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.media.MediaFormat
+import com.ghost.zeku.domain.model.media.MediaReleaseStatus
+import com.ghost.zeku.domain.model.media.MediaType
 
 /**
  * This class tells the UI what filters to display.

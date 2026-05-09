@@ -2,7 +2,7 @@ package com.ghost.zeku.presentation.viewmodel.main
 
 import com.ghost.zeku.domain.model.MessageType
 import com.ghost.zeku.domain.model.UserProfile
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.ProviderType
 
 // ========================================================================
 // 1. CONTRACT (State, Events, Effects)

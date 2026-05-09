@@ -1,12 +1,13 @@
 package com.ghost.zeku.data.remote.mal
 
 import com.ghost.zeku.data.remote.mal.model.*
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.model.UserProfile
-import com.ghost.zeku.domain.model.common.MediaDate
-import com.ghost.zeku.domain.model.common.MediaTitle
-import com.ghost.zeku.domain.model.common.TrackEntry
-import com.ghost.zeku.domain.model.enum.*
+import com.ghost.zeku.domain.model.media.MediaDate
+import com.ghost.zeku.domain.model.media.MediaTitle
+import com.ghost.zeku.domain.model.media.track.TrackEntry
 import com.ghost.zeku.domain.model.media.*
+import com.ghost.zeku.domain.model.media.track.TrackStatus
 
 // ==========================================
 // 1. ANIME MAPPERS

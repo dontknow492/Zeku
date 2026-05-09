@@ -5,7 +5,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
 import com.ghost.zeku.data.local.room.entities.ChapterEntity
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.ProviderType
 
 @Dao
 interface ChapterDao {

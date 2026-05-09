@@ -8,7 +8,7 @@ import com.ghost.zeku.domain.model.UserProfile
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.api.AuthState
 import com.ghost.zeku.domain.model.api.getErrorMessage
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.repository.AuthRepository
 import com.ghost.zeku.domain.repository.UserRepository
 import com.ghost.zeku.domain.repository.UserSettings

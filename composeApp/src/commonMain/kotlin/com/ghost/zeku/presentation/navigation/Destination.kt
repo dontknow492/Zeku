@@ -1,6 +1,6 @@
 package com.ghost.zeku.presentation.navigation
 
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.media.MediaType
 
 sealed interface Destination {
 

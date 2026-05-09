@@ -11,6 +11,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
@@ -27,11 +30,19 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.presentation.common.MediaAsyncImage
 import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.components.media.OnMediaAction
+import com.ghost.zeku.presentation.components.media.list.ListCardDefaults
+import com.ghost.zeku.presentation.components.media.list.ListCardLayout
+import com.ghost.zeku.presentation.components.media.list.MediaListCard
+import com.ghost.zeku.presentation.theme.AppTheme
 
 @Composable
 fun MediaPosterCard(
@@ -755,4 +766,110 @@ private fun CompactPosterLayout(
 }
 
 
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun PreviewPosterCard() {
+    val samplePosters = listOf(
+        MediaPosterUiData(
+            id = 101,
+            mediaType = MediaType.MANGA,
+            title = "Neon Skies",
+            imageUrl = "https://example.com/images/neon_skies_poster.jpg",
+            bannerImageUrl = "https://example.com/banners/neon_skies_banner.jpg",
+            score = 8.3f,
+            badgeText = "TV",
+            subTitle = "12 Episodes • Sci‑fi",
+            extraInfo = "Episode 5",
+            progress = 0.45f,
+            progressText = "5/12",
+            isNsfw = false,
+            isAiring = false,
+            overlayLabel = "⟳ CONTINUE"
+        ),
+        MediaPosterUiData(
+            id = 102,
+            mediaType = MediaType.MANGA,
+            title = "Last Light",
+            imageUrl = "https://example.com/images/last_light_poster.jpg",
+            bannerImageUrl = null,
+            score = 7.1f,
+            badgeText = "MOVIE",
+            subTitle = "2022 • Drama",
+            extraInfo = null,
+            progress = 1.0f,
+            progressText = "Watched",
+            isNsfw = false,
+            isAiring = false,
+            overlayLabel = "✓ COMPLETED"
+        ),
+        MediaPosterUiData(
+            id = 103,
+            mediaType = MediaType.MANGA,
+            title = "Circuit Breaker",
+            imageUrl = "https://example.com/images/circuit_breaker_poster.jpg",
+            bannerImageUrl = null,
+            score = 7.8f,
+            badgeText = null,
+            subTitle = "Science • 90 min",
+            extraInfo = null,
+            progress = 0.75f,
+            progressText = "68 min",
+            isNsfw = false,
+            isAiring = false,
+            overlayLabel = "⟳ CONTINUE"
+        ),
+        MediaPosterUiData(
+            id = 104,
+            mediaType = MediaType.MANGA,
+            title = "Midnight Market",
+            imageUrl = "https://example.com/images/midnight_market_poster.jpg",
+            bannerImageUrl = "https://example.com/banners/midnight_market_banner.jpg",
+            score = 6.6f,
+            badgeText = "TV",
+            subTitle = "Season 2 • Comedy",
+            extraInfo = "Episode 2",
+            progress = 0.12f,
+            progressText = "2/10",
+            isNsfw = false,
+            isAiring = true,
+            overlayLabel = "▶ PLAY"
+        ),
+        MediaPosterUiData(
+            id = 105,
+            mediaType = MediaType.MANGA,
+            title = "Garden of Echoes",
+            imageUrl = "https://example.com/images/garden_of_echoes_poster.jpg",
+            bannerImageUrl = "https://example.com/banners/garden_of_echoes_banner.jpg",
+            score = 8.9f,
+            badgeText = "MANHWA",
+            subTitle = "Limited • Fantasy",
+            extraInfo = "Chapter 120",
+            progress = 0.0f,
+            progressText = null,
+            isNsfw = false,
+            isAiring = false,
+            overlayLabel = null
+        )
+    )
+
+
+
+    AppTheme {
+        LazyVerticalGrid(columns = GridCells.Adaptive(minSize = 190.dp)) {
+            items(samplePosters) { item ->
+                val layout = PosterLayout.Overlay
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    Text(text = layout.name, style = TextStyle(fontSize = 20.sp))
+                    MediaPosterCard(
+                        modifier = Modifier,
+                        data = item,
+                        layout = layout,
+                        config = PosterDefaults.forLayout(layout),
+                        onAction = { TODO() },
+                    )
+                }
+            }
+        }
+    }
+}
 

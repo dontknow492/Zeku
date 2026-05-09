@@ -25,7 +25,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.presentation.common.isDesktop
 import com.ghost.zeku.presentation.common.isWideScreen
 import com.ghost.zeku.presentation.common.rememberPlatformConfiguration

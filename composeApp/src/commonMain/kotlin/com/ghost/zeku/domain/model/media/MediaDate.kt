@@ -1,4 +1,4 @@
-package com.ghost.zeku.domain.model.common
+package com.ghost.zeku.domain.model.media
 
 
 import kotlinx.datetime.LocalDate

@@ -20,7 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.ghost.zeku.domain.model.enum.CharacterRole
+import com.ghost.zeku.domain.model.media.CharacterRole
 import com.ghost.zeku.domain.model.media.MediaCharacter
 import com.ghost.zeku.presentation.common.MediaAsyncImage
 import com.ghost.zeku.presentation.theme.AppTheme

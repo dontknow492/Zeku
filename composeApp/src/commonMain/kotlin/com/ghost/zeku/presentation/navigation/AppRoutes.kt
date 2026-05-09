@@ -11,7 +11,7 @@ import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.media.MediaType
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
@@ -33,6 +33,10 @@ data class MediaDetailsRoute(val id: Int, val type: MediaType) : NavKey
 
 @Serializable
 data class AllCategoriesRoute(val type: MediaType, val categoryId: String, val title: String) : NavKey
+
+
+@Serializable
+data object LibraryCategoryRoute : NavKey
 
 enum class TopLevelDestination(
     val routeInstance: NavKey,

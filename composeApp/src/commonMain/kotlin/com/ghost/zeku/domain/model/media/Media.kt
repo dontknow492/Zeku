@@ -1,12 +1,7 @@
 package com.ghost.zeku.domain.model.media
 
 import androidx.compose.ui.util.fastAny
-import com.ghost.zeku.domain.model.common.MediaDate
-import com.ghost.zeku.domain.model.common.MediaTitle
-import com.ghost.zeku.domain.model.enum.MediaFormat
-import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.ProviderType
 import kotlinx.serialization.Serializable
 
 

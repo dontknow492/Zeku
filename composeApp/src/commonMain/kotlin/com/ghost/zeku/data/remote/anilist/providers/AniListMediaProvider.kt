@@ -6,8 +6,8 @@ import com.ghost.zeku.data.remote.anilist.toMediaDomain
 import com.ghost.zeku.domain.model.api.ApiError
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.api.ErrorType
-import com.ghost.zeku.domain.model.enum.MediaCategory
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.media.MediaCategory
+import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.domain.model.media.Media
 import com.ghost.zeku.domain.model.media.PageResult
 import com.ghost.zeku.domain.provider.MediaListProvider

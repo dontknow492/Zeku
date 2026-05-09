@@ -3,12 +3,12 @@ package com.ghost.zeku.domain.repository
 import androidx.paging.PagingData
 import com.ghost.zeku.data.repository.DataResult
 import com.ghost.zeku.domain.model.api.ApiResult
-import com.ghost.zeku.domain.model.enum.MediaCategory
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.media.MediaCategory
+import com.ghost.zeku.domain.model.media.MediaType
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.model.media.*
-import com.ghost.zeku.domain.model.search.MediaSearchFilter
-import com.ghost.zeku.domain.model.search.SearchCapabilities
+import com.ghost.zeku.domain.model.filter.search.MediaSearchFilter
+import com.ghost.zeku.domain.model.filter.search.SearchCapabilities
 import kotlinx.coroutines.flow.Flow
 
 /**

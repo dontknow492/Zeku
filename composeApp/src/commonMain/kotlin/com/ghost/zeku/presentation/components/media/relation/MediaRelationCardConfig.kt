@@ -13,7 +13,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.ghost.zeku.domain.model.enum.TitleLanguage
+import com.ghost.zeku.domain.model.media.TitleLanguage
 
 
 enum class RelationCardLayout {

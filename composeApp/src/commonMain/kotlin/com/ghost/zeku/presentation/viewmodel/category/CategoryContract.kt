@@ -2,7 +2,7 @@ package com.ghost.zeku.presentation.viewmodel.category
 
 import androidx.paging.PagingData
 import com.ghost.zeku.domain.model.MessageType
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.domain.model.media.Media
 import com.ghost.zeku.domain.model.settings.MediaDisplayPreference
 import com.ghost.zeku.presentation.components.media.MediaAction

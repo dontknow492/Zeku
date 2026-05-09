@@ -2,9 +2,13 @@ package com.ghost.zeku.di
 
 import com.ghost.zeku.data.remote.anilist.AniListSource
 import com.ghost.zeku.data.remote.mal.MalSource
+import com.ghost.zeku.data.repository.CategoryRepositoryImpl
+import com.ghost.zeku.data.repository.LibraryRepositoryImpl
 import com.ghost.zeku.data.repository.MediaRepositoryImpl
 import com.ghost.zeku.data.repository.UserRepositoryImpl
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.ProviderType
+import com.ghost.zeku.domain.repository.CategoryRepository
+import com.ghost.zeku.domain.repository.LibraryRepository
 import com.ghost.zeku.domain.repository.MediaRepository
 import com.ghost.zeku.domain.repository.UserRepository
 import org.koin.dsl.module
@@ -31,4 +35,17 @@ val repoModule = module {
             )
         )
     }
+    single<CategoryRepository> {
+        CategoryRepositoryImpl(
+            categoryDao = get(),
+        )
+    }
+    single<LibraryRepository> {
+        LibraryRepositoryImpl(
+            libraryDao = get(),
+            mediaDao = get(),
+        )
+    }
+
+
 }

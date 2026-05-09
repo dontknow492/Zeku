@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.domain.model.settings.MediaDisplayPreference
 import com.ghost.zeku.presentation.components.media.MediaGrid
 import com.ghost.zeku.presentation.components.media.settings.DisplaySettingsPanel

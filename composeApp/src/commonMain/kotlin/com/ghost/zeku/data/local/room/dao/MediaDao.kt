@@ -1,13 +1,14 @@
 package com.ghost.zeku.data.local.room.dao
 
 import androidx.paging.PagingSource
-import androidx.room.Dao
-import androidx.room.Query
-import androidx.room.Upsert
+import androidx.room.*
+import com.ghost.zeku.data.local.room.entities.LibraryCategoryEntity
+import com.ghost.zeku.data.local.room.entities.LibraryEntity
 import com.ghost.zeku.data.local.room.entities.MediaDetailsEntity
 import com.ghost.zeku.data.local.room.entities.MediaEntity
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.data.local.room.view.MediaLibraryView
+import com.ghost.zeku.domain.model.media.MediaType
+import com.ghost.zeku.domain.model.ProviderType
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -168,4 +169,14 @@ interface MediaDao {
         provider: ProviderType,
         mediaType: MediaType
     )
+
+
+    @RawQuery(
+        observedEntities = [
+            MediaEntity::class,
+            LibraryEntity::class,
+            LibraryCategoryEntity::class  // Add this
+        ]
+    )
+    fun getMediaPagingSource(query: RoomRawQuery): PagingSource<Int, MediaLibraryView>
 }

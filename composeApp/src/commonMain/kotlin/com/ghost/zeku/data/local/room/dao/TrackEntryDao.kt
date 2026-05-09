@@ -5,9 +5,9 @@ import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Upsert
 import com.ghost.zeku.data.local.room.entities.TrackEntryEntity
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.enum.ProviderType
-import com.ghost.zeku.domain.model.enum.TrackStatus
+import com.ghost.zeku.domain.model.media.MediaType
+import com.ghost.zeku.domain.model.ProviderType
+import com.ghost.zeku.domain.model.media.track.TrackStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao

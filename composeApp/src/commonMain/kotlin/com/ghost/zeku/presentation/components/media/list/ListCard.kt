@@ -25,9 +25,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.presentation.common.MediaAsyncImage
 import com.ghost.zeku.presentation.components.media.MediaAction
 import com.ghost.zeku.presentation.components.media.OnMediaAction
@@ -35,11 +38,11 @@ import com.ghost.zeku.presentation.theme.AppTheme
 
 @Composable
 fun MediaListCard(
+    modifier: Modifier = Modifier,
     data: MediaListUiData,
     layout: ListCardLayout = ListCardLayout.Modern,
     config: ListCardConfig = ListCardDefaults.forLayout(layout),
     onAction: OnMediaAction,
-    modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -514,12 +517,128 @@ private fun DetailedListCard(
 }
 
 
-@Preview
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun PreviewListCard() {
-    AppTheme {
-        Column {
+    val sampleMediaList = listOf(
+        MediaListUiData(
+            id = 1,
+            title = "Neon Skies",
+            subtitle = "Season 1",
+            description = "A hacker-turned-reluctant-hero navigates a neon-drenched metropolis to expose corporate secrets.",
+            imageUrl = "https://example.com/images/neon_skies.jpg",
+            bannerImageUrl = "https://example.com/banners/neon_skies_banner.jpg",
+            mediaType = MediaType.ANIME,
+            progress = 0.45f,
+            score = 8.3f,
+            genres = listOf("Sci-fi", "Thriller"),
+            isWatched = false,
+            currentEpisode = 5,
+            totalEpisodes = 12,
+            releaseYear = 2024,
+            ageRating = "TV-14",
+            isAdult = false,
+            isHidden = false,
+            tags = listOf("cyberpunk", "antihero")
+        ),
+        MediaListUiData(
+            id = 2,
+            title = "Last Light",
+            subtitle = null,
+            description = "A tense survival drama about a small-town community facing a mysterious blackout.",
+            imageUrl = "https://example.com/images/last_light.jpg",
+            bannerImageUrl = null,
+            mediaType = MediaType.ANIME,
+            progress = 1.0f,
+            score = 7.1f,
+            genres = listOf("Drama", "Mystery"),
+            isWatched = true,
+            currentEpisode = null,
+            totalEpisodes = null,
+            releaseYear = 2022,
+            ageRating = "R",
+            isAdult = false,
+            isHidden = false,
+            tags = listOf("survival", "ensemble")
+        ),
+        MediaListUiData(
+            id = 3,
+            title = "Garden of Echoes",
+            subtitle = "Limited Series",
+            description = "An intimate, surreal exploration of memory and forgiveness across three timelines.",
+            imageUrl = "https://example.com/images/garden_of_echoes.jpg",
+            bannerImageUrl = "https://example.com/banners/garden_of_echoes_banner.jpg",
+            mediaType = MediaType.ANIME,
+            progress = 0.0f,
+            score = 8.9f,
+            genres = listOf("Drama", "Fantasy"),
+            isWatched = false,
+            currentEpisode = 0,
+            totalEpisodes = 6,
+            releaseYear = 2025,
+            ageRating = "TV-MA",
+            isAdult = false,
+            isHidden = false,
+            tags = listOf("arthouse", "mind-bending")
+        ),
+        MediaListUiData(
+            id = 4,
+            title = "Circuit Breaker",
+            subtitle = null,
+            description = "A fast-paced documentary about the rise of renewable energy startups.",
+            imageUrl = "https://example.com/images/circuit_breaker.jpg",
+            bannerImageUrl = null,
+            mediaType = MediaType.ANIME,
+            progress = 0.75f,
+            score = 7.8f,
+            genres = listOf("Documentary", "Science"),
+            isWatched = false,
+            currentEpisode = null,
+            totalEpisodes = null,
+            releaseYear = 2021,
+            ageRating = "PG",
+            isAdult = false,
+            isHidden = false,
+            tags = listOf("energy", "innovation")
+        ),
+        MediaListUiData(
+            id = 5,
+            title = "Midnight Market",
+            subtitle = "Season 2",
+            description = "A whimsical ensemble comedy set in a bustling night market where secrets and romances bloom.",
+            imageUrl = "https://example.com/images/midnight_market.jpg",
+            bannerImageUrl = "https://example.com/banners/midnight_market_banner.jpg",
+            mediaType = MediaType.ANIME,
+            progress = 0.12f,
+            score = 6.6f,
+            genres = listOf("Comedy", "Romance"),
+            isWatched = false,
+            currentEpisode = 2,
+            totalEpisodes = 10,
+            releaseYear = 2023,
+            ageRating = "TV-14",
+            isAdult = false,
+            isHidden = false,
+            tags = listOf("ensemble", "romcom")
+        )
+    )
 
+    AppTheme {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+        ) {
+            sampleMediaList.forEach { item ->
+                val layout = ListCardLayout.entries.random()
+                Text(text = layout.name, style = TextStyle(fontSize = 20.sp))
+                MediaListCard(
+                    modifier = Modifier,
+                    data = item,
+                    layout = layout,
+                    config = ListCardDefaults.forLayout(layout),
+                    onAction = { TODO() },
+                )
+                HorizontalDivider()
+            }
         }
     }
 }

@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import com.ghost.zeku.domain.model.MessageType
-import com.ghost.zeku.domain.model.search.MediaSearchFilter
-import com.ghost.zeku.domain.model.search.SearchCapabilities
-import com.ghost.zeku.domain.model.search.SearchSort
+import com.ghost.zeku.domain.model.filter.search.MediaSearchFilter
+import com.ghost.zeku.domain.model.filter.search.SearchCapabilities
+import com.ghost.zeku.domain.model.filter.search.SearchSort
 import com.ghost.zeku.domain.model.settings.MediaDisplayPreference
 import com.ghost.zeku.domain.repository.MediaRepository
 import com.ghost.zeku.domain.repository.UserSettings

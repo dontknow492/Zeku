@@ -6,8 +6,8 @@ import androidx.room.Upsert
 import com.ghost.zeku.data.local.room.entities.ChapterRemoteKeys
 import com.ghost.zeku.data.local.room.entities.EpisodeRemoteKeys
 import com.ghost.zeku.data.local.room.entities.MediaRemoteKeys
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.media.MediaType
+import com.ghost.zeku.domain.model.ProviderType
 
 /**
  * A unified DAO for managing the pagination and category links.

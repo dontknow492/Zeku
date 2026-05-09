@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import androidx.paging.map
 import com.ghost.zeku.domain.model.MessageType
-import com.ghost.zeku.domain.model.enum.MediaCategory
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.media.MediaCategory
+import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.domain.model.media.Media
 import com.ghost.zeku.domain.repository.MediaRepository
 import com.ghost.zeku.presentation.components.media.MediaAction

@@ -25,11 +25,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.ghost.zeku.domain.model.common.MediaTitle
-import com.ghost.zeku.domain.model.enum.MediaFormat
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.enum.RelationType
-import com.ghost.zeku.domain.model.enum.getPreferred
+import com.ghost.zeku.domain.model.media.MediaTitle
+import com.ghost.zeku.domain.model.media.MediaFormat
+import com.ghost.zeku.domain.model.media.MediaType
+import com.ghost.zeku.domain.model.media.RelationType
+import com.ghost.zeku.domain.model.media.getPreferred
 import com.ghost.zeku.domain.model.media.MediaRelation
 import com.ghost.zeku.presentation.common.MediaAsyncImage
 import com.ghost.zeku.presentation.theme.AppTheme

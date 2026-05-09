@@ -2,7 +2,7 @@ package com.ghost.zeku.data.remote.mal
 
 import com.ghost.zeku.data.remote.mal.providers.*
 import com.ghost.zeku.domain.MediaSource
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.provider.*
 
 class MalSource(

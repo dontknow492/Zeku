@@ -1,4 +1,4 @@
-package com.ghost.zeku.domain.model.enum
+package com.ghost.zeku.domain.model.media
 
 enum class MediaFormat {
     TV, TV_SHORT, MOVIE, SPECIAL, OVA, ONA, MUSIC, MANGA, NOVEL, ONE_SHOT, UNKNOWN;

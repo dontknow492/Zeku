@@ -1,6 +1,6 @@
 package com.ghost.zeku.data.remote
 
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.repository.AuthRepository
 import io.ktor.client.*
 import io.ktor.client.plugins.*

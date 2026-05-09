@@ -1,8 +1,8 @@
 package com.ghost.zeku.data.local.room.entities
 
 import androidx.room.Entity
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.media.MediaType
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.model.media.MediaDetails
 
 @Entity(

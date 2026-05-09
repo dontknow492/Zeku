@@ -46,8 +46,8 @@ import androidx.compose.ui.unit.sp
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
-import com.ghost.zeku.domain.model.common.format
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.media.format
+import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.domain.model.media.*
 import com.ghost.zeku.presentation.common.*
 import com.ghost.zeku.presentation.common.chips.GenreChip

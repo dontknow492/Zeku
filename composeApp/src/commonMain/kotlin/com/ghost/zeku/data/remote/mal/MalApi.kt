@@ -6,8 +6,8 @@ import com.ghost.zeku.data.remote.mal.model.MalListStatus
 import com.ghost.zeku.data.remote.mal.model.MalMediaDto
 import com.ghost.zeku.data.remote.mal.model.MalPagedResponse
 import com.ghost.zeku.data.remote.mal.model.MalUserDto
-import com.ghost.zeku.domain.model.enum.MediaCategory
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.media.MediaCategory
+import com.ghost.zeku.domain.model.media.MediaType
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*

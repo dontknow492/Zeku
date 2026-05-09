@@ -1,7 +1,7 @@
 package com.ghost.zeku.domain.provider
 
 import com.ghost.zeku.domain.model.api.ApiResult
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.domain.model.media.Media
 import com.ghost.zeku.domain.model.media.MediaDetails
 import com.ghost.zeku.domain.model.media.PageResult

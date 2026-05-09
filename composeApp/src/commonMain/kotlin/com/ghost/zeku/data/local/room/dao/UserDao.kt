@@ -5,7 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.ghost.zeku.data.local.room.entities.UserEntity
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.ProviderType
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -23,3 +23,9 @@ interface UserDao {
     @Query("DELETE FROM user_profiles WHERE providerType = :provider")
     suspend fun deleteUser(provider: ProviderType)
 }
+
+
+
+
+
+

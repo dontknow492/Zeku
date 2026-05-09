@@ -10,7 +10,7 @@ import androidx.room.useWriterConnection
 import com.ghost.zeku.data.local.room.AppDatabase
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.api.getErrorMessage
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.model.media.PageResult
 import com.ghost.zeku.utils.formatTimestamp
 import io.github.aakira.napier.Napier

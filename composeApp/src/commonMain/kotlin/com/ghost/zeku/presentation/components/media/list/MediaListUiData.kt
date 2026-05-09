@@ -1,9 +1,9 @@
 package com.ghost.zeku.presentation.components.media.list
 
 import androidx.compose.runtime.Immutable
-import com.ghost.zeku.domain.model.enum.MediaFormat
-import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.media.MediaFormat
+import com.ghost.zeku.domain.model.media.MediaReleaseStatus
+import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.domain.model.media.Media
 
 @Immutable

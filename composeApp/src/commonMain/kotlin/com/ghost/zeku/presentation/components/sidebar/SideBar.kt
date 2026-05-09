@@ -22,7 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ghost.zeku.domain.model.UserProfile
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.presentation.components.item.UserProfileWithDropdown
 import com.ghost.zeku.presentation.navigation.TopLevelDestination
 import com.ghost.zeku.presentation.theme.AppTheme

@@ -1,6 +1,4 @@
-package com.ghost.zeku.domain.model.enum
-
-import com.ghost.zeku.domain.model.common.MediaTitle
+package com.ghost.zeku.domain.model.media
 
 enum class TitleLanguage { ROMAJI, ENGLISH, NATIVE }
 

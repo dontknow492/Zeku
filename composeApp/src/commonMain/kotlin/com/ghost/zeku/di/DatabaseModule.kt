@@ -29,5 +29,6 @@ val databaseModule = module {
     single { get<AppDatabase>().userDao() }
     single { get<AppDatabase>().libraryDao() }
     single { get<AppDatabase>().trackEntryDao() }
+    single { get<AppDatabase>().libraryCategoryDao() }
 
 }

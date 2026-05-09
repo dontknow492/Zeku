@@ -17,11 +17,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.NavDisplay
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.presentation.components.sidebar.ZekuAdaptiveSidebar
 import com.ghost.zeku.presentation.screen.category.CategoryScreen
 import com.ghost.zeku.presentation.screen.details.DetailScreen
 import com.ghost.zeku.presentation.screen.home.MediaHomeScreen
+import com.ghost.zeku.presentation.screen.library.LibraryCategoryScreen
 import com.ghost.zeku.presentation.screen.search.SearchScreen
 import com.ghost.zeku.presentation.viewmodel.main.MainContract
 import com.ghost.zeku.presentation.viewmodel.main.MainViewModel
@@ -206,6 +207,13 @@ fun ZekuNavDisplay(
                         mediaType = key.type,
                         onNavigate = appState::navigateToDestination,
                         onBack = appState::popBackStack,
+                    )
+                }
+
+                is LibraryCategoryRoute -> NavEntry(key) {
+                    LibraryCategoryScreen(
+                        viewModel = koinViewModel(),
+                        onNavigateBack = appState::popBackStack
                     )
                 }
 

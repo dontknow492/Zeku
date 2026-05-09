@@ -3,7 +3,7 @@ package com.ghost.zeku.data.local.room
 
 import com.ghost.zeku.data.local.room.entities.*
 import com.ghost.zeku.domain.model.UserProfile
-import com.ghost.zeku.domain.model.enum.MediaFormat
+import com.ghost.zeku.domain.model.media.MediaFormat
 import com.ghost.zeku.domain.model.media.Chapter
 import com.ghost.zeku.domain.model.media.Episode
 import com.ghost.zeku.domain.model.media.Media

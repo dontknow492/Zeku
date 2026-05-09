@@ -2,9 +2,9 @@ package com.ghost.zeku.data.local.room
 
 
 import androidx.room.TypeConverter
-import com.ghost.zeku.domain.model.common.MediaDate
-import com.ghost.zeku.domain.model.common.MediaTitle
-import com.ghost.zeku.domain.model.common.TrackEntry
+import com.ghost.zeku.domain.model.media.MediaDate
+import com.ghost.zeku.domain.model.media.MediaTitle
+import com.ghost.zeku.domain.model.media.track.TrackEntry
 import com.ghost.zeku.domain.model.media.MediaDetails
 import kotlinx.serialization.json.Json
 
@@ -78,3 +78,10 @@ class RoomConverters {
     }
 
 }
+
+
+
+
+
+
+

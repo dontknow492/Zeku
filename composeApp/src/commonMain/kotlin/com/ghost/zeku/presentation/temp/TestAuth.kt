@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import com.ghost.zeku.domain.model.api.AuthState
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.repository.AuthRepository
 import com.ghost.zeku.presentation.auth.AuthViewModel
 import kotlinx.coroutines.launch

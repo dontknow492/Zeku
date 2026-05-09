@@ -1,6 +1,5 @@
-package com.ghost.zeku.domain.model.common
+package com.ghost.zeku.domain.model.media.track
 
-import com.ghost.zeku.domain.model.enum.TrackStatus
 import kotlinx.serialization.Serializable
 
 // Represents a user's progress on a specific Anime or Manga

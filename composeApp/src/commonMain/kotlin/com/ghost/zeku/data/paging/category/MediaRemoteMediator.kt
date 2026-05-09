@@ -10,9 +10,9 @@ import com.ghost.zeku.data.local.room.entities.MediaEntity
 import com.ghost.zeku.data.local.room.entities.MediaRemoteKeys
 import com.ghost.zeku.data.local.room.toEntity
 import com.ghost.zeku.domain.model.api.ApiResult
-import com.ghost.zeku.domain.model.enum.MediaCategory
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.media.MediaCategory
+import com.ghost.zeku.domain.model.media.MediaType
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.provider.MediaListProvider
 
 @OptIn(ExperimentalPagingApi::class)

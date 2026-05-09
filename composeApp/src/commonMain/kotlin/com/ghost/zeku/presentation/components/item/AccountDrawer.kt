@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.ghost.zeku.domain.model.UserProfile
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.presentation.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)

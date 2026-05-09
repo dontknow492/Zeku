@@ -1,9 +1,13 @@
 package com.ghost.zeku.presentation.viewmodel.search
 
 import com.ghost.zeku.domain.model.MessageType
-import com.ghost.zeku.domain.model.enum.*
-import com.ghost.zeku.domain.model.search.SearchCapabilities
-import com.ghost.zeku.domain.model.search.SearchSort
+import com.ghost.zeku.domain.model.ProviderType
+import com.ghost.zeku.domain.model.filter.search.SearchCapabilities
+import com.ghost.zeku.domain.model.filter.search.SearchSort
+import com.ghost.zeku.domain.model.media.MediaFormat
+import com.ghost.zeku.domain.model.media.MediaReleaseStatus
+import com.ghost.zeku.domain.model.media.MediaSeason
+import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.domain.model.settings.MediaDisplayPreference
 import com.ghost.zeku.presentation.navigation.Destination
 

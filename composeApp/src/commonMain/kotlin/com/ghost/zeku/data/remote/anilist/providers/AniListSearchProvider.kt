@@ -3,14 +3,14 @@ package com.ghost.zeku.data.remote.anilist.providers
 import com.ghost.zeku.data.remote.anilist.*
 import com.ghost.zeku.data.remote.anilist.model.GraphQLRequest
 import com.ghost.zeku.domain.model.api.ApiResult
-import com.ghost.zeku.domain.model.enum.MediaFormat
-import com.ghost.zeku.domain.model.enum.MediaReleaseStatus
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.media.MediaFormat
+import com.ghost.zeku.domain.model.media.MediaReleaseStatus
+import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.domain.model.media.Media
 import com.ghost.zeku.domain.model.media.PageResult
-import com.ghost.zeku.domain.model.search.MediaSearchFilter
-import com.ghost.zeku.domain.model.search.SearchCapabilities
-import com.ghost.zeku.domain.model.search.SearchSort
+import com.ghost.zeku.domain.model.filter.search.MediaSearchFilter
+import com.ghost.zeku.domain.model.filter.search.SearchCapabilities
+import com.ghost.zeku.domain.model.filter.search.SearchSort
 import com.ghost.zeku.domain.provider.MediaSearchProvider
 
 

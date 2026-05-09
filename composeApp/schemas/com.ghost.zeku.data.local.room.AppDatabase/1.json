@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "f8b3dedc4aafb1a31bb6a7dd96afa9fd",
+    "identityHash": "1c2602c6b1b6e6a465040b4176276a87",
     "entities": [
       {
         "tableName": "user_profiles",
@@ -307,6 +307,58 @@
             "createSql": "CREATE INDEX IF NOT EXISTS `index_media_author` ON `${TABLE_NAME}` (`author`)"
           }
         ]
+      },
+      {
+        "tableName": "media_search",
+        "createSql": "CREATE VIRTUAL TABLE IF NOT EXISTS `${TABLE_NAME}` USING FTS4(`mediaId` INTEGER NOT NULL, `provider` TEXT NOT NULL, `title` TEXT NOT NULL, `synonyms` TEXT NOT NULL, `description` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "mediaId",
+            "columnName": "mediaId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "provider",
+            "columnName": "provider",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "synonyms",
+            "columnName": "synonyms",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": []
+        },
+        "ftsVersion": "FTS4",
+        "ftsOptions": {
+          "tokenizer": "simple",
+          "tokenizerArgs": [],
+          "contentTable": "",
+          "languageIdColumnName": "",
+          "matchInfo": "FTS4",
+          "notIndexedColumns": [],
+          "prefixSizes": [],
+          "preferredOrder": "ASC"
+        },
+        "contentSyncTriggers": []
       },
       {
         "tableName": "episodes",
@@ -753,7 +805,7 @@
       },
       {
         "tableName": "library",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `mediaId` INTEGER NOT NULL, `mediaType` TEXT NOT NULL, `category` TEXT NOT NULL, `favorite` INTEGER NOT NULL, `pinned` INTEGER NOT NULL, `hidden` INTEGER NOT NULL, `downloaded` INTEGER NOT NULL, `customTitle` TEXT, `notes` TEXT, `addedAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `mediaId` INTEGER NOT NULL, `mediaType` TEXT NOT NULL, `provider` TEXT NOT NULL, `categoryId` INTEGER NOT NULL, `favorite` INTEGER NOT NULL, `pinned` INTEGER NOT NULL, `hidden` INTEGER NOT NULL, `downloaded` INTEGER NOT NULL, `downloadPath` TEXT, `fileSize` INTEGER, `customTitle` TEXT, `customDescription` TEXT, `notes` TEXT, `rating` REAL, `watchCount` INTEGER NOT NULL, `lastWatchedAt` INTEGER, `tags` TEXT NOT NULL, `customThumbnailPath` TEXT, `addedAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `syncedAt` INTEGER, `isSynced` INTEGER NOT NULL, FOREIGN KEY(`categoryId`) REFERENCES `library_categories`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -774,9 +826,15 @@
             "notNull": true
           },
           {
-            "fieldPath": "category",
-            "columnName": "category",
+            "fieldPath": "provider",
+            "columnName": "provider",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "categoryId",
+            "columnName": "categoryId",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -804,8 +862,23 @@
             "notNull": true
           },
           {
+            "fieldPath": "downloadPath",
+            "columnName": "downloadPath",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fileSize",
+            "columnName": "fileSize",
+            "affinity": "INTEGER"
+          },
+          {
             "fieldPath": "customTitle",
             "columnName": "customTitle",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "customDescription",
+            "columnName": "customDescription",
             "affinity": "TEXT"
           },
           {
@@ -814,8 +887,173 @@
             "affinity": "TEXT"
           },
           {
+            "fieldPath": "rating",
+            "columnName": "rating",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "watchCount",
+            "columnName": "watchCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastWatchedAt",
+            "columnName": "lastWatchedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "tags",
+            "columnName": "tags",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "customThumbnailPath",
+            "columnName": "customThumbnailPath",
+            "affinity": "TEXT"
+          },
+          {
             "fieldPath": "addedAt",
             "columnName": "addedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "syncedAt",
+            "columnName": "syncedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "isSynced",
+            "columnName": "isSynced",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_library_mediaId_mediaType_provider",
+            "unique": true,
+            "columnNames": [
+              "mediaId",
+              "mediaType",
+              "provider"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_library_mediaId_mediaType_provider` ON `${TABLE_NAME}` (`mediaId`, `mediaType`, `provider`)"
+          },
+          {
+            "name": "index_library_categoryId",
+            "unique": false,
+            "columnNames": [
+              "categoryId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_library_categoryId` ON `${TABLE_NAME}` (`categoryId`)"
+          },
+          {
+            "name": "index_library_favorite_addedAt",
+            "unique": false,
+            "columnNames": [
+              "favorite",
+              "addedAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_library_favorite_addedAt` ON `${TABLE_NAME}` (`favorite`, `addedAt`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "library_categories",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "categoryId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "library_categories",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `type` TEXT, `displayName` TEXT, `description` TEXT, `color` TEXT, `icon` TEXT, `sort_order` INTEGER NOT NULL DEFAULT 0, `is_default` INTEGER NOT NULL DEFAULT 0, `is_visible` INTEGER NOT NULL DEFAULT 1, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "displayName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "color",
+            "columnName": "color",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "icon",
+            "columnName": "icon",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sortOrder",
+            "columnName": "sort_order",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "isDefault",
+            "columnName": "is_default",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "isVisible",
+            "columnName": "is_visible",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -834,14 +1072,23 @@
         },
         "indices": [
           {
-            "name": "index_library_mediaId_mediaType",
+            "name": "index_library_categories_name",
             "unique": true,
             "columnNames": [
-              "mediaId",
-              "mediaType"
+              "name"
             ],
             "orders": [],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_library_mediaId_mediaType` ON `${TABLE_NAME}` (`mediaId`, `mediaType`)"
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_library_categories_name` ON `${TABLE_NAME}` (`name`)"
+          },
+          {
+            "name": "index_library_categories_type_name",
+            "unique": true,
+            "columnNames": [
+              "type",
+              "name"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_library_categories_type_name` ON `${TABLE_NAME}` (`type`, `name`)"
           }
         ]
       },
@@ -950,9 +1197,15 @@
         ]
       }
     ],
+    "views": [
+      {
+        "viewName": "media_library_view",
+        "createSql": "CREATE VIEW `${VIEW_NAME}` AS SELECT \n            media.*,\n            -- Library Fields\n            library.id AS lib_id,\n            library.mediaId AS lib_mediaId,\n            library.mediaType AS lib_mediaType,\n            library.provider AS lib_provider,\n            library.categoryId AS lib_categoryId,\n            library.favorite AS lib_favorite,\n            library.pinned AS lib_pinned,\n            library.hidden AS lib_hidden,\n            library.downloaded AS lib_downloaded,\n            library.downloadPath AS lib_downloadPath,\n            library.fileSize AS lib_fileSize,\n            library.customTitle AS lib_customTitle,\n            library.customDescription AS lib_customDescription,\n            library.notes AS lib_notes,\n            library.rating AS lib_rating,\n            library.watchCount AS lib_watchCount,\n            library.lastWatchedAt AS lib_lastWatchedAt,\n            library.tags AS lib_tags,\n            library.customThumbnailPath AS lib_customThumbnailPath,\n            library.addedAt AS lib_addedAt,\n            library.updatedAt AS lib_updatedAt,\n            library.syncedAt AS lib_syncedAt,\n            library.isSynced AS lib_isSynced,\n            -- Category Fields\n            category.id AS cat_id,\n            category.name AS cat_name,\n            category.type AS cat_type,\n            category.displayName AS cat_displayName,\n            category.description AS cat_description,\n            category.color AS cat_color,\n            category.icon AS cat_icon,\n            category.sort_order AS cat_sortOrder,\n            category.is_default AS cat_isDefault,\n            category.is_visible AS cat_isVisible,\n            category.createdAt AS cat_createdAt,\n            category.updatedAt AS cat_updatedAt\n        FROM media\n        LEFT JOIN library ON media.id = library.mediaId \n            AND media.provider = library.provider\n        LEFT JOIN library_categories category ON library.categoryId = category.id"
+      }
+    ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f8b3dedc4aafb1a31bb6a7dd96afa9fd')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1c2602c6b1b6e6a465040b4176276a87')"
     ]
   }
 }

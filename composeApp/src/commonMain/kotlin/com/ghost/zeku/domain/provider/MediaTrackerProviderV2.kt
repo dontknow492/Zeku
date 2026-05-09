@@ -1,9 +1,9 @@
 package com.ghost.zeku.domain.provider
 
 import com.ghost.zeku.domain.model.api.ApiResult
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.enum.ProviderType
-import com.ghost.zeku.domain.model.enum.TrackStatus
+import com.ghost.zeku.domain.model.media.MediaType
+import com.ghost.zeku.domain.model.ProviderType
+import com.ghost.zeku.domain.model.media.track.TrackStatus
 import com.ghost.zeku.domain.model.media.track.TrackItem
 import com.ghost.zeku.domain.model.media.track.TrackUpdate
 import com.ghost.zeku.domain.model.media.track.TrackerLibraryEntry

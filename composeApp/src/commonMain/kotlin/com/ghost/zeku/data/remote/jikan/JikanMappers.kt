@@ -1,10 +1,10 @@
 package com.ghost.zeku.data.remote.jikan
 
-import com.ghost.zeku.domain.model.common.MediaTitle
-import com.ghost.zeku.domain.model.enum.CharacterRole
-import com.ghost.zeku.domain.model.enum.MediaFormat
-import com.ghost.zeku.domain.model.enum.MediaType
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.media.MediaTitle
+import com.ghost.zeku.domain.model.media.CharacterRole
+import com.ghost.zeku.domain.model.media.MediaFormat
+import com.ghost.zeku.domain.model.media.MediaType
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.model.media.Episode
 import com.ghost.zeku.domain.model.media.Media
 import com.ghost.zeku.domain.model.media.MediaCharacter

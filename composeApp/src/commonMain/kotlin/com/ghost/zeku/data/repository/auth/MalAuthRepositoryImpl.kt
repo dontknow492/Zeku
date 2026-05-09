@@ -4,7 +4,7 @@ import com.ghost.zeku.domain.model.api.ApiError
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.api.AuthState
 import com.ghost.zeku.domain.model.api.ErrorType
-import com.ghost.zeku.domain.model.enum.ProviderType
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.repository.ProviderAuthRepository
 import com.russhwolf.settings.Settings
 import io.github.aakira.napier.Napier

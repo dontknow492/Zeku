@@ -1,7 +1,7 @@
 package com.ghost.zeku.presentation.components.media
 
 import androidx.compose.runtime.Immutable
-import com.ghost.zeku.domain.model.enum.MediaType
+import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.domain.model.media.Review
 
 

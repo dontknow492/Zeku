@@ -4,12 +4,14 @@ import androidx.room.*
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.ghost.zeku.data.local.room.dao.*
 import com.ghost.zeku.data.local.room.entities.*
+import com.ghost.zeku.data.local.room.view.MediaLibraryView
 import kotlinx.coroutines.Dispatchers
 
 @Database(
     entities = [
         UserEntity::class,
         MediaEntity::class,
+        MediaSearchEntity::class,
 
         EpisodeEntity::class,
         ChapterEntity::class,
@@ -20,9 +22,14 @@ import kotlinx.coroutines.Dispatchers
         EpisodeRemoteKeys::class,
         ChapterRemoteKeys::class,
         LibraryEntity::class,
+        LibraryCategoryEntity::class,
         TrackEntryEntity::class
     ],
-    version = 1
+    views = [
+        MediaLibraryView::class  // Register the view here
+    ],
+    version = 1,
+    exportSchema = true
 )
 @TypeConverters(RoomConverters::class)
 @ConstructedBy(AppDatabaseConstructor::class)
@@ -34,6 +41,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun episodeDao(): EpisodeDao
     abstract fun userDao(): UserDao
     abstract fun libraryDao(): LibraryDao
+    abstract fun libraryCategoryDao(): LibraryCategoryDao
     abstract fun trackEntryDao(): TrackEntryDao
 }
 

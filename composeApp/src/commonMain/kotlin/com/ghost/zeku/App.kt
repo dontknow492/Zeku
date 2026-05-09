@@ -19,18 +19,26 @@ import com.ghost.zeku.data.remote.anilist.toMediaDetailsDomain
 import com.ghost.zeku.data.remote.mal.MalApi
 import com.ghost.zeku.data.remote.mal.model.MalMediaDto
 import com.ghost.zeku.data.remote.mal.toMediaDetailsDomain
-import com.ghost.zeku.domain.model.enum.*
+import com.ghost.zeku.domain.model.ProviderType
+import com.ghost.zeku.domain.model.media.*
+import com.ghost.zeku.domain.model.media.track.TrackStatus
 import com.ghost.zeku.domain.repository.AuthRepository
 import com.ghost.zeku.domain.repository.UserSettings
+import com.ghost.zeku.presentation.screen.library.LibraryCategoryScreen
 import com.ghost.zeku.presentation.theme.AppTheme
 import kotlinx.serialization.json.Json
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import java.util.concurrent.TimeUnit
 
 
 @Composable
 fun App() = AppTheme {
 //    ZekuAppWrapper()
+    LibraryCategoryScreen(
+        viewModel = koinViewModel(),
+        onNavigateBack = {}
+    )
 }
 
 @Composable
