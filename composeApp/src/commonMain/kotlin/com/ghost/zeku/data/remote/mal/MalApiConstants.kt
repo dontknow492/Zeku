@@ -42,3 +42,10 @@ object MalApiConstants {
         authors,serialization
     """
 }
+
+
+// commonMain
+expect object MalConfig {
+    val clientId: String
+    val redirectUri: String
+}

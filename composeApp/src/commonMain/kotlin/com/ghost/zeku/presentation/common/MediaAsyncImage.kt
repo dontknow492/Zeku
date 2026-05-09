@@ -1,23 +1,63 @@
 package com.ghost.zeku.presentation.common
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BrokenImage
-import androidx.compose.material.icons.filled.HideImage
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.rounded.BrokenImage
+import androidx.compose.material.icons.rounded.HideImage
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.WifiOff
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImagePainter
 import coil3.compose.LocalPlatformContext
 import coil3.compose.SubcomposeAsyncImage
@@ -26,72 +66,11 @@ import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.ghost.zeku.utils.shimmerEffect
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import zeku.composeapp.generated.resources.Res
 import zeku.composeapp.generated.resources.error_loading
 import zeku.composeapp.generated.resources.retry
-
-/**
- * A highly reusable, Compose Multiplatform image loader using Coil 3.
- * Handles loading and error states automatically using Material 3 theme colors.
- */
-@Composable
-fun MediaAsyncImageV1(
-    url: String,
-    contentDescription: String?,
-    modifier: Modifier = Modifier,
-    contentScale: ContentScale = ContentScale.Crop
-) {
-    SubcomposeAsyncImage(
-        model = url,
-        contentDescription = contentDescription,
-        modifier = modifier,
-        contentScale = contentScale,
-        loading = {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(28.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        },
-        error = {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.errorContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.BrokenImage,
-                        contentDescription = stringResource(Res.string.error_loading),
-                        tint = MaterialTheme.colorScheme.onErrorContainer,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(Res.string.error_loading),
-                        fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-        }
-    )
-
-}
-
 
 @Composable
 fun MediaAsyncImage(
@@ -99,120 +78,319 @@ fun MediaAsyncImage(
     contentDescription: String?,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop,
-    showRetryOnError: Boolean = true
+    showRetryOnError: Boolean = true,
+    enableShimmer: Boolean = true,
+    shape: RoundedCornerShape = RoundedCornerShape(18.dp),
+    onClick: (() -> Unit)? = null
 ) {
-    var retryHash by remember { mutableIntStateOf(0) }
+
+    var retryKey by remember { mutableIntStateOf(0) }
+
     val context = LocalPlatformContext.current
 
-    val request = remember(url, retryHash) {
+    val request = remember(url, retryKey) {
         ImageRequest.Builder(context)
             .data(url)
             .crossfade(true)
-            .crossfade(durationMillis = 400)
-            .apply {
-                if (retryHash > 0) {
-                    memoryCachePolicy(CachePolicy.WRITE_ONLY)
-                    diskCachePolicy(CachePolicy.WRITE_ONLY)
-                }
-            }
+            .crossfade(350)
+            .memoryCachePolicy(
+                if (retryKey > 0) CachePolicy.DISABLED
+                else CachePolicy.ENABLED
+            )
+            .diskCachePolicy(
+                if (retryKey > 0) CachePolicy.DISABLED
+                else CachePolicy.ENABLED
+            )
             .build()
     }
 
-    SubcomposeAsyncImage(
-        model = request,
-        contentDescription = contentDescription,
-        modifier = modifier,
-        contentScale = contentScale,
+    val clickableModifier = if (onClick != null) {
+        Modifier.clickable(
+            indication = null,
+            interactionSource = remember { MutableInteractionSource() }
+        ) { onClick() }
+    } else {
+        Modifier
+    }
+
+    Surface(
+        modifier = modifier.then(clickableModifier),
+        shape = shape,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+        color = MaterialTheme.colorScheme.surfaceContainer
     ) {
-        val painterState by painter.state.collectAsState()
-        when (val state = painterState) {
-            is AsyncImagePainter.State.Loading -> {
-                MediaImageLoadingState() // Used extracted UI
-            }
 
-            is AsyncImagePainter.State.Error -> {
-                MediaImageErrorState( // Used extracted UI
-                    showRetryOnError = showRetryOnError,
-                    errorMessage = state.result.throwable.message ?: state.result.throwable.toString(),
-                    onRetryClick = { retryHash++ }
-                )
-                Text("Retry: $retryHash")
-            }
-//            else -> {
-//                SubcomposeAsyncImageContent()
-//            }
-            AsyncImagePainter.State.Empty -> {
-                MediaImageEmptyState()
-            }
+        SubcomposeAsyncImage(
+            model = request,
+            contentDescription = contentDescription,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = contentScale
+        ) {
 
-            is AsyncImagePainter.State.Success -> {
-                SubcomposeAsyncImageContent()
+            val state by painter.state.collectAsState()
+
+            AnimatedContent(
+                targetState = state,
+                label = "media_image_state"
+            ) { imageState ->
+
+                when (imageState) {
+
+                    is AsyncImagePainter.State.Loading -> {
+                        MediaImageLoadingState(
+                            enableShimmer = enableShimmer
+                        )
+                    }
+
+                    is AsyncImagePainter.State.Success -> {
+                        SubcomposeAsyncImageContent()
+                    }
+
+                    is AsyncImagePainter.State.Error -> {
+
+                        MediaImageErrorState(
+                            throwableMessage = imageState.result.throwable.message,
+                            showRetry = showRetryOnError,
+                            onRetry = {
+                                retryKey++
+                            }
+                        )
+                    }
+
+                    AsyncImagePainter.State.Empty -> {
+                        MediaImageEmptyState()
+                    }
+                }
             }
         }
     }
 }
 
-
 @Composable
-internal fun MediaImageLoadingState(modifier: Modifier = Modifier) {
+private fun MediaImageLoadingState(
+    modifier: Modifier = Modifier,
+    enableShimmer: Boolean = true
+) {
+
     Box(
         modifier = modifier
             .fillMaxSize()
-            .shimmerEffect()
+            .then(
+                if (enableShimmer) Modifier.shimmerEffect()
+                else Modifier.background(
+                    MaterialTheme.colorScheme.surfaceContainerHighest
+                )
+            )
+    ) {
+
+        val infiniteTransition = rememberInfiniteTransition()
+
+        val alpha by infiniteTransition.animateFloat(
+            initialValue = 0.4f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(
+                    durationMillis = 900,
+                    easing = LinearEasing
+                ),
+                repeatMode = RepeatMode.Reverse
+            )
+        )
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(34.dp)
+                    .alpha(alpha),
+                strokeWidth = 3.dp
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Text(
+                text = "Loading image...",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+            )
+        }
+
+        // fake progress bar feel
+        InfiniteLoadingBar(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+private fun InfiniteLoadingBar(
+    modifier: Modifier = Modifier
+) {
+
+    val infiniteTransition = rememberInfiniteTransition()
+
+    val progress by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1400),
+            repeatMode = RepeatMode.Restart
+        )
+    )
+
+    LinearProgressIndicator(
+        progress = { progress },
+        modifier = modifier.height(3.dp)
     )
 }
 
 @Composable
-internal fun MediaImageErrorState(
-    modifier: Modifier = Modifier,
-    showRetryOnError: Boolean,
-    errorMessage: String = stringResource(Res.string.error_loading),
-    onRetryClick: () -> Unit
+private fun MediaImageErrorState(
+    throwableMessage: String?,
+    showRetry: Boolean,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
+    val errorMessage = stringResource(Res.string.error_loading)
 
-    val defaultErrorMessage = stringResource(Res.string.error_loading)
-    val error = remember(errorMessage) {
-        errorMessage.ifEmpty { defaultErrorMessage }
+    val message = remember(throwableMessage) {
+        throwableMessage
+            ?.takeIf { it.isNotBlank() }
+            ?: errorMessage ?: errorMessage
     }
+
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            .clickable(enabled = showRetryOnError) { onRetryClick() },
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.surfaceContainerHighest,
+                        MaterialTheme.colorScheme.surfaceContainer
+                    )
+                )
+            ),
         contentAlignment = Alignment.Center
     ) {
+
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = if (showRetryOnError) Icons.Filled.Refresh else Icons.Filled.BrokenImage,
-                contentDescription = stringResource(Res.string.error_loading),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                modifier = Modifier.size(28.dp)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+
+            Box(
+                modifier = Modifier
+                    .size(58.dp)
+                    .clip(CircleShape)
+                    .background(
+                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+
+                Icon(
+                    imageVector = if (showRetry) {
+                        Icons.Rounded.WifiOff
+                    } else {
+                        Icons.Rounded.BrokenImage
+                    },
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
             Text(
-                text = if (showRetryOnError) stringResource(Res.string.retry) else error,
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                textAlign = TextAlign.Center
+                text = if (showRetry) {
+                    "Failed to load image"
+                } else {
+                    "Image unavailable"
+                },
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
             )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            if (showRetry) {
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                TextButton(
+                    onClick = onRetry
+                ) {
+
+                    Icon(
+                        imageVector = Icons.Rounded.Refresh,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text(
+                        text = stringResource(Res.string.retry)
+                    )
+                }
+            }
         }
     }
 }
 
-
 @Composable
-internal fun MediaImageEmptyState(modifier: Modifier = Modifier) {
-    Box(modifier = modifier) {
-        Row {
+private fun MediaImageEmptyState(
+    modifier: Modifier = Modifier
+) {
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                MaterialTheme.colorScheme.surfaceContainerHighest
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+
+        Column(
+            modifier = Modifier.padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
             Icon(
-                imageVector = Icons.Filled.HideImage,
-                contentDescription = stringResource(Res.string.error_loading),
+                imageVector = Icons.Rounded.HideImage,
+                contentDescription = null,
+                modifier = Modifier.size(36.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Text("No Image")
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = "No image available",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -246,8 +424,9 @@ private fun MediaAsyncImageStatesPreview() {
                         .height(150.dp)
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp)),
-                    showRetryOnError = true,
-                    onRetryClick = {}
+                    showRetry = true,
+                    onRetry = {},
+                    throwableMessage = null
                 )
 
                 Text("3. Error State (Retry Disabled)", color = MaterialTheme.colorScheme.onBackground)
@@ -256,8 +435,9 @@ private fun MediaAsyncImageStatesPreview() {
                         .height(150.dp)
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp)),
-                    showRetryOnError = false,
-                    onRetryClick = {}
+                    showRetry = false,
+                    onRetry = {},
+                    throwableMessage = null
                 )
 
                 Text("4. Success State (Live Network)", color = MaterialTheme.colorScheme.onBackground)

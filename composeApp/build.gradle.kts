@@ -23,25 +23,42 @@ if (localPropertiesFile.exists()) {
 }
 
 buildConfig {
-    // Read from your existing local.properties logic
-    val token = localProperties.getProperty("ANILIST_TOKEN") ?: "\"\""
-    val malToken = localProperties.getProperty("MYANIMELIST_TOKEN") ?: "\"\""
-    val malClientID = localProperties.getProperty("MAL_CLIENT_ID") ?: "\"\""
-
-    // base url
-    buildConfigField("String", "ANILIST_BASE_URL", localProperties.getProperty("ANILIST_BASE_URL") ?: "https://graphql.anilist.co")
-    buildConfigField("String", "MAL_BASE_URL", localProperties.getProperty("MAL_BASE_URL") ?: "https://api.myanimelist.net/v2")
-    buildConfigField("String", "JIKAN_BASE_URL", localProperties.getProperty("JIKAN_BASE_URL") ?: "https://api.jikan.moe/v4")
-
-    //REDIRECT URI
-    buildConfigField("String", "AUTH_REDIRECT_URI", localProperties.getProperty("AUTH_REDIRECT_URI") )
 
 
-    buildConfigField("Boolean", "IS_DEBUG", true)
+    buildConfigField("BOOLEAN", "IS_DEBUG", true)
 
-    buildConfigField("String", "ANILIST_CLIENT_ID", localProperties.getProperty("ANILIST_CLIENT_ID") ?: "")
-    buildConfigField("String", "ANILIST_CLIENT_SECRET", localProperties.getProperty("ANILIST_CLIENT_SECRET") ?: "")
-    buildConfigField("String", "MAL_CLIENT_ID", localProperties.getProperty("MAL_CLIENT_ID") ?: "")
+    // IDs
+    buildConfigField("String", "AL_ID_ANDROID", localProperties.getProperty("anilist.android.id"))
+    buildConfigField("String", "AL_ID_DESKTOP", localProperties.getProperty("anilist.desktop.id"))
+
+    // Secrets
+    buildConfigField("String", "AL_SECRET_ANDROID", localProperties.getProperty("anilist.android.secret"))
+    buildConfigField("String", "AL_SECRET_DESKTOP", localProperties.getProperty("anilist.desktop.secret"))
+
+    // Redirects
+    buildConfigField("String", "AL_REDIRECT_ANDROID", localProperties.getProperty("anilist.android.redirect"))
+    buildConfigField("String", "AL_REDIRECT_DESKTOP", localProperties.getProperty("anilist.desktop.redirect"))
+
+    buildConfigField("String", "MAL_ID", localProperties.getProperty("mal.client.id"))
+    buildConfigField("String", "MAL_REDIRECT_ANDROID", localProperties.getProperty("mal.android.redirect"))
+    buildConfigField("String", "MAL_REDIRECT_DESKTOP", localProperties.getProperty("mal.desktop.redirect"))
+
+    buildConfigField(
+        "String",
+        "ANILIST_BASE_URL",
+        localProperties.getProperty("ANILIST_BASE_URL") ?: "https://graphql.anilist.co"
+    )
+    buildConfigField(
+        "String",
+        "MAL_BASE_URL",
+        localProperties.getProperty("MAL_BASE_URL") ?: "https://api.myanimelist.net/v2"
+    )
+    buildConfigField(
+        "String",
+        "JIKAN_BASE_URL",
+        localProperties.getProperty("JIKAN_BASE_URL") ?: "https://api.jikan.moe/v4"
+    )
+
 
 }
 

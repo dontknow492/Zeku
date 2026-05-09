@@ -145,7 +145,7 @@ class MediaRemoteMediator(
                                 )
                             }
 
-                        mediaDao.upsertAll(
+                        mediaDao.upsertMediaListWithSearch(
                             mediaItems.map { it.toEntity() }
                         )
 

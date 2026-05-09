@@ -8,3 +8,6 @@ sealed interface AuthState {
     // The superpower of Sealed Classes: Holding data!
     data class Error(val message: String) : AuthState
 }
+
+
+

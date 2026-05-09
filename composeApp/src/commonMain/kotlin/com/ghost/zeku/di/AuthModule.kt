@@ -1,9 +1,13 @@
 package com.ghost.zeku.di
 
+import com.ghost.zeku.data.remote.anilist.AniListConfig
+import com.ghost.zeku.data.remote.mal.MalConfig
 import com.ghost.zeku.data.repository.auth.AniListAuthRepositoryImpl
 import com.ghost.zeku.data.repository.auth.AuthRedirectListenerFactory
 import com.ghost.zeku.data.repository.auth.AuthRepositoryImpl
 import com.ghost.zeku.data.repository.auth.MalAuthRepositoryImpl
+import com.ghost.zeku.domain.AuthSessionHandler
+import com.ghost.zeku.domain.getAuthHandler
 import com.ghost.zeku.domain.repository.AuthRepository
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
@@ -25,9 +29,9 @@ val authModule = module {
         AniListAuthRepositoryImpl(
             settings = get(named("secureSettings")),
             httpClient = get(), // Injected from NetworkModule
-            clientId = BuildConfig.ANILIST_CLIENT_ID,
-            clientSecret = BuildConfig.ANILIST_CLIENT_SECRET,
-            redirectUri = get(named("anilist_redirect"))
+            clientId = AniListConfig.clientId,
+            clientSecret = AniListConfig.clientSecret,
+            redirectUri = AniListConfig.redirectUri
         )
     }
 
@@ -35,8 +39,8 @@ val authModule = module {
         MalAuthRepositoryImpl(
             settings = get(named("secureSettings")),
             httpClient = get(), // Injected from NetworkModule
-            clientId = BuildConfig.MAL_CLIENT_ID,
-            redirectUri = get(named("mal_redirect"))
+            clientId = MalConfig.clientId,
+            redirectUri = MalConfig.redirectUri
         )
     }
 
@@ -48,5 +52,9 @@ val authModule = module {
                 get<MalAuthRepositoryImpl>()
             )
         )
+    }
+
+    single<AuthSessionHandler> {
+        getAuthHandler()
     }
 }

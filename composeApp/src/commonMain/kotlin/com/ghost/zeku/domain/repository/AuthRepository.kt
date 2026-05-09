@@ -37,7 +37,7 @@ interface AuthRepository {
      * Why? Because MAL puts a ?code= in the URI, but AniList puts an #access_token= in the URI.
      * Passing the full string lets the Repository parse it perfectly without the UI caring!
      */
-    suspend fun handleAuthRedirectUri(provider: ProviderType, uriString: String): ApiResult<Unit>
+    suspend fun handleAuthRedirectUri(provider: ProviderType, authCode: String): ApiResult<Unit>
 
     /**
      * 3. Disconnect an account and wipe its tokens from secure storage.

@@ -20,15 +20,7 @@ fun MediaEntity.toDomain(): Media {
         mediaType = this.mediaType,
 
         // Safely parse the format String into the Enum. Fallback to UNKNOWN if it fails.
-        format = try {
-            if (!this.format.isNullOrBlank()) {
-                MediaFormat.valueOf(this.format.uppercase())
-            } else {
-                MediaFormat.UNKNOWN
-            }
-        } catch (e: IllegalArgumentException) {
-            MediaFormat.UNKNOWN
-        },
+        format = this.format,
 
         title = this.title,
         coverImage = this.coverImage,
@@ -52,7 +44,8 @@ fun MediaEntity.toDomain(): Media {
 
         chapters = this.chapters,
         volumes = this.volumes,
-        author = this.author
+        author = this.author,
+        synonyms = synonyms,
     )
 }
 
@@ -62,6 +55,7 @@ fun Media.toEntity(): MediaEntity {
         provider = this.source,
         mediaType = this.mediaType,
         title = this.title,
+        synonyms = this.synonyms,
         coverImage = this.coverImage,
         bannerImage = this.bannerImage,
         description = this.description,
@@ -73,7 +67,7 @@ fun Media.toEntity(): MediaEntity {
         startDate = this.startDate,
 
         // Convert Enum back to String for the database
-        format = this.format.name,
+        format = this.format,
 
         // These fields exist in MediaEntity but not in the Media domain model.
         // We set them to null.
@@ -119,6 +113,7 @@ fun MediaDetails.toBaseEntity(): MediaEntity {
         provider = this.source,
         mediaType = this.mediaType,
         title = this.title,
+        synonyms = this.synonyms,
         coverImage = this.coverImage,
         bannerImage = this.bannerImage,
         description = this.description,
@@ -134,9 +129,9 @@ fun MediaDetails.toBaseEntity(): MediaEntity {
         endDate = this.endDate,
 
         // Convert Enum to String. Fallback to UNKNOWN if null.
-        format = this.format?.name ?: MediaFormat.UNKNOWN.name,
+        format = this.format,
 
-        season = this.season?.name,
+        season = this.season,
         seasonYear = this.seasonYear,
         countryOfOrigin = this.countryOfOrigin,
         sourceMaterial = this.sourceMaterial,

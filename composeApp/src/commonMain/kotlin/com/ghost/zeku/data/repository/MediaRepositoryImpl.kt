@@ -312,7 +312,7 @@ class MediaRepositoryImpl(
                         .upsertDetails(details.toEntity())
 
                     database.mediaDao()
-                        .upsert(details.toBaseEntity())
+                        .upsertMediaWithSearch(details.toBaseEntity())
                 }
             }
         )
@@ -337,7 +337,7 @@ class MediaRepositoryImpl(
                         .upsertDetails(result.data.toEntity())
 
                     database.mediaDao()
-                        .upsert(result.data.toBaseEntity())
+                        .upsertMediaWithSearch(result.data.toBaseEntity())
                 }
 
                 ApiResult.Success(Unit)
@@ -428,7 +428,7 @@ class MediaRepositoryImpl(
                                         )
 
                                     database.mediaDao()
-                                        .upsertAll(entities)
+                                        .upsertMediaListWithSearch(entities)
 
                                     database.remoteKeysDao()
                                         .upsertMediaKeys(keys)

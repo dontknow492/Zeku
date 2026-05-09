@@ -24,7 +24,9 @@ import com.ghost.zeku.domain.model.media.*
 import com.ghost.zeku.domain.model.media.track.TrackStatus
 import com.ghost.zeku.domain.repository.AuthRepository
 import com.ghost.zeku.domain.repository.UserSettings
+import com.ghost.zeku.presentation.navigation.ZekuAppWrapper
 import com.ghost.zeku.presentation.screen.library.LibraryCategoryScreen
+import com.ghost.zeku.presentation.screen.library.LibraryScreen
 import com.ghost.zeku.presentation.theme.AppTheme
 import kotlinx.serialization.json.Json
 import org.koin.compose.koinInject
@@ -34,11 +36,14 @@ import java.util.concurrent.TimeUnit
 
 @Composable
 fun App() = AppTheme {
-//    ZekuAppWrapper()
-    LibraryCategoryScreen(
-        viewModel = koinViewModel(),
-        onNavigateBack = {}
-    )
+    ZekuAppWrapper()
+//    LibraryCategoryScreen(
+//        viewModel = koinViewModel(),
+//        onNavigateBack = {}
+//    )
+//    LibraryScreen(
+//        viewModel = koinViewModel(),
+//    )
 }
 
 @Composable

@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class DisplayPreferences(
     val category: MediaDisplayPreference = MediaDisplayPreference(),
-    val search: MediaDisplayPreference = MediaDisplayPreference()
+    val search: MediaDisplayPreference = MediaDisplayPreference(),
 )

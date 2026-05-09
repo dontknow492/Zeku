@@ -6,6 +6,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.OverscrollEffect
 import androidx.compose.foundation.gestures.FlingBehavior
 import androidx.compose.foundation.gestures.ScrollableDefaults
+import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridCells.Adaptive
@@ -14,19 +15,33 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberOverscrollEffect
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CloudOff
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import com.ghost.zeku.domain.model.media.Media
 import com.ghost.zeku.domain.model.settings.MediaDisplayPreference
+import com.ghost.zeku.presentation.common.isDesktop
+import com.ghost.zeku.presentation.common.rememberPlatformConfiguration
 import com.ghost.zeku.presentation.components.media.list.ListCardConfig
 import com.ghost.zeku.presentation.components.media.list.ListCardShimmer
 import com.ghost.zeku.presentation.components.media.list.MediaListCard
@@ -37,13 +52,10 @@ import com.ghost.zeku.presentation.components.media.poster.PosterConfig
 import com.ghost.zeku.presentation.components.media.poster.toMediaPosterUiData
 import com.ghost.zeku.presentation.components.section.EmptyMediaState
 import com.ghost.zeku.presentation.components.section.FullScreenError
+import com.ghost.zeku.utils.desktopDragScroll
 import kotlinx.serialization.Serializable
 
 
-@Serializable
-private enum class GridUiState {
-    LOADING, ERROR, EMPTY, CONTENT
-}
 
 @Serializable
 enum class GridStyle {
@@ -85,146 +97,193 @@ fun MediaGrid(
     userScrollEnabled: Boolean = true,
     overscrollEffect: OverscrollEffect? = rememberOverscrollEffect(),
 ) {
-    val state = rememberLazyGridState()
-    val refreshLoadState = pagingItems.loadState.refresh
-    val isListEmpty = pagingItems.itemCount == 0
+
+    val isDesktop = rememberPlatformConfiguration().isDesktop
+
+    val gridState = rememberLazyGridState()
 
     val displayMode = displayPreferences.mode
 
-
-    // 🌟 Auto-adjust columns based on Display Mode
-    // A Grid with Fixed(1) behaves exactly like a LazyColumn!
-    val actualColumns = when (displayMode) {
-        MediaDisplayMode.PosterGrid -> displayPreferences.gridStyle.toGridCells(
-            minSize = displayPreferences.gridMinSize,
-            count = displayPreferences.gridCount
-        )
+    val columns = when (displayMode) {
+        MediaDisplayMode.PosterGrid -> {
+            displayPreferences.gridStyle.toGridCells(
+                minSize = displayPreferences.gridMinSize,
+                count = displayPreferences.gridCount
+            )
+        }
 
         MediaDisplayMode.List -> Fixed(1)
     }
 
-    val actualSpacing = when (displayMode) {
+    val spacing = when (displayMode) {
         MediaDisplayMode.PosterGrid -> displayPreferences.gridSpacing
         MediaDisplayMode.List -> displayPreferences.listSpacing
     }
 
-    val verticalArrangement: Arrangement.Vertical =
-        if (!reverseLayout) Arrangement.spacedBy(actualSpacing, Alignment.Top) else Arrangement.spacedBy(
-            actualSpacing,
-            Alignment.Bottom
-        )
-    val horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(actualSpacing, Alignment.Start)
+    val refreshState = pagingItems.loadState.refresh
 
+    val hasItems = pagingItems.itemSnapshotList.isNotEmpty()
 
-    // 🌟 1. Determine the current UI State
-    val currentUiState = when (refreshLoadState) {
-        is LoadState.Loading if isListEmpty -> GridUiState.LOADING
-        is LoadState.Error if isListEmpty -> GridUiState.ERROR
-        is LoadState.NotLoading if isListEmpty -> GridUiState.EMPTY
-        else -> GridUiState.CONTENT
-    }
+    Box(modifier = modifier.fillMaxSize()) {
 
-    Crossfade(
-        targetState = currentUiState,
-        label = "MediaGridStateTransition",
-        modifier = modifier
-    ) { targetState ->
+        // =========================================================
+        // GRID
+        // =========================================================
 
-        when (targetState) {
-            GridUiState.LOADING -> {
-                LazyVerticalGrid(
-                    columns = actualColumns,
-                    state = state,
-                    contentPadding = contentPadding,
-                    reverseLayout = reverseLayout,
-                    horizontalArrangement = horizontalArrangement,
-                    verticalArrangement = verticalArrangement,
-                    userScrollEnabled = false,
-                ) {
-                    items(count = 12) {
-                        LoadingItem(
-                            displayPreferences.mode,
-                            displayPreferences.listConfig,
-                            displayPreferences.posterConfig
-                        )
-                    }
+        LazyVerticalGrid(
+            columns = columns,
+
+            state = gridState,
+
+            modifier = Modifier.fillMaxSize()
+                .then(if (isDesktop) Modifier.desktopDragScroll(state = gridState) else Modifier)
+                .pointerHoverIcon(
+                    if (isDesktop) PointerIcon.Hand else PointerIcon.Default
+                ),
+
+            contentPadding = contentPadding,
+
+            reverseLayout = reverseLayout,
+
+            horizontalArrangement = Arrangement.spacedBy(spacing),
+
+            verticalArrangement = Arrangement.spacedBy(spacing),
+
+            flingBehavior = flingBehavior,
+
+            userScrollEnabled = userScrollEnabled,
+
+            overscrollEffect = overscrollEffect
+        ) {
+
+            // =========================================================
+            // INITIAL LOADING SHIMMERS
+            // =========================================================
+
+            if (refreshState is LoadState.Loading && !hasItems) {
+
+                items(12) {
+
+                    LoadingItem(
+                        displayMode = displayMode,
+                        listConfig = displayPreferences.listConfig,
+                        posterConfig = displayPreferences.posterConfig
+                    )
                 }
             }
 
-            GridUiState.ERROR -> {
-                val error = (refreshLoadState as? LoadState.Error)?.error ?: Exception("Unknown Error")
-                FullScreenError(
-                    error = error,
-                    onRetry = { pagingItems.retry() }
-                )
-            }
+            // =========================================================
+            // CONTENT
+            // =========================================================
 
-            GridUiState.EMPTY -> {
-                EmptyMediaState()
-            }
+            else {
 
-            GridUiState.CONTENT -> {
-                LazyVerticalGrid(
-                    columns = actualColumns,
-                    state = state,
-                    contentPadding = contentPadding,
-                    reverseLayout = reverseLayout,
-                    horizontalArrangement = horizontalArrangement,
-                    verticalArrangement = verticalArrangement,
-                    flingBehavior = flingBehavior,
-                    userScrollEnabled = userScrollEnabled,
-                    overscrollEffect = overscrollEffect,
-                ) {
-                    // Prepend Loading/Error
-                    if (pagingItems.loadState.prepend is LoadState.Loading) {
-                        item(span = { GridItemSpan(maxLineSpan) }) { PaginationLoader() }
+                items(
+                    count = pagingItems.itemCount,
+                    key = { index ->
+                        pagingItems[index]?.id ?: index
                     }
-                    if (pagingItems.loadState.prepend is LoadState.Error) {
-                        val error = (pagingItems.loadState.prepend as LoadState.Error).error
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            PaginationError(error = error, onRetry = { pagingItems.retry() })
-                        }
-                    }
+                ) { index ->
 
-                    // Main Items
-                    items(count = pagingItems.itemCount) { index ->
-                        val item = pagingItems[index]
-                        if (item != null) {
-                            when (displayMode) {
+                    val item = pagingItems[index]
 
+                    if (item != null) {
 
-                                MediaDisplayMode.PosterGrid -> MediaPosterCard(
+                        when (displayMode) {
+
+                            MediaDisplayMode.PosterGrid -> {
+
+                                MediaPosterCard(
                                     data = item.toMediaPosterUiData(),
-                                    layout = displayPreferences.posterLayout,
-                                    config = displayPreferences.posterConfig,
-                                    onAction = onMediaAction,
-                                    modifier = Modifier.animateItem().animateContentSize().fillMaxWidth()
-                                )
 
-                                MediaDisplayMode.List -> MediaListCard(
-                                    data = item.toMediaListUiData(),
-                                    layout = displayPreferences.listCardLayout,
-                                    config = displayPreferences.listConfig,
+                                    layout = displayPreferences.posterLayout,
+
+                                    config = displayPreferences.posterConfig,
+
                                     onAction = onMediaAction,
-                                    modifier = Modifier.animateItem().animateContentSize().fillMaxWidth()
+
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .animateItem()
+                                )
+                            }
+
+                            MediaDisplayMode.List -> {
+
+                                MediaListCard(
+                                    data = item.toMediaListUiData(),
+
+                                    layout = displayPreferences.listCardLayout,
+
+                                    config = displayPreferences.listConfig,
+
+                                    onAction = onMediaAction,
+
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .animateItem()
                                 )
                             }
                         }
                     }
+                }
 
-                    // Append Loading/Error
-                    if (pagingItems.loadState.append is LoadState.Loading) {
-                        item(span = { GridItemSpan(maxLineSpan) }) { PaginationLoader() }
-                    }
-                    if (pagingItems.loadState.append is LoadState.Error) {
-                        val error = (pagingItems.loadState.append as LoadState.Error).error
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            PaginationError(error = error, onRetry = { pagingItems.retry() })
-                        }
+                // =========================================================
+                // APPEND LOADING
+                // =========================================================
+
+                if (pagingItems.loadState.append is LoadState.Loading) {
+
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        PaginationLoader()
                     }
                 }
 
+                // =========================================================
+                // APPEND ERROR
+                // =========================================================
+
+                if (pagingItems.loadState.append is LoadState.Error) {
+
+                    val error =
+                        (pagingItems.loadState.append as LoadState.Error).error
+
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+
+                        PaginationError(
+                            error = error,
+                            onRetry = pagingItems::retry
+                        )
+                    }
+                }
             }
+        }
+
+        // =========================================================
+        // FULLSCREEN ERROR
+        // =========================================================
+
+        if (refreshState is LoadState.Error && !hasItems) {
+
+            FullScreenError(
+                error = refreshState.error,
+                onRetry = pagingItems::retry,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        // =========================================================
+        // EMPTY STATE
+        // =========================================================
+
+        if (
+            refreshState is LoadState.NotLoading &&
+            !hasItems
+        ) {
+
+            EmptyMediaState(
+                modifier = Modifier.fillMaxSize()
+            )
         }
     }
 }
@@ -244,49 +303,161 @@ private fun LoadingItem(
 
 
 @Composable
-private fun PaginationLoader() {
-    Box(
-        modifier = Modifier
+private fun PaginationLoader(
+    modifier: Modifier = Modifier,
+    message: String = "Loading more..."
+) {
+
+    Surface(
+        modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+
+        shape = RoundedCornerShape(24.dp),
+
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+
+        tonalElevation = 1.dp
     ) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(32.dp),
-            color = MaterialTheme.colorScheme.primary,
-            strokeWidth = 3.dp
-        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 16.dp),
+
+            horizontalArrangement = Arrangement.Center,
+
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            CircularProgressIndicator(
+                modifier = Modifier.size(18.dp),
+                strokeWidth = 2.5.dp
+            )
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
 @Composable
 fun PaginationError(
     error: Throwable,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = Modifier
+
+    ElevatedCard(
+        modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+
+        shape = RoundedCornerShape(24.dp),
+
+        colors = CardDefaults.elevatedCardColors(
+            containerColor =
+                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f)
+        )
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "Failed to load more",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.error
-            )
-            Text(
-                text = error.localizedMessage ?: "Please check your connection.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
-            )
-        }
-        Spacer(modifier = Modifier.width(8.dp))
-        OutlinedButton(onClick = onRetry) {
-            Text("Retry")
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 16.dp),
+
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            // =====================================================
+            // ERROR ICON
+            // =====================================================
+
+            Surface(
+                shape = CircleShape,
+
+                color = MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
+            ) {
+
+                Icon(
+                    imageVector = Icons.Rounded.CloudOff,
+
+                    contentDescription = null,
+
+                    tint = MaterialTheme.colorScheme.error,
+
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .size(20.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            // =====================================================
+            // TEXT
+            // =====================================================
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+
+                Text(
+                    text = "Couldn't load more",
+
+                    style = MaterialTheme.typography.titleSmall,
+
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Text(
+                    text =
+                        error.localizedMessage
+                            ?.takeIf { it.isNotBlank() }
+                            ?: "Please check your internet connection.",
+
+                    style = MaterialTheme.typography.bodySmall,
+
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+
+                    maxLines = 2
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // =====================================================
+            // RETRY BUTTON
+            // =====================================================
+
+            FilledTonalButton(
+                onClick = onRetry,
+
+                shape = RoundedCornerShape(14.dp),
+
+                contentPadding = PaddingValues(
+                    horizontal = 14.dp,
+                    vertical = 10.dp
+                )
+            ) {
+
+                Icon(
+                    imageVector = Icons.Rounded.Refresh,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text("Retry")
+            }
         }
     }
 }

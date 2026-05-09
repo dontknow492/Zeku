@@ -28,7 +28,7 @@ import kotlinx.coroutines.Dispatchers
     views = [
         MediaLibraryView::class  // Register the view here
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(RoomConverters::class)

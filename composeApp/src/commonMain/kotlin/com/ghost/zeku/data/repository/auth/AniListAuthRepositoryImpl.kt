@@ -1,10 +1,13 @@
 package com.ghost.zeku.data.repository.auth
 
+import com.ghost.zeku.data.remote.anilist.AniListQueries
+import com.ghost.zeku.data.remote.anilist.model.AniListResponse
+import com.ghost.zeku.data.remote.anilist.model.ViewerWrapper
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.model.api.ApiError
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.api.AuthState
 import com.ghost.zeku.domain.model.api.ErrorType
-import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.repository.ProviderAuthRepository
 import com.russhwolf.settings.Settings
 import io.github.aakira.napier.Napier
@@ -45,6 +48,7 @@ class AniListAuthRepositoryImpl(
         private const val KEY_REFRESH_TOKEN = "auth_token_anilist_refresh"
         private const val KEY_TOKEN_DATE = "auth_token_anilist_date"
         private const val KEY_USER_ID = "auth_user_id_anilist" // Add this
+        private const val KEY_USER_NAME = "auth_user_name_anilist"
     }
 
     private val _authState = MutableStateFlow<AuthState>(
@@ -86,34 +90,15 @@ class AniListAuthRepositoryImpl(
         return url
     }
 
-    override suspend fun handleAuthRedirectUri(uriString: String): ApiResult<Unit> {
+    override suspend fun handleAuthRedirectUri(authCode: String): ApiResult<Unit> {
         Napier.d { "AniList handleAuthRedirectUri called" }
-        Napier.v { "AniList redirect URI received: ${uriString.take(150)}..." }
+        Napier.v { "AniList redirect URI received: ${authCode.take(150)}..." }
         _authState.update { AuthState.Loading }
 
         return try {
-            // Extract the authorization CODE (not token!)
-            val code = extractAuthorizationCode(uriString)
-
-            if (code == null) {
-                Napier.w { "AniList auth redirect: could not extract authorization code from URI" }
-                Napier.d { "Full URI that failed parsing: $uriString" }
-                _authState.update { AuthState.LoggedOut }
-                return ApiResult.Error(
-                    error = ApiError(
-                        type = ErrorType.PARSE_ERROR,
-                        message = "Could not extract authorization code from AniList redirect.",
-                        rawError = uriString,
-                        recoverable = true,
-                        recoverySuggestion = "Please try logging in again."
-                    )
-                )
-            }
-
-            Napier.v { "AniList authorization code extracted: ${code.take(4)}****" }
 
             // Exchange the code for an access token
-            val tokenResponse = exchangeCodeForToken(code)
+            val tokenResponse = exchangeCodeForToken(authCode)
 
             // Save tokens
             settings.putString(KEY_ACCESS_TOKEN, tokenResponse.accessToken)
@@ -200,40 +185,6 @@ class AniListAuthRepositoryImpl(
         return tokenResponse
     }
 
-    /**
-     * Extracts the authorization CODE from the redirect URI.
-     * With response_type=code, the format is:
-     * com.ghost.zeku://auth?code=abc123...
-     * or
-     * http://localhost:8080/?code=abc123...
-     */
-    private fun extractAuthorizationCode(uriString: String): String? {
-        Napier.v { "Extracting authorization code from AniList redirect" }
-
-        // Method 1: Try parsing as URL (handles both custom schemes and HTTP)
-        try {
-            val url = Url(uriString)
-            val code = url.parameters["code"]
-            if (code != null) {
-                Napier.d { "Authorization code extracted via URL parsing" }
-                return code
-            }
-        } catch (e: Exception) {
-            Napier.v { "URL parsing failed, trying regex fallback: ${e.message}" }
-        }
-
-        // Method 2: Regex fallback
-        val codePattern = "[?&]code=([^&\\s]+)".toRegex()
-        val match = codePattern.find(uriString)
-        if (match != null) {
-            val code = match.groupValues[1]
-            Napier.d { "Authorization code extracted via regex" }
-            return code
-        }
-
-        Napier.w { "No authorization code found in redirect URI" }
-        return null
-    }
 
     override suspend fun logout() {
         Napier.d { "AniList logout initiated" }
@@ -241,6 +192,8 @@ class AniListAuthRepositoryImpl(
         settings.remove(KEY_ACCESS_TOKEN)
         settings.remove(KEY_REFRESH_TOKEN)
         settings.remove(KEY_TOKEN_DATE)
+        settings.remove(KEY_USER_ID)
+        settings.remove(KEY_USER_NAME)
         _authState.update { AuthState.LoggedOut }
         Napier.i { "AniList logout complete: tokenCleared=$hadToken" }
     }
@@ -257,7 +210,7 @@ class AniListAuthRepositoryImpl(
 
 
     private suspend fun fetchAndSaveUserId(token: String): Int {
-        val query = """{"query":"query { Viewer { id } }"}"""
+        val query = AniListQueries.GET_USER_VIEWER
 
         val response = httpClient.post(BuildConfig.ANILIST_BASE_URL) {
             header("Authorization", "Bearer $token")
@@ -266,22 +219,22 @@ class AniListAuthRepositoryImpl(
             setBody(query)
         }
 
-        // Define a tiny local DTO or use Json.decodeFromString
-        val body = response.bodyAsText()
-        // Simplified parsing (or use your AniListResponse models if available)
-        val id = extractIdFromJson(body)
+        if (response.status.isSuccess()) {
+            // 2. Safely parse the response using Kotlinx Serialization
+            val parsedResponse = response.body<AniListResponse<ViewerWrapper>>()
+            val viewer = parsedResponse.data?.viewer
 
-        if (id != null) {
-            settings.putInt(KEY_USER_ID, id)
-            return id
+            if (viewer != null) {
+                // 3. Save both the ID and the Name to your settings
+                settings.putInt(KEY_USER_ID, viewer.id)
+                settings.putString(KEY_USER_NAME, viewer.name)
+
+                Napier.d { "AniList Profile saved: ${viewer.name} (ID: ${viewer.id})" }
+                return viewer.id
+            }
         }
+
         throw IllegalStateException("Could not parse User ID from AniList")
     }
 
-    private fun extractIdFromJson(json: String): Int? {
-        // You can use Json.decodeFromString here with your DTOs
-        // or a simple regex if you don't want to define more classes
-        val regex = """"id":\s*(\d+)""".toRegex()
-        return regex.find(json)?.groupValues?.get(1)?.toIntOrNull()
-    }
 }

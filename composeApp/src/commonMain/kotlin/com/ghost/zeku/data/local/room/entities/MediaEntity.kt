@@ -1,5 +1,6 @@
 package com.ghost.zeku.data.local.room.entities
 
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Index
 import com.ghost.zeku.domain.model.media.MediaDate
@@ -8,6 +9,8 @@ import com.ghost.zeku.domain.model.media.MediaReleaseStatus
 import com.ghost.zeku.domain.model.media.MediaSourceMaterial
 import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.domain.model.ProviderType
+import com.ghost.zeku.domain.model.media.MediaFormat
+import com.ghost.zeku.domain.model.media.MediaSeason
 
 /**
  * Unified media table for all media types.
@@ -22,7 +25,6 @@ import com.ghost.zeku.domain.model.ProviderType
         Index(value = ["mediaType"]),
 
         // Search / Sorting
-        Index(value = ["title"]),
         Index(value = ["score"]),
         Index(value = ["popularity"]),
         Index(value = ["updatedAt"]),
@@ -68,7 +70,10 @@ data class MediaEntity(
     // Core Shared Fields
     // ------------------------------------------------------------------------
 
+    @Embedded(prefix = "title_")
     val title: MediaTitle,
+
+    val synonyms: List<String>,
 
     val coverImage: String,
 
@@ -90,9 +95,9 @@ data class MediaEntity(
 
     val endDate: MediaDate? = null,
 
-    val format: String? = null,
+    val format: MediaFormat = MediaFormat.UNKNOWN,
 
-    val season: String? = null,
+    val season: MediaSeason? = null,
 
     val seasonYear: Int? = null,
 

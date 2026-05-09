@@ -1,5 +1,6 @@
 package com.ghost.zeku.data.repository.auth
 
+import com.ghost.zeku.data.remote.mal.model.MalUserDto
 import com.ghost.zeku.domain.model.api.ApiError
 import com.ghost.zeku.domain.model.api.ApiResult
 import com.ghost.zeku.domain.model.api.AuthState
@@ -98,33 +99,25 @@ class MalAuthRepositoryImpl(
         return url
     }
 
-    override suspend fun handleAuthRedirectUri(uriString: String): ApiResult<Unit> {
+    override suspend fun handleAuthRedirectUri(authCode: String): ApiResult<Unit> {
         Napier.d { "MAL handleAuthRedirectUri called" }
-        Napier.v { "MAL redirect URI received: ${uriString.take(100)}..." }
+        Napier.v { "MAL redirect URI received: ${authCode.take(100)}..." }
         _authState.update { AuthState.Loading }
 
         return try {
-            val url = Url(uriString)
-            val code = url.parameters["code"]
             val verifier = settings.getString(KEY_CODE_VERIFIER, "")
 
-            if (code == null) {
-                Napier.w { "MAL redirect URI missing 'code' parameter" }
-                throw IllegalStateException("MAL URI did not contain a 'code' parameter.")
-            }
             if (verifier.isEmpty()) {
                 Napier.e { "MAL PKCE code verifier missing from storage" }
                 throw IllegalStateException("Code verifier was lost. Cannot complete PKCE flow.")
             }
-
-            Napier.v { "MAL exchanging authorization code for token (code=${code.take(4)}****)" }
 
 
             val rawResponse = httpClient.submitForm(
                 url = "https://myanimelist.net/v1/oauth2/token",
                 formParameters = parameters {
                     append("client_id", clientId)
-                    append("code", code)
+                    append("code", authCode)
                     append("code_verifier", verifier)
                     append("grant_type", "authorization_code")
                     append("redirect_uri", redirectUri)
@@ -210,7 +203,7 @@ class MalAuthRepositoryImpl(
         }
 
         if (response.status.isSuccess()) {
-            val profile = response.body<MalProfileResponse>()
+            val profile = response.body<MalUserDto>()
             settings.putString(KEY_USER_NAME, profile.name)
             settings.putInt(KEY_USER_ID, profile.id)
             Napier.d { "MAL Profile saved: ${profile.name} (ID: ${profile.id})" }

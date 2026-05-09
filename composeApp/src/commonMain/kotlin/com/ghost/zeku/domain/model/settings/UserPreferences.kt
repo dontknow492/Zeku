@@ -40,6 +40,7 @@ data class UserPreferences(
     val accentColor: Color = Primary,
 
     val displayPreferences: DisplayPreferences = DisplayPreferences(),
+    val libraryPreferences: LibraryPreferences = LibraryPreferences(),
 )
 
 

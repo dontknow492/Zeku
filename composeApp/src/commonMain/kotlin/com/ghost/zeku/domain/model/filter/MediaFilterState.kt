@@ -3,11 +3,15 @@ package com.ghost.zeku.domain.model.filter
 import com.ghost.zeku.domain.model.media.MediaReleaseStatus
 import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.domain.model.ProviderType
+import com.ghost.zeku.utils.serializer.IntRangeSerializer
+import kotlinx.serialization.Serializable
 
 /**
  * Represents the current state of the library/search filters.
  * A default instance means "Show everything, no filters applied."
  */
+
+@Serializable
 data class MediaFilterState(
     // ------------------------------------------------------------------------
     // 1. Searching
@@ -37,9 +41,11 @@ data class MediaFilterState(
     // null means "no limit".
     // Example: 1999..2024
     // ------------------------------------------------------------------------
+    @Serializable(with = IntRangeSerializer::class)
     val yearRange: IntRange? = null,
 
     // Example: 70..100 (if using AniList 100-point scale)
+    @Serializable(with = IntRangeSerializer::class)
     val scoreRange: IntRange? = null,
 
     // ------------------------------------------------------------------------

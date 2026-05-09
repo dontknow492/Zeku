@@ -1,8 +1,11 @@
 package com.ghost.zeku.domain.model.filter
 
+import kotlinx.serialization.Serializable
+
 /**
  * Used by the ViewModel to group the final List<MediaEntity> before passing to Compose.
  */
+@Serializable
 enum class GroupOption {
     NONE,
     SOURCE,     // Group by AniList, MAL, etc.

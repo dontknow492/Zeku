@@ -9,8 +9,11 @@ import com.ghost.zeku.domain.repository.AuthRepository
 import io.github.aakira.napier.Napier
 import io.ktor.client.*
 import io.ktor.client.plugins.*
+import io.ktor.client.plugins.cache.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
+import io.ktor.client.request.*
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
@@ -20,15 +23,19 @@ val networkModule = module {
 
     // 1. Provide the HttpClient using the platform-specific engine
     single {
+        val json = Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+            explicitNulls = false
+            encodeDefaults = false
+            prettyPrint = false
+            coerceInputValues = true
+        }
         val client = HttpClient(provideHttpClientEngine()) {
 
             // 1. CONTENT NEGOTIATION (JSON)
             install(ContentNegotiation) {
-                json(Json {
-                    ignoreUnknownKeys = true // Crucial for AniList/MAL adding new fields
-                    isLenient = true
-                    explicitNulls = false // Don't serialize nulls
-                })
+                json(json)
             }
 
             // 2. TIMEOUTS (Don't let the app hang forever on a bad connection)
@@ -51,8 +58,12 @@ val networkModule = module {
 
             // 4. DEFAULT REQUEST (Applies to every call)
             install(DefaultRequest) {
-                // Good practice so APIs know what app is pinging them
-                headers.append("User-Agent", "ZekuApp/1.0")
+
+                header(HttpHeaders.UserAgent, "ZekuApp/1.0")
+
+                accept(ContentType.Application.Json)
+
+                contentType(ContentType.Application.Json)
             }
 
             // 5. LOGGING
@@ -65,6 +76,55 @@ val networkModule = module {
                     }
                 }
             }
+
+            // ----------------------------------------------------
+            // CACHE CONTROL
+            // ----------------------------------------------------
+
+            install(HttpCache)
+
+            HttpResponseValidator {
+
+                validateResponse { response ->
+
+                    val statusCode = response.status.value
+
+                    when (statusCode) {
+
+                        in 300..399 -> {
+                            Napier.w(
+                                tag = "HTTP",
+                                message = "Redirect: ${response.status}"
+                            )
+                        }
+
+                        in 400..499 -> {
+                            Napier.w(
+                                tag = "HTTP",
+                                message = "Client Error: ${response.status}"
+                            )
+                        }
+
+                        in 500..599 -> {
+                            Napier.e(
+                                tag = "HTTP",
+                                message = "Server Error: ${response.status}"
+                            )
+                        }
+                    }
+                }
+
+                handleResponseExceptionWithRequest { exception, request ->
+
+                    Napier.e(
+                        tag = "HTTP",
+                        throwable = exception,
+                        message = "Request failed: ${request.url}"
+                    )
+                }
+            }
+
+
         }
         KtorAuthInterceptor.install(client) {
             get<AuthRepository>()
@@ -73,7 +133,7 @@ val networkModule = module {
         client
     }
 
-    // 2. Provide your AniList Api Client
+// 2. Provide your AniList Api Client
     single { AniListApi(client = get()) }
     single { MalApi(client = get()) }
     single { JikanApi(client = get()) }

@@ -3,14 +3,20 @@ package com.ghost.zeku.presentation.viewmodel.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ghost.zeku.domain.AuthSessionHandler
 import com.ghost.zeku.domain.model.MessageType
-import com.ghost.zeku.domain.model.UserProfile
 import com.ghost.zeku.domain.model.ProviderType
+import com.ghost.zeku.domain.model.UserProfile
+import com.ghost.zeku.domain.model.api.ApiResult
+import com.ghost.zeku.domain.model.api.getErrorMessage
 import com.ghost.zeku.domain.repository.AuthRepository
 import com.ghost.zeku.domain.repository.UserRepository
+import com.ghost.zeku.utils.BrowserLauncher
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.awt.Desktop
+import java.net.URI
 
 
 // ========================================================================
@@ -19,7 +25,8 @@ import kotlinx.coroutines.launch
 
 class MainViewModel(
     private val userRepository: UserRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val authHandler: AuthSessionHandler,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MainContract.State())
@@ -48,8 +55,8 @@ class MainViewModel(
                 logoutAccount(event.user)
             }
 
-            MainContract.Event.AddAccountClick -> {
-                Napier.d { "Add account click" }
+            is MainContract.Event.AddAccountClick -> {
+                login(event.provider)
             }
 
             MainContract.Event.OpenZekuSite -> {
@@ -58,6 +65,82 @@ class MainViewModel(
 
             is MainContract.Event.ViewAccount -> {
                 Napier.d { "User requested account view from: ${event.user}" }
+            }
+        }
+    }
+
+    private fun login(provider: ProviderType) {
+        viewModelScope.launch {
+            Napier.d { "Starting login flow for ${provider.name}..." }
+
+            // 1. Get the URL to open the provider's login page
+            val authUrl = authRepository.getAuthorizationUrl(provider)
+
+            if (authUrl == null) {
+                sendEffect(MainContract.Effect.ShowMessage("Failed to generate login URL", MessageType.Error.Network))
+                return@launch
+            }
+
+            // 2. Determine the path to listen for based on the provider
+            val listenPath = provider.authPath
+
+            Napier.d { "Awaiting browser redirect on path: $listenPath..." }
+
+            // 3. Open browser and suspend until we get the authorization code
+            val authCode = authHandler.getAuthorizationCode(authUrl, listenPath)
+
+            BrowserLauncher.openUrl(authUrl)
+
+            if (authCode != null) {
+                Napier.d { "Code received! Exchanging for tokens..." }
+
+                // 4. Extract tokens and complete the login using the RETURNED code
+                when (val result = authRepository.handleAuthRedirectUri(provider, authCode)) {
+
+                    is ApiResult.Success -> {
+                        Napier.d { "Login successful!" }
+                        // Show success toast/snackbar
+                        sendEffect(
+                            MainContract.Effect.ShowMessage(
+                                "Successfully logged into ${provider.name}!",
+                                MessageType.Success
+                            )
+                        )
+
+                        // Refresh the user state so the UI updates
+                        onEvent(MainContract.Event.Initialize)
+                    }
+
+                    is ApiResult.Error -> {
+                        Napier.e { "Login failed: ${result.getErrorMessage()}" }
+                        // Show error toast/snackbar
+                        sendEffect(
+                            MainContract.Effect.ShowMessage(
+                                result.getErrorMessage() ?: "Login Failed",
+                                MessageType.Error.Network
+                            )
+                        )
+                        // State update handled internally by AuthRepository
+                    }
+
+                    is ApiResult.Empty -> {
+                        sendEffect(
+                            MainContract.Effect.ShowMessage(
+                                "Unexpected empty response from server.",
+                                MessageType.Error.Network
+                            )
+                        )
+                    }
+
+                    else -> {
+                        Napier.w { "Unhandled ApiResult type." }
+                    }
+                }
+            } else {
+                // This happens if the user closes the browser tab without logging in
+                // or if the local Ktor server times out/cancels.
+                Napier.i { "Login cancelled by user." }
+                sendEffect(MainContract.Effect.ShowMessage("Login cancelled.", MessageType.Info))
             }
         }
     }

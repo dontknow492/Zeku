@@ -47,7 +47,7 @@ data class MediaDetails(
 
     val status: MediaReleaseStatus? = null,
 
-    val format: MediaFormat? = null,
+    val format: MediaFormat = MediaFormat.UNKNOWN,
 
     val sourceMaterial: MediaSourceMaterial? = null,
 

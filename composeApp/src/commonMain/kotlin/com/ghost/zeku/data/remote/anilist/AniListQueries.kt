@@ -358,3 +358,14 @@ object AniListQueries {
 
 
 }
+
+
+
+
+
+
+
+
+
+
+

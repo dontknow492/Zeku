@@ -13,7 +13,8 @@ interface MainContract {
         val currentUser: UserProfile? = null,
         val availableUsers: List<UserProfile> = emptyList(),
         val activeProvider: ProviderType = ProviderType.MYANIMELIST,
-        val isLoggingOut: Boolean = false
+        val isLoggingOut: Boolean = false,
+        val error: String? = null,
     )
 
     sealed interface Event {
@@ -21,7 +22,7 @@ interface MainContract {
         data object OpenZekuSite : Event
         data class SwitchAccount(val user: UserProfile) : Event
         data class Logout(val user: UserProfile) : Event
-        data object AddAccountClick : Event
+        data class AddAccountClick(val provider: ProviderType) : Event
         data class ViewAccount(val user: UserProfile) : Event
     }
 

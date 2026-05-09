@@ -85,7 +85,7 @@ class AuthRepositoryImpl(
         return url
     }
 
-    override suspend fun handleAuthRedirectUri(provider: ProviderType, uriString: String): ApiResult<Unit> {
+    override suspend fun handleAuthRedirectUri(provider: ProviderType, authCode: String): ApiResult<Unit> {
         Napier.d { "Handling auth redirect for $provider" }
 
         val repo = providerMap[provider]
@@ -101,7 +101,7 @@ class AuthRepositoryImpl(
             )
         }
 
-        val result = repo.handleAuthRedirectUri(uriString)
+        val result = repo.handleAuthRedirectUri(authCode)
         when (result) {
             is ApiResult.Success -> {
                 Napier.i { "Auth redirect handled successfully for $provider" }

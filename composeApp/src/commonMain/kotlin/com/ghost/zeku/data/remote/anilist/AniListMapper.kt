@@ -35,6 +35,7 @@ fun AniListMedia.toMediaDomain(): Media {
         format = format.toMediaFormat(),
 
         title = title.toDomain(),
+        synonyms = this.synonyms ?: emptyList(),
 
         coverImage = coverImage?.large.orEmpty(),
 

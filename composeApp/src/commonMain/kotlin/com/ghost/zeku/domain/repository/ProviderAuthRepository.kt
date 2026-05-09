@@ -19,7 +19,7 @@ interface ProviderAuthRepository {
 
     fun getAuthorizationUrl(): String
 
-    suspend fun handleAuthRedirectUri(uriString: String): ApiResult<Unit>
+    suspend fun handleAuthRedirectUri(authCode: String): ApiResult<Unit>
 
     suspend fun logout()
 

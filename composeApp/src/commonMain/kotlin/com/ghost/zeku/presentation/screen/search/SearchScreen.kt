@@ -3,32 +3,27 @@ package com.ghost.zeku.presentation.screen.search
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.domain.model.media.Media
+import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.domain.model.settings.MediaDisplayPreference
 import com.ghost.zeku.presentation.common.isWideScreen
 import com.ghost.zeku.presentation.common.rememberPlatformConfiguration
+import com.ghost.zeku.presentation.components.SearchTopBar
 import com.ghost.zeku.presentation.components.media.MediaGrid
 import com.ghost.zeku.presentation.components.media.settings.DisplaySettingsPanel
 import com.ghost.zeku.presentation.navigation.Destination
@@ -91,9 +86,9 @@ private fun SearchScreenContent(
                     // Toggle sheet visibility
                     onEvent(SearchContract.Event.SetFilterSheetVisibility(!state.isFilterSheetOpen))
                 },
-                activeFilterCount = getActiveFilterCount(state),
+                badgeCount = getActiveFilterCount(state),
                 isFilterPanelOpen = state.isFilterSheetOpen,
-
+                placeholder = "Search anime, manga...."
                 )
         }
     ) { paddingValues ->
@@ -204,98 +199,6 @@ private fun SearchScreenContent(
     }
 }
 
-
-// ========================================================================
-// TOP BAR & GRID COMPONENTS
-// ========================================================================
-
-@Composable
-private fun SearchTopBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    onFilterClick: () -> Unit,
-    activeFilterCount: Int,
-    isFilterPanelOpen: Boolean,
-) {
-    val focusManager = LocalFocusManager.current
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .statusBarsPadding(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // Search Input Field
-        OutlinedTextField(
-            value = query,
-            onValueChange = onQueryChange,
-            modifier = Modifier.weight(1f),
-            placeholder = { Text("Search anime, manga...") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-            trailingIcon = {
-                if (query.isNotEmpty()) {
-                    IconButton(onClick = {
-                        onQueryChange("")
-                        focusManager.clearFocus()
-                    }) {
-                        Icon(Icons.Default.Clear, contentDescription = "Clear")
-                    }
-                }
-            },
-            singleLine = true,
-            shape = RoundedCornerShape(50),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-            )
-        )
-
-        // Filter Button with Badge
-        Box {
-            IconButton(
-                onClick = {
-                    focusManager.clearFocus()
-                    onFilterClick()
-                },
-                modifier = Modifier
-                    .background(
-                        // Highlight the button when the side panel is actively open
-                        color = if (isFilterPanelOpen) MaterialTheme.colorScheme.primaryContainer
-                        else MaterialTheme.colorScheme.surfaceVariant,
-                        shape = CircleShape
-                    )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.FilterList,
-                    contentDescription = "Filters",
-                    tint = if (isFilterPanelOpen) MaterialTheme.colorScheme.onPrimaryContainer
-                    else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            // Active Filters Badge
-            if (activeFilterCount > 0) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .offset(x = 4.dp, y = (-4).dp)
-                        .size(18.dp)
-                        .background(MaterialTheme.colorScheme.primary, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = activeFilterCount.toString(),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-    }
-}
 
 // ========================================================================
 // CAPABILITY-DRIVEN FILTER SHEET

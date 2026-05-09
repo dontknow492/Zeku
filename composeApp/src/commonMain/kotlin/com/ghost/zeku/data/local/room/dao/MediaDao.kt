@@ -6,9 +6,10 @@ import com.ghost.zeku.data.local.room.entities.LibraryCategoryEntity
 import com.ghost.zeku.data.local.room.entities.LibraryEntity
 import com.ghost.zeku.data.local.room.entities.MediaDetailsEntity
 import com.ghost.zeku.data.local.room.entities.MediaEntity
+import com.ghost.zeku.data.local.room.entities.MediaSearchEntity
 import com.ghost.zeku.data.local.room.view.MediaLibraryView
-import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.domain.model.ProviderType
+import com.ghost.zeku.domain.model.media.MediaType
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -22,6 +23,71 @@ interface MediaDao {
 
     @Upsert
     suspend fun upsert(media: MediaEntity)
+
+
+    @Upsert
+    suspend fun upsertMediaInternal(media: MediaEntity)
+
+    // 2. FTS Tables duplicate data if you just insert, so we must delete the old one first
+    @Query("DELETE FROM media_search WHERE mediaId = :mediaId AND provider = :provider")
+    suspend fun deleteSearchInternal(mediaId: Int, provider: String)
+
+    @Insert
+    suspend fun insertMediaSearchInternal(search: MediaSearchEntity)
+
+    /**
+     * 3. The public upsert method used by your Repository.
+     * @Transaction ensures that if one fails, the other rolls back.
+     */
+    @Transaction
+    suspend fun upsertMediaWithSearch(
+        media: MediaEntity,
+    ) {
+        // Step 1: Upsert the actual media data
+        upsertMediaInternal(media)
+
+        // Step 2: Delete the old search index (prevents duplicate search results!)
+        deleteSearchInternal(media.id, media.provider.name)
+
+        // Step 3: Mash all possible names together for the Search Index
+        val allSearchableTitles = listOfNotNull(
+            media.title.romaji,
+            media.title.english,
+            media.title.native,
+            media.title.userPreferred
+        ) + media.synonyms
+
+        // Join them with a space
+        val combinedSynonyms = allSearchableTitles.joinToString(" ")
+
+        // Step 4: Create and save the fresh FTS search entity
+        val searchEntity = MediaSearchEntity(
+            mediaId = media.id,
+            provider = media.provider.name,
+            title = media.title.userPreferred ?: media.title.romaji ?: "",
+            synonyms = combinedSynonyms,
+            description = media.description ?: ""
+        )
+
+        insertMediaSearchInternal(searchEntity)
+    }
+
+
+    /**
+     * Helper for upserting a whole list from a network fetch.
+     */
+    @Transaction
+    suspend fun upsertMediaListWithSearch(
+        medias: List<MediaEntity>
+    ) {
+        medias.forEach { media ->
+            upsertMediaWithSearch(media)
+        }
+    }
+
+
+
+
 
     @Query(
         """

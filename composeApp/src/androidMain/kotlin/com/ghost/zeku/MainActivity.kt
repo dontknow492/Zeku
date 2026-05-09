@@ -1,6 +1,7 @@
 package com.ghost.zeku
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -31,9 +32,15 @@ class MainActivity : ComponentActivity() {
      * common code's listener.
      */
     private fun handleIntent(intent: Intent?) {
-        val uri = intent?.dataString
-        if (uri != null && uri.startsWith("com.ghost.zeku://auth")) {
-            AndroidAuthRedirectListener.onRedirectReceived(uri)
+        val data: Uri? = intent?.data
+
+        // Check if the scheme and host match what's in the manifest
+        if (data?.scheme == "zeku" && data.host == "auth") {
+            // Since you want to handle /mal and /anilist differently:
+            val path = data.path // This will be "/mal" or "/anilist"
+
+            // Pass the full URI string or just the code to your listener
+            AndroidAuthRedirectListener.onRedirectReceived(data.toString())
         }
     }
 }

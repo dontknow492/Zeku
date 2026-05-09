@@ -19,10 +19,6 @@ fun Modifier.desktopDragScroll(state: ScrollableState): Modifier {
     return this.draggable(
         orientation = Orientation.Horizontal,
         state = rememberDraggableState { delta ->
-            // dispatchRawDelta applies the pixel movement synchronously
-            // directly to the Carousel's scroll state.
-            // We use -delta because dragging left (negative delta)
-            // means scrolling forward (positive scroll).
             state.dispatchRawDelta(-delta)
         }
     )

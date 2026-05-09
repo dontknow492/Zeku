@@ -25,6 +25,7 @@ data class Media(
     val format: MediaFormat = MediaFormat.UNKNOWN,
 
     val title: MediaTitle,
+    val synonyms: List<String>,
 
     val coverImage: String,
 

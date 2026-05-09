@@ -42,6 +42,8 @@ fun MalNode<MalMediaDto>.toMediaDomain(
             native = dto.alternativeTitles?.ja
         ),
 
+        synonyms = dto.alternativeTitles?.synonyms ?: emptyList(),
+
         // =========================================================
         // VISUALS
         // =========================================================

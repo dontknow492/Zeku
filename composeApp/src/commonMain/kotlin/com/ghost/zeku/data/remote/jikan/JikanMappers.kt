@@ -58,6 +58,7 @@ fun JikanRecommendationEdge.toMediaDomain(mediaType: MediaType): Media? {
         format = MediaFormat.UNKNOWN, // Jikan doesn't return format in the basic recommendation node
         genres = emptyList(),
         score = null,
-        mediaType = mediaType
+        mediaType = mediaType,
+        synonyms = emptyList()
     )
 }

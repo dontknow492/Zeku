@@ -17,12 +17,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.NavDisplay
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.presentation.components.sidebar.ZekuAdaptiveSidebar
 import com.ghost.zeku.presentation.screen.category.CategoryScreen
 import com.ghost.zeku.presentation.screen.details.DetailScreen
 import com.ghost.zeku.presentation.screen.home.MediaHomeScreen
 import com.ghost.zeku.presentation.screen.library.LibraryCategoryScreen
+import com.ghost.zeku.presentation.screen.library.LibraryScreen
 import com.ghost.zeku.presentation.screen.search.SearchScreen
 import com.ghost.zeku.presentation.viewmodel.main.MainContract
 import com.ghost.zeku.presentation.viewmodel.main.MainViewModel
@@ -43,7 +45,7 @@ fun ZekuAppWrapper(
 
         LaunchedEffect(state.currentUser) {
             uiState.resetStack()
-            uiState.navigateTo(AnimeHomeRoute)
+            uiState.navigateTo(LibraryRoute)
         }
 
         // Remember whether the user has toggled the sidebar to be wide or narrow.
@@ -96,7 +98,7 @@ fun ZekuAppWrapper(
                         allUsers = state.availableUsers,
                         onAccountSwitch = { viewModel.onEvent(MainContract.Event.SwitchAccount(it)) },
                         onLogoutClick = { viewModel.onEvent(MainContract.Event.Logout(it)) },
-                        onAddAccountClick = { viewModel.onEvent(MainContract.Event.AddAccountClick) },
+                        onAddAccountClick = { viewModel.onEvent(MainContract.Event.AddAccountClick(ProviderType.ANILIST)) },
                         onAvatarClick = { viewModel.onEvent(MainContract.Event.ViewAccount(it)) },
                     )
                 }
@@ -187,7 +189,9 @@ fun ZekuNavDisplay(
                 }
 
                 is LibraryRoute -> NavEntry(key) {
-                    MockScreen("${navBackStack.size}: Library") {}
+                    LibraryScreen(
+                        viewModel = koinViewModel(),
+                    )
                 }
 
                 is MediaDetailsRoute -> NavEntry(key) {
