@@ -1,11 +1,16 @@
 package com.ghost.zeku.presentation.components.media.list
 
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -30,6 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.model.media.MediaType
 import com.ghost.zeku.presentation.common.MediaAsyncImage
 import com.ghost.zeku.presentation.components.media.MediaAction
@@ -40,10 +46,12 @@ import com.ghost.zeku.presentation.theme.AppTheme
 fun MediaListCard(
     modifier: Modifier = Modifier,
     data: MediaListUiData,
+    selected: Boolean = false,
     layout: ListCardLayout = ListCardLayout.Modern,
     config: ListCardConfig = ListCardDefaults.forLayout(layout),
     onAction: OnMediaAction,
 ) {
+
     val interactionSource = remember { MutableInteractionSource() }
 
     val isHovered by interactionSource.collectIsHoveredAsState()
@@ -51,11 +59,62 @@ fun MediaListCard(
 
     val scale by animateFloatAsState(
         targetValue = when {
-            isPressed && config.enablePress -> config.scaleOnPress
-            isHovered && config.enableHover -> config.scaleOnHover
+
+            isPressed && config.enablePress ->
+                config.scaleOnPress
+
+            isHovered && config.enableHover ->
+                config.scaleOnHover
+
+            selected ->
+                1.01f
+
             else -> 1f
         },
-        animationSpec = spring(stiffness = Spring.StiffnessLow)
+        animationSpec = spring(
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "list_card_scale"
+    )
+
+    val borderColor by animateColorAsState(
+        targetValue = when {
+
+            selected -> MaterialTheme.colorScheme.primary
+
+            isHovered -> MaterialTheme.colorScheme.outline.copy(
+                alpha = 0.4f
+            )
+
+            else -> Color.Transparent
+        },
+        label = "list_card_border"
+    )
+
+    val containerColor by animateColorAsState(
+        targetValue = when {
+
+            selected -> MaterialTheme.colorScheme.primaryContainer.copy(
+                alpha = 0.18f
+            )
+
+            isHovered -> MaterialTheme.colorScheme.surfaceContainerHigh
+
+            else -> MaterialTheme.colorScheme.surface
+        },
+        label = "list_card_container"
+    )
+
+    val elevation by animateDpAsState(
+        targetValue = when {
+
+            selected -> config.elevation + 6.dp
+
+            isHovered -> config.elevation + 2.dp
+
+            else -> config.elevation
+        },
+        label = "list_card_elevation"
     )
 
     Card(
@@ -64,22 +123,109 @@ fun MediaListCard(
                 scaleX = scale
                 scaleY = scale
             }
-            .clickable(
+            .combinedClickable(
                 interactionSource = interactionSource,
-                indication = null
-            ) {
-                onAction(MediaAction.MediaClick(data.id, data.mediaType))
-            },
-        shape = RoundedCornerShape(config.cornerRadius),
-        elevation = if (config.enableShadow)
-            CardDefaults.cardElevation(config.elevation)
-        else CardDefaults.cardElevation(0.dp)
+                indication = null,
+
+                onClick = {
+                    onAction(
+                        MediaAction.MediaClick(
+                            data.id,
+                            data.mediaType
+                        )
+                    )
+                },
+
+                onLongClick = {
+                    onAction(
+                        MediaAction.LongClick(
+                            data.id,
+                            data.mediaType
+                        )
+                    )
+                }
+            ),
+
+        shape = RoundedCornerShape(
+            config.cornerRadius
+        ),
+
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor
+        ),
+
+        border = BorderStroke(
+            width = if (selected) 1.5.dp else 1.dp,
+            color = borderColor
+        ),
+
+        elevation = if (config.enableShadow) {
+            CardDefaults.cardElevation(
+                defaultElevation = elevation
+            )
+        } else {
+            CardDefaults.cardElevation(
+                defaultElevation = 0.dp
+            )
+        }
     ) {
-        when (layout) {
-            ListCardLayout.Minimal -> MinimalListCard(data, config, onAction)
-            ListCardLayout.Compact -> CompactListCard(data, config, onAction)
-            ListCardLayout.Modern -> ModernListCard(data, config, onAction)
-            ListCardLayout.Detailed -> DetailedListCard(data, config, onAction)
+
+        Box {
+
+            when (layout) {
+
+                ListCardLayout.Minimal -> {
+                    MinimalListCard(
+                        data,
+                        config,
+                        onAction
+                    )
+                }
+
+                ListCardLayout.Compact -> {
+                    CompactListCard(
+                        data,
+                        config,
+                        onAction
+                    )
+                }
+
+                ListCardLayout.Modern -> {
+                    ModernListCard(
+                        data,
+                        config,
+                        onAction
+                    )
+                }
+
+                ListCardLayout.Detailed -> {
+                    DetailedListCard(
+                        data,
+                        config,
+                        onAction
+                    )
+                }
+            }
+
+
+            Row {
+                AnimatedVisibility(
+                    visible = selected,
+                    modifier = Modifier
+                ) {
+
+                    Box(
+                        modifier = Modifier
+                            .padding(vertical = 12.dp)
+                            .width(4.dp)
+                            .fillMaxHeight(0.7f)
+                            .clip(RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp))
+                            .background(
+                                MaterialTheme.colorScheme.primary
+                            )
+                    )
+                }
+            }
         }
     }
 }

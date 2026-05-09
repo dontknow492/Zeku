@@ -25,6 +25,7 @@ import com.ghost.zeku.domain.model.media.track.TrackStatus
 import com.ghost.zeku.domain.repository.AuthRepository
 import com.ghost.zeku.domain.repository.UserSettings
 import com.ghost.zeku.presentation.navigation.ZekuAppWrapper
+import com.ghost.zeku.presentation.screen.details.DetailScreenPreview
 import com.ghost.zeku.presentation.screen.library.LibraryCategoryScreen
 import com.ghost.zeku.presentation.screen.library.LibraryScreen
 import com.ghost.zeku.presentation.theme.AppTheme
@@ -36,7 +37,7 @@ import java.util.concurrent.TimeUnit
 
 @Composable
 fun App() = AppTheme {
-    ZekuAppWrapper()
+//    ZekuAppWrapper()
 //    LibraryCategoryScreen(
 //        viewModel = koinViewModel(),
 //        onNavigateBack = {}
@@ -44,6 +45,7 @@ fun App() = AppTheme {
 //    LibraryScreen(
 //        viewModel = koinViewModel(),
 //    )
+//    AnimeDetailPreview()
 }
 
 @Composable
@@ -1486,23 +1488,7 @@ fun AnimeDetailPreview() {
 
     }
 
-    SelectionContainer {
-        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-            Text(text = "Anime Details", style = MaterialTheme.typography.displayLarge)
-            HorizontalDivider(modifier = Modifier.fillMaxWidth())
-            Text(text = "AniList Anime Details:", style = MaterialTheme.typography.titleLarge)
-            Text(
-                text = aniListAnimeDetails?.toMediaDetailsDomain().toString(),
-                style = MaterialTheme.typography.bodyLarge
-            )
-            HorizontalDivider(modifier = Modifier.fillMaxWidth().height(5.dp))
-            Text(text = "Mal Anime Details", style = MaterialTheme.typography.titleLarge)
-            Text(
-                text = malAnimeDetails?.toMediaDetailsDomain(mediaType = MediaType.ANIME).toString(),
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-    }
+
 }
 
 @Composable

@@ -2,8 +2,10 @@ package com.ghost.zeku.presentation.components.media.poster
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -14,9 +16,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.*
@@ -48,6 +52,7 @@ import com.ghost.zeku.presentation.theme.AppTheme
 fun MediaPosterCard(
     modifier: Modifier = Modifier,
     data: MediaPosterUiData,
+    selected: Boolean = false,
     layout: PosterLayout = PosterLayout.Modern,
     config: PosterConfig = PosterDefaults.forLayout(layout),
     onAction: OnMediaAction,
@@ -68,12 +73,46 @@ fun MediaPosterCard(
             isHovered && config.enableHover ->
                 config.scaleOnHover
 
+            selected ->
+                1.03f
+
             else -> 1f
         },
         animationSpec = spring(
             stiffness = Spring.StiffnessLow
         ),
         label = "poster_scale"
+    )
+
+    val borderColor by animateColorAsState(
+        targetValue = when {
+
+            selected -> MaterialTheme.colorScheme.primary
+
+            isHovered -> MaterialTheme.colorScheme.outline.copy(
+                alpha = 0.5f
+            )
+
+            else -> Color.Transparent
+        },
+        label = "poster_border"
+    )
+
+    val borderWidth by animateDpAsState(
+        targetValue = if (selected) 3.dp else 1.dp,
+        label = "poster_border_width"
+    )
+
+    val shadowElevation by animateDpAsState(
+        targetValue = when {
+
+            selected -> 14.dp
+
+            isHovered -> 10.dp
+
+            else -> 4.dp
+        },
+        label = "poster_elevation"
     )
 
     Card(
@@ -99,7 +138,8 @@ fun MediaPosterCard(
                 onLongClick = {
                     onAction(
                         MediaAction.LongClick(
-                            data.id, data.mediaType
+                            data.id,
+                            data.mediaType
                         )
                     )
                 }
@@ -107,48 +147,61 @@ fun MediaPosterCard(
 
         shape = RoundedCornerShape(
             config.cornerRadius
+        ),
+
+        border = BorderStroke(
+            borderWidth,
+            borderColor
+        ),
+
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = shadowElevation
         )
     ) {
 
-        when (layout) {
+        Box {
 
-            PosterLayout.Minimal -> {
-                MinimalPosterLayout(
-                    data = data,
-                    config = config,
-                    isHovered = isHovered,
-                    onAction = onAction
-                )
-            }
+            when (layout) {
 
-            PosterLayout.Modern -> {
-                ModernPosterLayout(
-                    data = data,
-                    config = config,
-                    isHovered = isHovered,
-                    onAction = onAction
-                )
-            }
+                PosterLayout.Minimal -> {
+                    MinimalPosterLayout(
+                        data = data,
+                        config = config,
+                        isHovered = isHovered,
+                        onAction = onAction
+                    )
+                }
 
-            PosterLayout.Overlay -> {
-                OverlayPosterLayout(
-                    data = data,
-                    config = config,
-                    isHovered = isHovered,
-                    onAction = onAction
-                )
-            }
+                PosterLayout.Modern -> {
+                    ModernPosterLayout(
+                        data = data,
+                        config = config,
+                        isHovered = isHovered,
+                        onAction = onAction
+                    )
+                }
 
-            PosterLayout.Compact -> {
-                CompactPosterLayout(
-                    data = data,
-                    config = config,
-                    onAction = onAction
-                )
+                PosterLayout.Overlay -> {
+                    OverlayPosterLayout(
+                        data = data,
+                        config = config,
+                        isHovered = isHovered,
+                        onAction = onAction
+                    )
+                }
+
+                PosterLayout.Compact -> {
+                    CompactPosterLayout(
+                        data = data,
+                        config = config,
+                        onAction = onAction
+                    )
+                }
             }
         }
     }
 }
+
 
 @Composable
 private fun ModernPosterLayout(
@@ -862,6 +915,7 @@ private fun PreviewPosterCard() {
                     Text(text = layout.name, style = TextStyle(fontSize = 20.sp))
                     MediaPosterCard(
                         modifier = Modifier,
+                        selected = true,
                         data = item,
                         layout = layout,
                         config = PosterDefaults.forLayout(layout),

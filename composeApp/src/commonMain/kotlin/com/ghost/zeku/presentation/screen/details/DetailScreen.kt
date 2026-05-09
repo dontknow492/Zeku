@@ -41,13 +41,14 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
-import com.ghost.zeku.domain.model.media.format
-import com.ghost.zeku.domain.model.media.MediaType
+import com.ghost.zeku.domain.model.ProviderType
 import com.ghost.zeku.domain.model.media.*
 import com.ghost.zeku.presentation.common.*
 import com.ghost.zeku.presentation.common.chips.GenreChip
@@ -66,9 +67,12 @@ import com.ghost.zeku.presentation.components.section.MediaSection
 import com.ghost.zeku.presentation.components.section.MediaSectionConfig
 import com.ghost.zeku.presentation.components.section.PagedMediaSection
 import com.ghost.zeku.presentation.navigation.Destination
+import com.ghost.zeku.presentation.theme.AppTheme
 import com.ghost.zeku.presentation.viewmodel.detail.MediaDetailContract
 import com.ghost.zeku.presentation.viewmodel.detail.MediaDetailViewModel
 import io.github.aakira.napier.Napier
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import zeku.composeapp.generated.resources.*
@@ -1355,5 +1359,278 @@ private fun InfoCard(
                 maxLines = 1
             )
         }
+    }
+}
+
+
+@Preview
+@Composable
+fun DetailScreenPreview() {
+    val demoState = MediaDetailContract.State(
+        id = 113415,
+        type = MediaType.ANIME,
+        source = ProviderType.ANILIST,
+        title = "JUJUTSU KAISEN",
+        nativeTitle = "呪術廻戦",
+        synonyms = listOf("Jujutsu Kaisen", "JUJUTSU KAISEN"),
+        countryOfOrigin = null,
+
+        coverImage = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx113415-LHBAeoZDIsnF.jpg",
+        bannerImage = "https://s4.anilist.co/file/anilistcdn/media/anime/banner/113415-jQBSkxWAAk83.jpg",
+        extraPictures = emptyList(),
+        description = "A boy fights... for \"the right death.\" Hardship, regret, shame: the negative feelings that humans feel become Curses that lurk in our everyday lives. ... (Source: Crunchyroll)",
+        background = null,
+
+        genres = listOf("Action", "Drama", "Supernatural"),
+        tags = emptyList(),
+        status = MediaReleaseStatus.FINISHED,
+        format = MediaFormat.TV,
+        sourceMaterial = MediaSourceMaterial.MANGA,
+        isAdult = false,
+
+        startDate = null,
+        endDate = null,
+        season = null,
+        seasonYear = null,
+        broadcastString = null,
+
+        averageScore = 84.0,
+        meanScore = null,
+        popularity = null,
+        favourites = null,
+        rank = null,
+
+        totalEpisodes = 24,
+        durationPerEpisode = 24,
+        contentRating = null,
+        nextAiringEpisode = null,
+        studios = emptyList(),
+
+        trailer = MediaTrailer(
+            title = "Jujutsu Kaisen: Trailer #1",
+//            url = "https://www.youtube.com/watch?v=pkKu9hLT-t8",
+            id = "pkKu9hLT-t8",
+            site = "youtube",
+            thumbnail = "https://i.ytimg.com/vi/pkKu9hLT-t8/hqdefault.jpg"
+        ),
+        externalLinks = listOf(
+            ExternalLink(site = "Official Site", url = "https://jujutsukaisen.jp/", iconUrl = null),
+            ExternalLink(
+                site = "Twitter",
+                url = "https://twitter.com/animejujutsu",
+                iconUrl = "https://s4.anilist.co/file/anilistcdn/link/icon/17-R0tMgOvwvhsS.png"
+            ),
+            ExternalLink(
+                site = "Crunchyroll",
+                url = "https://www.crunchyroll.com/jujutsu-kaisen",
+                iconUrl = "https://s4.anilist.co/file/anilistcdn/link/icon/5-AWN2pVlluCOO.png"
+            ),
+            ExternalLink(
+                site = "Netflix",
+                url = "https://www.netflix.com/title/81278456",
+                iconUrl = "https://s4.anilist.co/file/anilistcdn/link/icon/10-rVGPom8RCiwH.png"
+            ),
+            ExternalLink(
+                site = "iQ",
+                url = "https://www.iq.com/album/igc33vhvex",
+                iconUrl = "https://s4.anilist.co/file/anilistcdn/link/icon/122-EPBJ2E0oPt5C.png"
+            ),
+            ExternalLink(
+                site = "Bilibili TV",
+                url = "https://www.bilibili.tv/media/37738",
+                iconUrl = "https://s4.anilist.co/file/anilistcdn/link/icon/119-NCwGvCjFADGQ.png"
+            ),
+            ExternalLink(
+                site = "YouTube Playlist",
+                url = "https://youtube.com/playlist?list=PLxSscENEp7JisDU6GAJuyNpVwDvCm-f3J",
+                iconUrl = "https://s4.anilist.co/file/anilistcdn/link/icon/13-ZwR1Xwgtyrwa.png"
+            ),
+            ExternalLink(
+                site = "Hulu",
+                url = "https://www.hulu.com/series/jujutsu-kaisen-382ec8bf-3650-4cde-94db-ecd18665f9e0",
+                iconUrl = "https://s4.anilist.co/file/anilistcdn/link/icon/7-rM06PQyWONGC.png"
+            )
+        ),
+        characters = listOf(
+            MediaCharacter(
+                id = 126635,
+                name = "Megumi Fushiguro",
+                role = CharacterRole.MAIN,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b126635-L0y3I92JSUkN.png"
+            ),
+            MediaCharacter(
+                id = 127212,
+                name = "Yuuji Itadori",
+                role = CharacterRole.MAIN,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b127212-FVm2tD0erQ5B.png"
+            ),
+            MediaCharacter(
+                id = 133700,
+                name = "Nobara Kugisaki",
+                role = CharacterRole.MAIN,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b133700-f6sOO3TcgLV6.png"
+            ),
+            MediaCharacter(
+                id = 127691,
+                name = "Satoru Gojou",
+                role = CharacterRole.MAIN,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b127691-9zqh1xpIubn7.png"
+            ),
+            MediaCharacter(
+                id = 133704,
+                name = "Kento Nanami",
+                role = CharacterRole.SUPPORTING,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b133704-8wLTGjc234q2.png"
+            ),
+            MediaCharacter(
+                id = 157867,
+                name = "Yoshinobu Gakuganji",
+                role = CharacterRole.SUPPORTING,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b157867-dHdd8ZECuzHx.png"
+            ),
+            MediaCharacter(
+                id = 200767,
+                name = "Takeshi Iguchi",
+                role = CharacterRole.SUPPORTING,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b200767-bTqPLS2Jpiqf.png"
+            ),
+            MediaCharacter(
+                id = 209694,
+                name = "Haruta Shigemo",
+                role = CharacterRole.SUPPORTING,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b209694-xSS6FxN4al3l.png"
+            ),
+            MediaCharacter(
+                id = 172743,
+                name = "Hanami",
+                role = CharacterRole.SUPPORTING,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b172743-4Y5SXqED6A3G.jpg"
+            ),
+            MediaCharacter(
+                id = 189237,
+                name = "Masamichi Yaga",
+                role = CharacterRole.SUPPORTING,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b189237-ZxNJwVPL8DvW.png"
+            ),
+            MediaCharacter(
+                id = 200768,
+                name = "Takagi",
+                role = CharacterRole.SUPPORTING,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b200768-fgIRyfO8ABk2.jpg"
+            ),
+            MediaCharacter(
+                id = 157865,
+                name = "Takuma Ino",
+                role = CharacterRole.SUPPORTING,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b157865-X9ENX9OzWevS.jpg"
+            ),
+            MediaCharacter(
+                id = 210846,
+                name = "Akari Nitta",
+                role = CharacterRole.SUPPORTING,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b210846-XcRQ643Ne8Pb.png"
+            ),
+            MediaCharacter(
+                id = 133702,
+                name = "Mahito",
+                role = CharacterRole.SUPPORTING,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b133702-Y7JRG5vAvjIL.png"
+            ),
+            MediaCharacter(
+                id = 158154,
+                name = "Shouko Ieiri",
+                role = CharacterRole.SUPPORTING,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b158154-UCqbiULli62P.png"
+            ),
+            MediaCharacter(
+                id = 194056,
+                name = "Nagi Yoshino",
+                role = CharacterRole.SUPPORTING,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b194056-yEzHVaAF9eqJ.png"
+            ),
+            MediaCharacter(
+                id = 210062,
+                name = "Shouta Itou",
+                role = CharacterRole.SUPPORTING,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b210062-EIMZ4Nmvx6rP.png"
+            ),
+            MediaCharacter(
+                id = 222599,
+                name = "Takeda",
+                role = CharacterRole.SUPPORTING,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b222599-0eRcr9ezGaN0.png"
+            ),
+            MediaCharacter(
+                id = 156991,
+                name = "Jougo",
+                role = CharacterRole.SUPPORTING,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b156991-niYjdp9CxO4w.png"
+            ),
+            MediaCharacter(
+                id = 189238,
+                name = "Kiyotaka Ijichi",
+                role = CharacterRole.SUPPORTING,
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/character/large/b189238-ItSLams6lRk9.png"
+            )
+        ),
+        relations = listOf(
+            MediaRelation(
+                id = 101517,
+                mediaType = MediaType.MANGA,
+                relationType = RelationType.ADAPTATION,
+                title = MediaTitle("Jujutsu Kaisen"),
+                format = MediaFormat.TV,
+                coverImage = "https://s4.anilist.co/file/anilistcdn/media/manga/cover/medium/bx101517-H3TdM3g5ZUe9.jpg"
+            ),
+            MediaRelation(
+                id = 131573,
+                mediaType = MediaType.ANIME,
+                relationType = RelationType.PREQUEL,
+                title = MediaTitle("JUJUTSU KAISEN 0"),
+                format = MediaFormat.TV,
+                coverImage = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx131573-rpl82vDEDRm6.jpg"
+            ),
+            MediaRelation(
+                id = 145064,
+                mediaType = MediaType.ANIME,
+                relationType = RelationType.SEQUEL,
+                title = MediaTitle("JUJUTSU KAISEN Season 2"),
+                format = MediaFormat.TV,
+                coverImage = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx145064-hSNRJM03pvv1.jpg"
+            ),
+            MediaRelation(
+                id = 147463,
+                mediaType = MediaType.ANIME,
+                relationType = RelationType.OTHER,
+                title = MediaTitle("Jujutsu Kaisen PV"),
+                format = MediaFormat.TV,
+                coverImage = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b147463-LmoLwL9DbYAn.jpg"
+            )
+        ),
+
+        staff = emptyList(),
+
+        trackEntry = null,
+
+        isLoading = false,
+        error = null
+    )
+
+    val episodes: Flow<PagingData<Episode>> = flowOf<PagingData<Episode>>(PagingData.empty())
+    val recommendations: Flow<PagingData<Media>> = flowOf(PagingData.empty())
+    val reviews: Flow<PagingData<Review>> = flowOf<PagingData<Review>>(PagingData.empty())
+
+    val isWideScreen = rememberPlatformConfiguration().isWideScreen
+
+    AppTheme {
+        MediaDetailContent(
+            state = demoState,
+            episodes = episodes.collectAsLazyPagingItems(),
+            recommendations = recommendations.collectAsLazyPagingItems(),
+            reviews = reviews.collectAsLazyPagingItems(),
+            onEvent = {},
+            config = MediaDetailUiConfig(),
+            isWideScreen = isWideScreen,
+        )
     }
 }
